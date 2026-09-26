@@ -4,6 +4,7 @@ import { submissionService } from '../services/submissionService';
 import { newsletterService } from '../services/newsletterService';
 import { authService } from '../services/authService';
 import { publicationService } from '../services/publicationService';
+import { pdfService } from '../services/pdfService';
 import { eventService } from '../services/eventService';
 import { researchService } from '../services/researchService';
 import { expertService } from '../services/expertService';
@@ -978,6 +979,19 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                             </span>
                           </td>
                           <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await pdfService.downloadPublicationPdf(p);
+                                } catch (e) {
+                                  alert('Error generating PDF');
+                                }
+                              }}
+                              className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition-colors inline-flex cursor-pointer"
+                              title="Download Scholarly PDF"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
                             <button
                               onClick={() => handleTogglePublish('publication', p.id)}
                               className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"

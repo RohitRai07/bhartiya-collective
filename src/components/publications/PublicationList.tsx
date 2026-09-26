@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { publicationService } from '../../services/publicationService';
+import { pdfService } from '../../services/pdfService';
 import { Publication, PublicationCategory } from '../../types/publication';
-import { BookOpen, Search, Download, FileText, Tag, Calendar, User } from 'lucide-react';
+import { BookOpen, Search, Download, FileText, Tag, Calendar, User, Loader2, Check } from 'lucide-react';
 
 export const PublicationList: React.FC = () => {
   const [publications, setPublications] = useState<Publication[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<PublicationCategory | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadedId, setDownloadedId] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -33,6 +36,20 @@ export const PublicationList: React.FC = () => {
     'Occasional Paper',
     'Civilizational Brief',
   ];
+
+  const handleDownloadPdf = async (pub: Publication) => {
+    try {
+      setDownloadingId(pub.id);
+      await pdfService.downloadPublicationPdf(pub);
+      setDownloadedId(pub.id);
+      setTimeout(() => setDownloadedId(null), 3000);
+    } catch (err) {
+      console.error('Failed to generate publication PDF:', err);
+      alert('Unable to generate PDF at this time. Please try again.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -136,11 +153,27 @@ export const PublicationList: React.FC = () => {
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                   <span className="text-[11px] text-slate-400">Open Access Monograph</span>
                   <button
-                    onClick={() => alert(`Initiating open-access download for: ${pub.title} (PDF)`)}
-                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 transition-colors"
+                    onClick={() => handleDownloadPdf(pub)}
+                    disabled={downloadingId === pub.id}
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 transition-all cursor-pointer shadow-2xs disabled:opacity-60"
+                    title={`Download official PDF: ${pub.title}`}
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download PDF</span>
+                    {downloadingId === pub.id ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-800" />
+                        <span>Generating...</span>
+                      </>
+                    ) : downloadedId === pub.id ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="text-emerald-800 font-bold">Downloaded!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-3.5 h-3.5 text-amber-800" />
+                        <span>Download PDF</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

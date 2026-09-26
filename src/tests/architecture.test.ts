@@ -16,6 +16,7 @@ import { authService, DEFAULT_ADMIN_CREDS } from '../services/authService';
 import { notificationService } from '../services/notificationService';
 import { registrationCsvExporter, REGISTRATION_CSV_COLUMNS } from '../export/registrationCsvExporter';
 import { fileService } from '../services/fileService';
+import { pdfService } from '../services/pdfService';
 import { UserRegistrationInput } from '../types/registration';
 
 async function runTests() {
@@ -210,6 +211,27 @@ async function runTests() {
   assert(Array.isArray(mediaList), 'Media library returns array of stored assets');
   assert(typeof fileService.uploadFile === 'function', 'File upload boundary is decoupled and available');
   assert(typeof fileService.uploadImageAsDataUrl === 'function', 'Image data URL conversion is available');
+
+  console.log('\n📌 Testing Client-Side Scholarly PDF Generation Engine:');
+  const dummyPub = {
+    id: 'test-pub-01',
+    title: 'De-Universalizing Modernity: Indic Epistemology in Statecraft',
+    subtitle: 'A foundational working paper on civilizational administrative doctrines',
+    authors: ['Dr. Ananya Sharma', 'Prof. Raghuram Iyer'],
+    abstract: 'This paper examines constitutional jurisprudence through the lens of indigenous dharmic tenets and civilizational jurisprudence.',
+    category: 'monograph' as const,
+    publishedDate: '2026-09-15',
+    readTime: '24 min',
+    tags: ['Epistemology', 'Jurisprudence', 'Statecraft'],
+    pdfUrl: '#',
+    status: 'published' as const
+  };
+
+  const pdfDoc = pdfService.buildPublicationPdf(dummyPub);
+  assert(pdfDoc !== null && typeof pdfDoc === 'object', 'PDF document instance generated successfully');
+  assert(typeof pdfService.downloadPublicationPdf === 'function', 'PDF download trigger method is available');
+  assert(pdfDoc.internal.pageSize.getWidth() > 0, 'PDF generated with valid page dimensions');
+  assert(typeof (pdfDoc as any).output === 'function', 'PDF instance supports binary output generation');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);
