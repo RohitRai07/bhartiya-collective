@@ -1,0 +1,70 @@
+import { EventItem } from '../types/event';
+
+export const mockEvents: EventItem[] = [
+  {
+    id: 'evt-ucc-flagship',
+    title: '#BharatDialogue on UNIFORM CIVIL CODE (UCC)',
+    type: 'Symposium',
+    date: 'COMING SOON',
+    time: 'Full Day National Dialogue',
+    location: 'Constitution Club of India, Rafi Marg, Sansad Marg Area, New Delhi 110001',
+    mode: 'Hybrid',
+    description: 'A landmark national dialogue examining law, equality, personal laws reform, gender justice, and foundational constitutional values with leading jurists, scholars, and policy practitioners.',
+    speakers: [
+      { name: 'Eminent Constitutional Jurists', affiliation: 'Supreme Court of India & High Courts', role: 'Keynote Panel' },
+      { name: 'Scholars of Comparative Jurisprudence', affiliation: 'National Law Universities', role: 'Plenary Session' },
+      { name: 'Civic & Legal Reform Advocates', affiliation: 'Bharat Collective Policy Forum', role: 'Roundtable Chairs' },
+    ],
+    registrationOpen: true,
+    seatsLeft: 150,
+    bannerImage: '/images/bharat-dialogue-ucc-banner.jpg',
+  },
+  {
+    id: 'evt-101',
+    title: 'National Symposium on Civilizational Jurisprudence & Dharma',
+    type: 'Symposium',
+    date: '2026-10-18',
+    time: '09:30 AM – 05:30 PM IST',
+    location: 'India International Centre (IIC), Max Mueller Marg, New Delhi',
+    mode: 'Hybrid',
+    description: 'An apex gathering of jurists, constitutional scholars, and philosophers addressing the synthesis between constitutional morality and ancient Indian jurisprudential treatises.',
+    speakers: [
+      { name: 'Hon. Justice (Retd.) M. Ramachandran', affiliation: 'Former Judge, Supreme Court of India', role: 'Keynote Speaker' },
+      { name: 'Prof. Vidya Shankar', affiliation: 'National Law School of India University', role: 'Plenary Panelist' },
+      { name: 'Dr. Chetan Bhattacharya', affiliation: 'Centre for Policy Research', role: 'Session Chair' },
+    ],
+    registrationOpen: true,
+    seatsLeft: 45,
+  },
+  {
+    id: 'evt-102',
+    title: 'Roundtable: Computational Linguistics & Sanskrit Knowledge Systems',
+    type: 'Roundtable',
+    date: '2026-11-05',
+    time: '02:00 PM – 06:00 PM IST',
+    location: 'IIT Delhi & Online Stream',
+    mode: 'Hybrid',
+    description: 'Deep technical exploration into Paninian generative grammar, knowledge representation, semantic networks, and large language model architectures for Indic languages.',
+    speakers: [
+      { name: 'Dr. Srinivas Parameswaran', affiliation: 'IIT Bombay Computer Science & Sanskrit Studies', role: 'Lead Speaker' },
+      { name: 'Dr. Preeti Deshmukh', affiliation: 'Computational Paninian Grammar Lab', role: 'Discussant' },
+    ],
+    registrationOpen: true,
+    seatsLeft: 80,
+  },
+  {
+    id: 'evt-103',
+    title: 'Public Lecture: The Economic Architecture of Ancient Indian Guilds (Shrenis)',
+    type: 'Public Lecture',
+    date: '2026-11-22',
+    time: '06:00 PM – 07:30 PM IST',
+    location: 'Auditorium, NMML, Teen Murti Bhavan, New Delhi',
+    mode: 'In-Person',
+    description: 'A historical and institutional analysis of self-regulating merchant guilds, craft standardization, contract enforcement, and international maritime trade in early India.',
+    speakers: [
+      { name: 'Prof. Alok Ranjan', affiliation: 'Delhi School of Economics', role: 'Distinguished Speaker' },
+    ],
+    registrationOpen: true,
+    seatsLeft: 120,
+  }
+];
