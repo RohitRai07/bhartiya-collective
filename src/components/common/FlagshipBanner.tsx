@@ -73,7 +73,7 @@ export const FlagshipBanner: React.FC<FlagshipBannerProps> = ({ onRegisterClick 
                 )}
 
                 <a
-                  href="/images/bharat-dialogue-ucc-banner.jpg"
+                  href={`${import.meta.env.BASE_URL}images/bharat-dialogue-ucc-banner.jpg`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm border border-white/20 transition-all flex items-center space-x-2"
@@ -89,7 +89,7 @@ export const FlagshipBanner: React.FC<FlagshipBannerProps> = ({ onRegisterClick 
             <div className="lg:col-span-5 flex justify-center">
               <div className="relative group max-w-sm rounded-2xl overflow-hidden shadow-2xl border-4 border-amber-400/40 bg-white">
                 <img
-                  src="/images/bharat-dialogue-ucc-banner.jpg"
+                  src={`${import.meta.env.BASE_URL}images/bharat-dialogue-ucc-banner.jpg`}
                   alt="#BharatDialogue on Uniform Civil Code - Constitution Club of India"
                   className="w-full h-auto object-cover transform group-hover:scale-102 transition-transform duration-300"
                 />
