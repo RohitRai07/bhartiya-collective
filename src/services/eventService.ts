@@ -24,7 +24,20 @@ function loadStoredEvents(): EventItem[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       return initial;
     }
-    return JSON.parse(raw);
+    const parsed: EventItem[] = JSON.parse(raw);
+    let needsUpdate = false;
+    const migrated = parsed.map(evt => {
+      const defaultEvt = mockEvents.find(m => m.id === evt.id);
+      if (defaultEvt && (!evt.bannerImage || evt.bannerImage === '/images/bharat-dialogue-ucc-banner.jpg')) {
+        needsUpdate = true;
+        return { ...evt, bannerImage: defaultEvt.bannerImage };
+      }
+      return evt;
+    });
+    if (needsUpdate) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+    }
+    return migrated;
   } catch {
     return mockEvents;
   }

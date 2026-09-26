@@ -7,6 +7,17 @@ interface EventListProps {
   onRegisterInterest?: (event: EventItem) => void;
 }
 
+const resolveEventImage = (url?: string): string => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const clean = url.replace(/^\//, '');
+  return `${import.meta.env.BASE_URL}${clean}`;
+};
+
+const DEFAULT_EVENT_IMAGE = 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=800&q=80';
+
 export const EventList: React.FC<EventListProps> = ({ onRegisterInterest }) => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [registeredEvents, setRegisteredEvents] = useState<Set<string>>(new Set());
@@ -31,6 +42,7 @@ export const EventList: React.FC<EventListProps> = ({ onRegisterInterest }) => {
         {events.map((evt) => {
           const isRegistered = registeredEvents.has(evt.id);
           const isFlagship = evt.id === 'evt-ucc-flagship';
+          const imageUrl = resolveEventImage(evt.bannerImage) || DEFAULT_EVENT_IMAGE;
 
           return (
             <div
@@ -41,22 +53,36 @@ export const EventList: React.FC<EventListProps> = ({ onRegisterInterest }) => {
                   : 'border-slate-200 hover:border-amber-400'
               }`}
             >
-              {/* Optional Event Poster Preview */}
-              {evt.bannerImage && (
-                <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-900 border-b border-amber-500/20">
-                  <img
-                    src={evt.bannerImage}
-                    alt={evt.title}
-                    className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 left-3">
-                    <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-900/90 text-amber-300 text-[10px] font-bold uppercase tracking-wider backdrop-blur-xs border border-amber-400/40">
+              {/* Event Poster / Banner Preview */}
+              <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-900 border-b border-amber-500/20 group">
+                <img
+                  src={imageUrl}
+                  alt={evt.title}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = DEFAULT_EVENT_IMAGE;
+                  }}
+                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+
+                <div className="absolute top-3 left-3">
+                  {isFlagship ? (
+                    <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-900/90 text-amber-300 text-[10px] font-bold uppercase tracking-wider backdrop-blur-xs border border-amber-400/40 shadow-sm">
                       <Sparkles className="w-3 h-3 text-amber-400" />
                       <span>Flagship Event</span>
                     </span>
-                  </div>
+                  ) : (
+                    <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-900/80 text-amber-200 text-[10px] font-bold uppercase tracking-wider backdrop-blur-xs border border-white/20 shadow-xs">
+                      <span>{evt.type}</span>
+                    </span>
+                  )}
                 </div>
-              )}
+
+                <div className="absolute bottom-2.5 right-3 text-white text-[11px] font-semibold backdrop-blur-md bg-slate-950/80 px-2 py-0.5 rounded-md border border-white/10">
+                  {evt.mode}
+                </div>
+              </div>
 
               <div className="p-6 flex-1 flex flex-col justify-between">
                 <div>

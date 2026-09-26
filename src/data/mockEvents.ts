@@ -17,7 +17,7 @@ export const mockEvents: EventItem[] = [
     ],
     registrationOpen: true,
     seatsLeft: 150,
-    bannerImage: '/images/bharat-dialogue-ucc-banner.jpg',
+    bannerImage: 'images/bharat-dialogue-ucc-banner.jpg',
   },
   {
     id: 'evt-101',
@@ -35,6 +35,7 @@ export const mockEvents: EventItem[] = [
     ],
     registrationOpen: true,
     seatsLeft: 45,
+    bannerImage: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'evt-102',
@@ -51,6 +52,7 @@ export const mockEvents: EventItem[] = [
     ],
     registrationOpen: true,
     seatsLeft: 80,
+    bannerImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
   },
   {
     id: 'evt-103',
@@ -66,5 +68,6 @@ export const mockEvents: EventItem[] = [
     ],
     registrationOpen: true,
     seatsLeft: 120,
+    bannerImage: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
   }
 ];
