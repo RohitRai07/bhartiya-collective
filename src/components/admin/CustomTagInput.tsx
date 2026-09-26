@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { taxonomyService } from '../../services/taxonomyService';
-import { X, Plus, Sparkles, Trash2, Tag as TagIcon } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 
 interface CustomTagInputProps {
   label: string;
@@ -19,7 +19,6 @@ export const CustomTagInput: React.FC<CustomTagInputProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [showManageTags, setShowManageTags] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const loadTags = () => {
@@ -59,36 +58,16 @@ export const CustomTagInput: React.FC<CustomTagInputProps> = ({
     onChange(tags.filter(t => t !== tagToRemove));
   };
 
-  const handleDeleteFromSuggestions = (tagToDelete: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (window.confirm(`Permanently remove tag "${tagToDelete}" from suggested tags?`)) {
-      taxonomyService.removeTag(tagToDelete);
-      handleRemoveTag(tagToDelete);
-      loadTags();
-    }
-  };
-
   const availableSuggestions = suggestedTags.filter(
     st => !tags.some(t => t.toLowerCase() === st.toLowerCase())
   );
 
   return (
     <div className="space-y-1.5">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <label className="block text-xs font-bold text-slate-900">
-          {label}
-        </label>
-        
-        <button
-          type="button"
-          onClick={() => setShowManageTags(!showManageTags)}
-          className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold cursor-pointer"
-        >
-          {showManageTags ? 'Done' : 'Manage Tag Pool'}
-        </button>
-      </div>
+      {/* Clean Header with Label Only */}
+      <label className="block text-xs font-bold text-slate-900">
+        {label}
+      </label>
 
       {/* Main Tag Chips Container + Input Box */}
       <div 
@@ -130,8 +109,8 @@ export const CustomTagInput: React.FC<CustomTagInputProps> = ({
       </div>
 
       {/* Quick Select Suggestions */}
-      {availableSuggestions.length > 0 && !showManageTags && (
-        <div className="space-y-1 pt-1">
+      {availableSuggestions.length > 0 && (
+        <div className="space-y-1 pt-0.5">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
             Suggested Tags (click to add):
           </span>
@@ -151,38 +130,9 @@ export const CustomTagInput: React.FC<CustomTagInputProps> = ({
         </div>
       )}
 
-      {/* Manage Tag Pool Mode with Deletion */}
-      {showManageTags && (
-        <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-2 shadow-xs animate-in fade-in duration-150">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="font-bold text-slate-700">All Saved Tags in Pool ({suggestedTags.length}):</span>
-            <span className="text-slate-400">Click trash to permanently delete</span>
-          </div>
-          <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
-            {suggestedTags.map((st, i) => (
-              <span
-                key={i}
-                className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs bg-slate-50 border border-slate-200 text-slate-700"
-              >
-                <span>#{st}</span>
-                <button
-                  type="button"
-                  onClick={(e) => handleDeleteFromSuggestions(st, e)}
-                  className="text-red-500 hover:text-red-700 p-0.5 rounded cursor-pointer"
-                  title={`Delete #${st} permanently`}
-                >
-                  <Trash2 className="w-2.5 h-2.5" />
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {helperText && (
         <p className="text-[11px] text-slate-500">{helperText}</p>
       )}
-
     </div>
   );
 };

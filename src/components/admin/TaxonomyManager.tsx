@@ -275,11 +275,11 @@ export const TaxonomyManager: React.FC = () => {
                 className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-800 hover:bg-amber-900 disabled:opacity-50 text-white shadow-xs transition-colors cursor-pointer shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add & Select (Enter)</span>
+                <span>Add Option (Enter)</span>
               </button>
             </div>
             <p className="text-[11px] text-slate-400">
-              Tip: You can also type custom choices directly inside any modal dropdown while editing content!
+              Options added here are immediately selectable in all admin dropdowns and automatically create filter tabs & badges on the public website.
             </p>
           </form>
 
