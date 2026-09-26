@@ -13,7 +13,8 @@ import {
   Heart,
   Users,
   Compass,
-  BookOpen
+  BookOpen,
+  Scale
 } from 'lucide-react';
 
 interface HomePageProps {
@@ -68,9 +69,18 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <button
                 type="button"
                 onClick={() => onNavigate('/publications')}
-                className="px-6 py-3.5 rounded-xl font-semibold text-sm bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 transition-colors"
+                className="px-5 py-3.5 rounded-xl font-semibold text-sm bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 transition-colors"
               >
                 Read Publications
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onNavigate('/circulars')}
+                className="px-5 py-3.5 rounded-xl font-semibold text-sm bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 transition-colors flex items-center space-x-1.5"
+              >
+                <Scale className="w-4 h-4 text-amber-800" />
+                <span>Circulars & Legal</span>
               </button>
             </div>
           </div>

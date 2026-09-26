@@ -17,6 +17,7 @@ import { notificationService } from '../services/notificationService';
 import { registrationCsvExporter, REGISTRATION_CSV_COLUMNS } from '../export/registrationCsvExporter';
 import { fileService } from '../services/fileService';
 import { pdfService } from '../services/pdfService';
+import { circularService } from '../services/circularService';
 import { UserRegistrationInput } from '../types/registration';
 
 async function runTests() {
@@ -232,6 +233,58 @@ async function runTests() {
   assert(typeof pdfService.downloadPublicationPdf === 'function', 'PDF download trigger method is available');
   assert(pdfDoc.internal.pageSize.getWidth() > 0, 'PDF generated with valid page dimensions');
   assert(typeof (pdfDoc as any).output === 'function', 'PDF instance supports binary output generation');
+
+  console.log('\n📌 Testing Circulars & Legal Materials Domain Service:');
+  const allCirculars = await circularService.getCirculars();
+  assert(allCirculars.length >= 8, 'Seeded Indian Constitution & legal catalog loaded successfully');
+
+  const constDoc = allCirculars.find(c => c.id === 'circ-const-india-01');
+  assert(Boolean(constDoc), 'Constitutional Lex category contains Constitution of India');
+  assert(Boolean(constDoc?.title.includes('Constitution of India')), 'Correctly includes Constitution of India title');
+
+  const bnsDoc = allCirculars.find(c => c.shortTitle.includes('BNS'));
+  assert(Boolean(bnsDoc), 'Statutory Acts category contains Bharatiya Nyaya Sanhita (BNS 2023)');
+
+  const categoryCounts = await circularService.getCategoryCounts();
+  assert(typeof categoryCounts === 'object' && categoryCounts.all >= 8, 'Category counts returned with total documents');
+  assert(categoryCounts.constitution > 0, 'Constitutional category has active documents');
+
+  // Search test
+  const searchResults = await circularService.getCirculars({ search: 'Bharatiya' });
+  assert(searchResults.length >= 2, 'Search query for "Bharatiya" matches BNS and BNSS');
+
+  // CRUD Lifecycle
+  const testCirc = await circularService.createCircular({
+    title: 'Model Guidelines on Indic Civilizational Jurisprudence',
+    shortTitle: 'Indic Jurisprudence Guidelines',
+    circularNumber: 'BCF-CIRC-TEST-2026',
+    category: 'guidelines',
+    issuingAuthority: 'Bharat Collective Legal Secretariat',
+    summary: 'Test legal guideline document for automated verification.',
+    keyProvisions: ['§ 1. Dharmic Rule of Law', '§ 2. Nyaya Principles'],
+    tags: ['Test', 'Jurisprudence'],
+    status: 'published'
+  });
+  assert(testCirc.id.startsWith('circ-'), 'New circular created with valid ID prefix');
+
+  const updatedCirc = await circularService.updateCircular(testCirc.id, { shortTitle: 'Updated Guidelines' });
+  assert(updatedCirc.shortTitle === 'Updated Guidelines', 'Circular updated reactively');
+
+  const toggledCirc = await circularService.togglePublish(testCirc.id);
+  assert(toggledCirc.status === 'draft', 'Circular status toggles from published to draft');
+
+  const downloads = await circularService.incrementDownloads(testCirc.id);
+  assert(downloads === 1, 'Download counter increments correctly');
+
+  // PDF Generation for Circulars
+  const circPdf = pdfService.buildCircularPdf(testCirc);
+  assert(circPdf !== null && typeof circPdf === 'object', 'Circular legal compendium PDF built successfully');
+  assert(typeof pdfService.downloadCircularPdf === 'function', 'Circular PDF download method is available');
+
+  // Cleanup
+  await circularService.deleteCircular(testCirc.id);
+  const afterDelete = await circularService.getCircularById(testCirc.id);
+  assert(afterDelete === null, 'Test circular cleaned up successfully');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

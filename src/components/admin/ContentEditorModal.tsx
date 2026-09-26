@@ -10,16 +10,20 @@ import {
   Upload,
   Sparkles,
   BellRing,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Scale,
+  FileText
 } from 'lucide-react';
 import { Publication, PublicationCategory, ContentStatus } from '../../types/publication';
+import { Circular, CircularCategory, CircularStatus } from '../../types/circular';
 import { EventItem, EventCategory } from '../../types/event';
 import { ResearchDomain } from '../../types/research';
 import { ScholarExpert, ExpertRole } from '../../types/expert';
 import { NewsArticle } from '../../types/news';
 import { ImageUploadWithUrl } from './ImageUploadWithUrl';
+import { PdfUploadWithUrl } from './PdfUploadWithUrl';
 
-export type ContentEntityType = 'publication' | 'event' | 'research' | 'expert' | 'news';
+export type ContentEntityType = 'publication' | 'circular' | 'event' | 'research' | 'expert' | 'news';
 
 interface ContentEditorModalProps {
   isOpen: boolean;
@@ -56,11 +60,40 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
         mapped.venue = initialData.venue || initialData.location || '';
       } else if (type === 'publication') {
         mapped.publicationDate = initialData.publicationDate || initialData.publishedDate || new Date().toISOString().split('T')[0];
+      } else if (type === 'circular') {
+        mapped.keyProvisions = Array.isArray(initialData.keyProvisions)
+          ? initialData.keyProvisions.join('\n')
+          : (initialData.keyProvisions || '');
+        mapped.tags = Array.isArray(initialData.tags)
+          ? initialData.tags.join(', ')
+          : (initialData.tags || '');
       }
       setFormData(mapped);
     } else {
       // Default initial states based on type
-      if (type === 'publication') {
+      if (type === 'circular') {
+        setFormData({
+          title: '',
+          shortTitle: '',
+          circularNumber: `BCF-LEG-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+          category: 'guidelines' as CircularCategory,
+          issuingAuthority: 'Bharat Collective Legal Secretariat',
+          releaseDate: new Date().toISOString().split('T')[0],
+          effectiveDate: new Date().toISOString().split('T')[0],
+          summary: '',
+          keyProvisions: '§ 1. Institutional Governance Scope\n§ 2. Procedural Guidelines & Standard Operating Procedures\n§ 3. Statutory Compliance and Redressal',
+          pdfUrl: '',
+          pdfDataUrl: '',
+          fileName: 'Official_Circular.pdf',
+          fileSize: '1.2 MB',
+          pageCount: 16,
+          language: 'English',
+          important: false,
+          status: 'published' as CircularStatus,
+          tags: 'Legal, Guidelines, Policy, Constitution',
+          contentPreview: ''
+        });
+      } else if (type === 'publication') {
         setFormData({
           title: '',
           authors: 'Dr. Scholar Name',
@@ -173,6 +206,16 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
         payload.publicationDate = payload.publishedDate;
         if (!payload.pages) payload.pages = 32;
         if (!payload.authors || payload.authors.length === 0) payload.authors = ['Editorial Desk'];
+      } else if (type === 'circular') {
+        payload.shortTitle = payload.shortTitle || payload.title;
+        if (typeof payload.keyProvisions === 'string') {
+          payload.keyProvisions = payload.keyProvisions.split('\n').map((s: string) => s.trim()).filter(Boolean);
+        }
+        if (typeof payload.tags === 'string') {
+          payload.tags = payload.tags.split(',').map((s: string) => s.trim()).filter(Boolean);
+        }
+        if (!payload.pageCount) payload.pageCount = 12;
+        if (!payload.fileName) payload.fileName = `${(payload.shortTitle || 'Circular').replace(/\s+/g, '_')}.pdf`;
       }
 
       await onSave(type, payload, notifyUsers);
@@ -187,6 +230,7 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
   const getModalTitle = () => {
     const action = isEditing ? 'Edit' : 'Create / Add New';
     switch (type) {
+      case 'circular': return `${action} Circular / Legal Guideline`;
       case 'publication': return `${action} Research Publication / Monograph`;
       case 'event': return `${action} Symposium / Dialogue Event`;
       case 'research': return `${action} Research Domain / Center`;
@@ -206,6 +250,7 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
         <div className="bg-slate-900 text-white p-5 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center space-x-2.5">
             <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+              {type === 'circular' && <Scale className="w-5 h-5" />}
               {type === 'publication' && <BookOpen className="w-5 h-5" />}
               {type === 'event' && <Calendar className="w-5 h-5" />}
               {type === 'research' && <Compass className="w-5 h-5" />}
@@ -236,6 +281,179 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
             <div className="p-3 rounded-xl bg-red-50 text-red-800 border border-red-200 text-xs">
               {error}
             </div>
+          )}
+
+          {/* 0. CIRCULAR & LEGAL FIELDS */}
+          {type === 'circular' && (
+            <>
+              <div className="space-y-1">
+                <label className="font-bold text-slate-900">Document Full Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title || ''}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g. The Constitution of India (With Preamble & Key Amendments)"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-900">Short / Citation Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.shortTitle || ''}
+                    onChange={e => setFormData({ ...formData, shortTitle: e.target.value })}
+                    placeholder="e.g. Constitution of India"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-900">Document Category *</label>
+                  <select
+                    value={formData.category || 'guidelines'}
+                    onChange={e => setFormData({ ...formData, category: e.target.value as CircularCategory })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold"
+                  >
+                    <option value="constitution">Constitutional Framework & Amendment</option>
+                    <option value="acts_statutes">Central Act & Statutory Code</option>
+                    <option value="circulars_rules">Administrative Circular & Rules</option>
+                    <option value="guidelines">Legal Guideline & Advisory</option>
+                    <option value="model_bills">Model Legislative Bill & Blueprint</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-900">Gazette Ref / Circular Number *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.circularNumber || ''}
+                    onChange={e => setFormData({ ...formData, circularNumber: e.target.value })}
+                    placeholder="e.g. Act No. 45 of 2023 • Gazette Ext. Part II"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-900">Issuing Authority / Ministry *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.issuingAuthority || ''}
+                    onChange={e => setFormData({ ...formData, issuingAuthority: e.target.value })}
+                    placeholder="e.g. Ministry of Law & Justice, Govt. of India"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-900">Release / Gazette Date</label>
+                  <input
+                    type="date"
+                    value={formData.releaseDate || ''}
+                    onChange={e => setFormData({ ...formData, releaseDate: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-900">Effective Date</label>
+                  <input
+                    type="date"
+                    value={formData.effectiveDate || ''}
+                    onChange={e => setFormData({ ...formData, effectiveDate: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-900">Official Language</label>
+                  <select
+                    value={formData.language || 'English'}
+                    onChange={e => setFormData({ ...formData, language: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
+                  >
+                    <option value="English">English</option>
+                    <option value="Hindi">Hindi</option>
+                    <option value="Bilingual">Bilingual (English + Hindi)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-900">Statement of Objects & Scope *</label>
+                <textarea
+                  rows={3}
+                  required
+                  value={formData.summary || ''}
+                  onChange={e => setFormData({ ...formData, summary: e.target.value })}
+                  placeholder="Comprehensive summary of legislative scope, historical context, constitutional background..."
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-900">Key Statutory Provisions (One item per line)</label>
+                <textarea
+                  rows={3}
+                  value={formData.keyProvisions || ''}
+                  onChange={e => setFormData({ ...formData, keyProvisions: e.target.value })}
+                  placeholder="§ 1. Preamble & Constitutional Foundation&#10;§ 2. Fundamental Rights and Judicial Review&#10;§ 3. Directive Principles of State Policy"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-xs font-mono"
+                />
+              </div>
+
+              {/* Drag & Drop PDF Document Zone */}
+              <PdfUploadWithUrl
+                label="Official Document PDF (Drag & Drop or Gazette URL)"
+                value={formData.pdfDataUrl || formData.pdfUrl || ''}
+                fileName={formData.fileName}
+                fileSize={formData.fileSize}
+                onChange={({ url, fileName, fileSize, pageCount }) => {
+                  setFormData({
+                    ...formData,
+                    pdfDataUrl: url.startsWith('data:') ? url : '',
+                    pdfUrl: url.startsWith('data:') ? '' : url,
+                    fileName: fileName || formData.fileName,
+                    fileSize: fileSize || formData.fileSize,
+                    pageCount: pageCount || formData.pageCount || 12,
+                  });
+                }}
+                helperText="Upload official PDF file or link external gazette document"
+              />
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-900">Taxonomy & Citation Tags (Comma separated)</label>
+                <input
+                  type="text"
+                  value={formData.tags || ''}
+                  onChange={e => setFormData({ ...formData, tags: e.target.value })}
+                  placeholder="Constitution, Article 44, Criminal Code, Bare Act"
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2 border-t border-slate-100">
+                <input
+                  type="checkbox"
+                  id="important-circ"
+                  checked={Boolean(formData.important)}
+                  onChange={e => setFormData({ ...formData, important: e.target.checked })}
+                  className="rounded text-amber-600 focus:ring-amber-500"
+                />
+                <label htmlFor="important-circ" className="text-xs font-medium text-slate-800">
+                  Pin as Landmark / Priority Legal Document
+                </label>
+              </div>
+            </>
           )}
 
           {/* 1. PUBLICATION FIELDS */}

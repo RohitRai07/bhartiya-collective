@@ -174,6 +174,90 @@ export const fileService = {
   },
 
   /**
+   * Convert an uploaded PDF file into a persistent Data URL (base64) for client-side storage & download
+   */
+  async uploadPdfAsDataUrl(
+    file: File
+  ): Promise<{
+    url: string;
+    name: string;
+    sizeKb: number;
+    mimeType: string;
+    pageCountEstimate?: number;
+  }> {
+    return new Promise((resolve, reject) => {
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      if (!isPdf) {
+        return reject(new Error('Please upload a valid PDF document (.pdf file extension).'));
+      }
+
+      if (file.size > 20 * 1024 * 1024) {
+        return reject(new Error('File exceeds maximum 20 MB size limit for browser upload.'));
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const rawDataUrl = e.target?.result as string;
+        const sizeKb = Math.round(file.size / 1024);
+        // Estimate ~50KB per page as a basic heuristic
+        const pageCountEstimate = Math.max(1, Math.round(sizeKb / 55));
+
+        const result = {
+          url: rawDataUrl,
+          name: file.name,
+          sizeKb,
+          mimeType: 'application/pdf',
+          pageCountEstimate,
+        };
+
+        this.saveToPdfLibrary(result);
+        resolve(result);
+      };
+
+      reader.onerror = () => reject(new Error('Failed to read PDF file.'));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  /**
+   * Save uploaded PDF to persistent PDF document library
+   */
+  saveToPdfLibrary(item: { name: string; url: string; sizeKb: number; mimeType?: string }) {
+    if (typeof window === 'undefined') return;
+    try {
+      const KEY = 'bharat_collective_pdf_library';
+      const raw = localStorage.getItem(KEY);
+      const existing = raw ? JSON.parse(raw) : [];
+      const newEntry = {
+        id: `pdf-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: item.name,
+        url: item.url,
+        sizeKb: item.sizeKb,
+        uploadedAt: new Date().toISOString(),
+      };
+      // Keep most recent 15 PDFs
+      const updated = [newEntry, ...existing.filter((m: any) => m.name !== item.name)].slice(0, 15);
+      localStorage.setItem(KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Could not save to PDF library (quota warning):', e);
+    }
+  },
+
+  /**
+   * Get all stored PDFs from the library
+   */
+  getPdfLibrary(): { id: string; name: string; url: string; sizeKb: number; uploadedAt: string }[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const KEY = 'bharat_collective_pdf_library';
+      const raw = localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  /**
    * Save uploaded image to persistent Admin Media Library
    */
   saveToMediaLibrary(item: { name: string; url: string; sizeKb: number; mimeType?: string }) {

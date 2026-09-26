@@ -8,6 +8,7 @@ import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
 import { ResearchPage } from './pages/ResearchPage';
 import { PublicationsPage } from './pages/PublicationsPage';
+import { CircularsPage } from './pages/CircularsPage';
 import { EventsPage } from './pages/EventsPage';
 import { NewsPage } from './pages/NewsPage';
 import { RegistrationPage } from './pages/RegistrationPage';
@@ -65,6 +66,8 @@ export function App() {
         return <ResearchPage />;
       case '/publications':
         return <PublicationsPage />;
+      case '/circulars':
+        return <CircularsPage onNavigate={navigateTo} />;
       case '/events':
         return <EventsPage onNavigate={navigateTo} />;
       case '/news':

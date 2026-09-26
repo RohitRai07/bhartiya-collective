@@ -5,6 +5,7 @@ import { newsletterService } from '../services/newsletterService';
 import { authService } from '../services/authService';
 import { publicationService } from '../services/publicationService';
 import { pdfService } from '../services/pdfService';
+import { circularService } from '../services/circularService';
 import { eventService } from '../services/eventService';
 import { researchService } from '../services/researchService';
 import { expertService } from '../services/expertService';
@@ -16,6 +17,7 @@ import { UserRegistrationRecord } from '../types/registration';
 import { PaperSubmissionRecord, PaperSubmissionStatus } from '../types/submission';
 import { AuthSession, AdminCredentials } from '../types/auth';
 import { Publication } from '../types/publication';
+import { Circular } from '../types/circular';
 import { EventItem } from '../types/event';
 import { ResearchDomain } from '../types/research';
 import { ScholarExpert } from '../types/expert';
@@ -65,7 +67,8 @@ import {
   SendHorizontal,
   UploadCloud,
   Image as ImageIcon,
-  ExternalLink
+  ExternalLink,
+  Scale
 } from 'lucide-react';
 
 interface AdminPreviewPageProps {
@@ -73,7 +76,7 @@ interface AdminPreviewPageProps {
 }
 
 type MainTab = 'registrations' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings';
-type ContentSubTab = 'publications' | 'events' | 'research' | 'experts' | 'news' | 'media';
+type ContentSubTab = 'publications' | 'circulars' | 'events' | 'research' | 'experts' | 'news' | 'media';
 
 export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPublicSite }) => {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -90,6 +93,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
   // Content state
   const [publications, setPublications] = useState<Publication[]>([]);
+  const [circulars, setCirculars] = useState<Circular[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [domains, setDomains] = useState<ResearchDomain[]>([]);
   const [experts, setExperts] = useState<ScholarExpert[]>([]);
@@ -166,10 +170,11 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [regs, subs, pubs, evts, doms, exps, nws, logs] = await Promise.all([
+      const [regs, subs, pubs, circs, evts, doms, exps, nws, logs] = await Promise.all([
         registrationService.getRegistrations(),
         submissionService.getSubmissions(),
         publicationService.getPublications({ includeDrafts: true }),
+        circularService.getCirculars({ includeDrafts: true }),
         eventService.getEvents(true),
         researchService.getDomains(true),
         expertService.getExperts({ includeArchived: true }),
@@ -180,6 +185,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       setRegistrations(regs || []);
       setSubmissions(subs || []);
       setPublications(pubs || []);
+      setCirculars(circs || []);
       setEvents(evts || []);
       setDomains(doms || []);
       setExperts(exps || []);
@@ -365,7 +371,13 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   };
 
   const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers: boolean) => {
-    if (type === 'publication') {
+    if (type === 'circular') {
+      if (editingItem?.id) {
+        await circularService.updateCircular(editingItem.id, data);
+      } else {
+        await circularService.createCircular(data);
+      }
+    } else if (type === 'publication') {
       if (editingItem?.id) {
         await publicationService.updatePublication(editingItem.id, data);
       } else {
@@ -416,6 +428,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
   const handleDeleteContent = async (type: ContentEntityType, id: string) => {
     if (!window.confirm('Are you sure you wish to delete this item?')) return;
+    if (type === 'circular') await circularService.deleteCircular(id);
     if (type === 'publication') await publicationService.deletePublication(id);
     if (type === 'event') await eventService.deleteEvent(id);
     if (type === 'research') await researchService.deleteDomain(id);
@@ -425,6 +438,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   };
 
   const handleTogglePublish = async (type: ContentEntityType, id: string) => {
+    if (type === 'circular') await circularService.togglePublish(id);
     if (type === 'publication') await publicationService.togglePublish(id);
     if (type === 'event') await eventService.togglePublish(id);
     if (type === 'news') await newsService.togglePublish(id);
@@ -878,6 +892,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
                 {[
                   { id: 'publications', label: `Publications (${publications.length})`, icon: BookOpen },
+                  { id: 'circulars', label: `Circulars & Legal (${circulars.length})`, icon: Scale },
                   { id: 'events', label: `Symposia & Events (${events.length})`, icon: Calendar },
                   { id: 'research', label: `Research Domains (${domains.length})`, icon: Compass },
                   { id: 'experts', label: `Council & Fellows (${experts.length})`, icon: Users },
@@ -909,6 +924,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     onClick={() => {
                       const typeMap: Record<string, ContentEntityType> = {
                         publications: 'publication',
+                        circulars: 'circular',
                         events: 'event',
                         research: 'research',
                         experts: 'expert',
@@ -924,6 +940,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     <span>
                       Add New {
                         contentSubTab === 'publications' ? 'Publication' :
+                        contentSubTab === 'circulars' ? 'Legal Circular' :
                         contentSubTab === 'events' ? 'Event' :
                         contentSubTab === 'research' ? 'Domain' :
                         contentSubTab === 'experts' ? 'Scholar' : 'Article'
@@ -1009,6 +1026,118 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                               onClick={() => handleDeleteContent('publication', p.id)}
                               className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
                               title="Delete Publication"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* 1.5 CIRCULARS & LEGAL GUIDELINES TABLE */}
+            {contentSubTab === 'circulars' && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                      <tr>
+                        <th className="p-3.5">Title & Reference</th>
+                        <th className="p-3.5">Category</th>
+                        <th className="p-3.5">Issuing Authority</th>
+                        <th className="p-3.5">Enacted Date</th>
+                        <th className="p-3.5">PDF Document</th>
+                        <th className="p-3.5">Status</th>
+                        <th className="p-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {circulars.map(c => (
+                        <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3.5 max-w-sm">
+                            <div className="flex items-center space-x-1.5">
+                              {c.important && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-500 text-white shrink-0">
+                                  Landmark
+                                </span>
+                              )}
+                              <span className="font-serif font-bold text-slate-900 text-xs truncate">
+                                {c.shortTitle || c.title}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-mono mt-0.5 block truncate">
+                              {c.circularNumber}
+                            </span>
+                          </td>
+                          <td className="p-3.5">
+                            <span className="text-[10px] uppercase font-semibold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded">
+                              {c.category.replace(/_/g, ' ')}
+                            </span>
+                          </td>
+                          <td className="p-3.5 text-slate-700 max-w-xs truncate">
+                            {c.issuingAuthority}
+                          </td>
+                          <td className="p-3.5 text-slate-600 font-mono text-[11px] whitespace-nowrap">
+                            {c.releaseDate}
+                          </td>
+                          <td className="p-3.5 whitespace-nowrap">
+                            {c.pdfDataUrl ? (
+                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                <span>Uploaded PDF</span>
+                                <span className="font-mono text-[9px] text-emerald-700">({c.fileSize || 'Local'})</span>
+                              </span>
+                            ) : c.pdfUrl && c.pdfUrl !== '#' ? (
+                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                                <span>Gazette Link</span>
+                                <span className="font-mono text-[9px] text-blue-700">({c.fileSize || 'PDF'})</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">
+                                Institutional PDF
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3.5">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              c.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                            }`}>
+                              {c.status || 'published'}
+                            </span>
+                          </td>
+                          <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await pdfService.downloadCircularPdf(c);
+                                } catch (e) {
+                                  alert('Error downloading circular PDF');
+                                }
+                              }}
+                              className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded transition-colors inline-flex cursor-pointer"
+                              title="Download Official Legal PDF"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleTogglePublish('circular', c.id)}
+                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
+                            >
+                              {c.status === 'published' ? 'Unpublish' : 'Publish'}
+                            </button>
+                            <button
+                              onClick={() => handleOpenEditContent('circular', c)}
+                              className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition-colors inline-flex cursor-pointer"
+                              title="Edit Circular / Guidelines"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteContent('circular', c.id)}
+                              className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
+                              title="Delete Circular"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>

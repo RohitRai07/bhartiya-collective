@@ -15,6 +15,7 @@ export const navigationConfig = {
     { id: 'about', label: 'About', path: '/about' },
     { id: 'research', label: 'Research', path: '/research', featureFlag: 'research' },
     { id: 'publications', label: 'Publications', path: '/publications', featureFlag: 'publications' },
+    { id: 'circulars', label: 'Circulars & Legal', path: '/circulars' },
     { id: 'events', label: 'Events', path: '/events', featureFlag: 'events' },
     { id: 'news', label: 'Insights & News', path: '/news' },
     { id: 'contact', label: 'Contact', path: '/contact' },
@@ -27,6 +28,7 @@ export const navigationConfig = {
 
   footerNav: {
     initiatives: [
+      { id: 'circulars-legal', label: 'Statutory Circulars & Lex', path: '/circulars' },
       { id: 'research-domains', label: 'Research Domains', path: '/research' },
       { id: 'monographs', label: 'Monographs & Papers', path: '/publications' },
       { id: 'symposia', label: 'National Symposia', path: '/events' },
