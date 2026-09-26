@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Circular, CircularCategory } from '../types/circular';
 import { circularService } from '../services/circularService';
 import { taxonomyService } from '../services/taxonomyService';
+import { gazetteSyncService, OfficialGazetteFeed } from '../services/gazetteSyncService';
 import { CircularCard } from '../components/circulars/CircularCard';
 import { CircularPreviewModal } from '../components/circulars/CircularPreviewModal';
 import { 
@@ -17,7 +18,11 @@ import {
   RotateCcw,
   CheckCircle2,
   FileCheck2,
-  Tag
+  Tag,
+  ShieldCheck,
+  RefreshCw,
+  Radio,
+  ExternalLink
 } from 'lucide-react';
 
 interface CircularsPageProps {
@@ -35,6 +40,9 @@ export const CircularsPage: React.FC<CircularsPageProps> = () => {
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [dynamicCategories, setDynamicCategories] = useState(taxonomyService.getOptions('circular_category'));
   const [tagsPool, setTagsPool] = useState<string[]>(taxonomyService.getTags());
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [syncSettings, setSyncSettings] = useState(gazetteSyncService.getSyncSettings());
 
   const loadData = async () => {
     try {
@@ -54,18 +62,53 @@ export const CircularsPage: React.FC<CircularsPageProps> = () => {
 
   useEffect(() => {
     loadData();
+    // Initialize auto-sync background check if enabled
+    gazetteSyncService.initAutoSync();
+
     const handleUpdate = () => {
       loadData();
       setDynamicCategories(taxonomyService.getOptions('circular_category'));
       setTagsPool(taxonomyService.getTags());
     };
+
+    const handleGazetteSync = (e: any) => {
+      if (e.detail?.message) {
+        setSyncMessage(e.detail.message);
+        setTimeout(() => setSyncMessage(null), 6000);
+      }
+      loadData();
+      setSyncSettings(gazetteSyncService.getSyncSettings());
+    };
+
     window.addEventListener('bharat:content-updated', handleUpdate);
     window.addEventListener('bharat:taxonomy-updated', handleUpdate);
+    window.addEventListener('bharat:gazette-synced', handleGazetteSync);
     return () => {
       window.removeEventListener('bharat:content-updated', handleUpdate);
       window.removeEventListener('bharat:taxonomy-updated', handleUpdate);
+      window.removeEventListener('bharat:gazette-synced', handleGazetteSync);
     };
   }, []);
+
+  const handleTriggerSync = async () => {
+    try {
+      setSyncing(true);
+      const res = await gazetteSyncService.syncNow();
+      setSyncMessage(res.message);
+      setTimeout(() => setSyncMessage(null), 6000);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to sync with official gazette repository');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleToggleAutoSync = () => {
+    const next = !syncSettings.autoSyncEnabled;
+    const updated = gazetteSyncService.updateSyncSettings({ autoSyncEnabled: next });
+    setSyncSettings(updated);
+  };
 
   // Filter and sort items
   const filteredCirculars = circulars
@@ -155,6 +198,85 @@ export const CircularsPage: React.FC<CircularsPageProps> = () => {
             <span>Updated with Bharatiya Nyaya Sanhita (2024)</span>
           </span>
         </div>
+      </div>
+
+      {/* 1.5 OFFICIAL E-GAZETTE LIVE AUTO-SYNC & SOURCE VALIDATION COMMAND STRIP */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950 text-white rounded-2xl p-4 sm:p-5 border border-slate-800 shadow-md space-y-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          
+          {/* Left side: Live feed status & source provenance info */}
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center space-x-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>e-Gazette Live Auto-Sync Active</span>
+              </span>
+
+              <span className="text-[11px] text-slate-300 hidden sm:inline">
+                Synchronized with <span className="text-amber-300 font-mono">egazette.gov.in</span> & <span className="text-amber-300 font-mono">legislative.gov.in</span>
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
+              Official automated pipeline for Indian statutory notifications. When new bare acts, statutory circulars, or practice directions are enacted, they are automatically discovered, cross-referenced, and ingested with verified government links for citizen double-validation.
+            </p>
+
+            {syncSettings.lastSyncedAt && (
+              <p className="text-[10px] text-slate-400 font-mono">
+                Last verified against official gazette repository: {new Date(syncSettings.lastSyncedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST
+              </p>
+            )}
+          </div>
+
+          {/* Right side: Sync trigger & controls */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            
+            {/* Auto-Sync Toggle */}
+            <button
+              type="button"
+              onClick={handleToggleAutoSync}
+              className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all flex items-center space-x-1.5 cursor-pointer ${
+                syncSettings.autoSyncEnabled
+                  ? 'bg-slate-800 text-emerald-300 border-emerald-500/40 hover:bg-slate-700'
+                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+              }`}
+              title="Toggle automatic background sync when new gazettes are released"
+            >
+              <Radio className={`w-3.5 h-3.5 ${syncSettings.autoSyncEnabled ? 'text-emerald-400' : 'text-slate-500'}`} />
+              <span>Auto-Sync: {syncSettings.autoSyncEnabled ? 'ON' : 'OFF'}</span>
+            </button>
+
+            {/* Sync Now Button */}
+            <button
+              type="button"
+              onClick={handleTriggerSync}
+              disabled={syncing}
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-70 text-slate-950 font-bold text-xs transition-all flex items-center space-x-2 shadow-xs cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+              <span>{syncing ? 'Checking e-Gazette...' : '⚡ Check for New Gazettes'}</span>
+            </button>
+
+          </div>
+
+        </div>
+
+        {/* Sync Result Banner */}
+        {syncMessage && (
+          <div className="p-3 bg-emerald-950/80 border border-emerald-500/40 rounded-xl text-xs text-emerald-200 flex items-center justify-between animate-in fade-in duration-200">
+            <div className="flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{syncMessage}</span>
+            </div>
+            <button
+              onClick={() => setSyncMessage(null)}
+              className="text-emerald-400 hover:text-white text-xs font-bold ml-2 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
       </div>
 
       {/* 2. STATS STRIP */}

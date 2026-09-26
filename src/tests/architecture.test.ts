@@ -19,6 +19,7 @@ import { fileService } from '../services/fileService';
 import { pdfService } from '../services/pdfService';
 import { circularService } from '../services/circularService';
 import { taxonomyService } from '../services/taxonomyService';
+import { gazetteSyncService } from '../services/gazetteSyncService';
 import { UserRegistrationInput } from '../types/registration';
 
 async function runTests() {
@@ -318,6 +319,46 @@ async function runTests() {
   taxonomyService.removeTag('Jan Vishwas Act');
   assert(!taxonomyService.getTags().includes('Jan Vishwas Act'), 'Tag deleted successfully from pool');
   assert(taxonomyService.getTags().length === initialTagsCount, 'Tags count restores accurately after deletion');
+
+  // 13. e-Gazette Auto-Sync & Official Government Source Double-Validation Suite
+  console.log('\n📌 Testing e-Gazette Auto-Sync & Official Government Source Double-Validation:');
+  const feeds = gazetteSyncService.getOfficialFeeds();
+  assert(feeds.length >= 5, 'Official Government of India feeds configured');
+  assert(feeds.some(f => f.verifiedDomain === 'egazette.gov.in'), 'e-Gazette of India (egazette.gov.in) configured');
+  assert(feeds.some(f => f.verifiedDomain === 'legislative.gov.in'), 'Legislative Department (legislative.gov.in) configured');
+  assert(feeds.some(f => f.verifiedDomain === 'sci.gov.in'), 'Supreme Court of India (sci.gov.in) configured');
+
+  // Seeded circulars verify source links
+  const seededList = await circularService.getCirculars();
+  const coi = seededList.find(c => c.id === 'circ-const-india-01');
+  assert(Boolean(coi?.sourceUrl), 'Constitution of India has official government source URL');
+  assert(coi?.sourceUrl?.includes('legislative.gov.in'), 'Constitution source points to authentic legislative.gov.in repository');
+  assert(Boolean(coi?.sourceName), 'Constitution has verified official issuing authority source name');
+
+  // Pending gazettes detection
+  const pendingGazettes = await gazetteSyncService.checkForNewGazettes();
+  assert(Array.isArray(pendingGazettes) && pendingGazettes.length > 0, 'Discovers pending un-ingested gazettes from live catalog');
+  assert(pendingGazettes.some(g => g.shortTitle?.includes('BSA')), 'Includes Bharatiya Sakshya Adhiniyam (BSA 2023) in live gazette catalog');
+  assert(pendingGazettes.some(g => g.shortTitle?.includes('Telecommunications')), 'Includes Telecommunications Act 2023 in live gazette catalog');
+
+  // Execute live sync
+  const syncResult = await gazetteSyncService.syncNow();
+  assert(syncResult.syncedCount > 0, 'Successfully auto-syncs newly discovered statutory gazettes');
+  assert(syncResult.newlyAdded.length === syncResult.syncedCount, 'Returns newly ingested statutory records');
+  assert(syncResult.newlyAdded.every(c => c.isAutoSynced && Boolean(c.sourceUrl)), 'All auto-synced circulars carry isAutoSynced flag and official sourceUrl');
+  assert(syncResult.newlyAdded.some(c => c.sourceUrl?.includes('.gov.in')), 'Auto-synced circulars contain authentic .gov.in double-validation links');
+
+  // Second sync should be idempotent (prevent duplicate additions)
+  const secondSync = await gazetteSyncService.syncNow();
+  assert(secondSync.syncedCount === 0, 'Second sync correctly detects 0 new items (prevents duplicate gazette ingestion)');
+
+  // Auto-sync configuration settings
+  const originalSettings = gazetteSyncService.getSyncSettings();
+  assert(typeof originalSettings.autoSyncEnabled === 'boolean', 'Auto-sync settings contain boolean flag');
+  const updatedSettings = gazetteSyncService.updateSyncSettings({ autoSyncEnabled: false });
+  assert(updatedSettings.autoSyncEnabled === false, 'Auto-sync toggle settings persisted');
+  gazetteSyncService.updateSyncSettings({ autoSyncEnabled: true });
+  assert(gazetteSyncService.getSyncSettings().autoSyncEnabled === true, 'Auto-sync toggle restored to active state');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

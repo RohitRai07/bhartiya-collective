@@ -177,6 +177,69 @@ export const CircularPreviewModal: React.FC<CircularPreviewModalProps> = ({
             </div>
           </div>
 
+          {/* Official Government Provenance & Double-Validation Card */}
+          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white rounded-2xl p-5 border border-slate-700/80 shadow-sm space-y-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-serif font-bold text-sm text-white">
+                    Official Gazette Provenance & Double-Validation
+                  </h4>
+                  <p className="text-[11px] text-slate-300">
+                    Cross-referenced against verified statutory repositories of the Government of India
+                  </p>
+                </div>
+              </div>
+
+              {circular.isAutoSynced && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30">
+                  ⚡ Auto-Synced from e-Gazette
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800 text-xs">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                  Official Source / Repository:
+                </span>
+                <span className="font-semibold text-amber-300 block truncate">
+                  {circular.sourceName || 'e-Gazette of India (egazette.gov.in)'}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                  Statutory Citation:
+                </span>
+                <span className="font-mono text-slate-200 block truncate">
+                  {circular.circularNumber}
+                </span>
+              </div>
+            </div>
+
+            {circular.sourceUrl && (
+              <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-slate-800/80">
+                <p className="text-[11px] text-slate-300">
+                  Citizens & advocates may independently cross-check this legal notification on the authentic government portal.
+                </p>
+                <a
+                  href={circular.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors flex items-center justify-center space-x-1.5 shrink-0 shadow-xs cursor-pointer"
+                  title="Verify on official Government of India portal"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Double-Validate on Official Portal ↗</span>
+                </a>
+              </div>
+            )}
+          </div>
+
           {/* Key Provisions */}
           {circular.keyProvisions && circular.keyProvisions.length > 0 && (
             <div className="space-y-3">
@@ -252,7 +315,21 @@ export const CircularPreviewModal: React.FC<CircularPreviewModalProps> = ({
 
           <div className="flex items-center space-x-2 justify-end">
             
-            {circular.pdfUrl && circular.pdfUrl !== '#' && (
+            {circular.sourceUrl && (
+              <a
+                href={circular.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 font-semibold transition-colors flex items-center space-x-1.5 cursor-pointer"
+                title={`Open official portal: ${circular.sourceName || circular.sourceUrl}`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Verify Source</span>
+                <ExternalLink className="w-3 h-3 text-emerald-700" />
+              </a>
+            )}
+
+            {circular.pdfUrl && circular.pdfUrl !== '#' && circular.pdfUrl !== circular.sourceUrl && (
               <a
                 href={circular.pdfUrl}
                 target="_blank"
@@ -260,7 +337,7 @@ export const CircularPreviewModal: React.FC<CircularPreviewModalProps> = ({
                 className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 font-semibold transition-colors flex items-center space-x-1.5 cursor-pointer"
               >
                 <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
-                <span>Open Gazette Link</span>
+                <span>External Gazette</span>
               </a>
             )}
 

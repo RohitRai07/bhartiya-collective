@@ -15,7 +15,8 @@ import {
   CheckCircle2, 
   Loader2, 
   Sparkles,
-  Layers
+  Layers,
+  ShieldCheck
 } from 'lucide-react';
 
 interface CircularCardProps {
@@ -94,6 +95,16 @@ export const CircularCard: React.FC<CircularCardProps> = ({
                 Landmark
               </span>
             )}
+
+            {circular.isAutoSynced && (
+              <span 
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-950 border border-sky-300 shadow-2xs"
+                title="Automatically discovered & synchronized from Government of India e-Gazette / Ministry portal"
+              >
+                <ShieldCheck className="w-2.5 h-2.5 mr-1 text-sky-700" />
+                e-Gazette Synced
+              </span>
+            )}
           </div>
 
           <span className="text-[11px] font-mono text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 truncate max-w-[200px]" title={circular.circularNumber}>
@@ -163,6 +174,32 @@ export const CircularCard: React.FC<CircularCardProps> = ({
           </div>
         )}
 
+        {/* Official Source Provenance & Verification Link */}
+        {(circular.sourceName || circular.sourceUrl) && (
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <div className="flex items-center space-x-1.5 truncate">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+              <span className="truncate">
+                <span className="font-semibold text-slate-700">Official Source: </span>
+                {circular.sourceName || 'e-Gazette of India (egazette.gov.in)'}
+              </span>
+            </div>
+            {circular.sourceUrl && (
+              <a
+                href={circular.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-amber-800 hover:text-amber-950 font-bold flex items-center space-x-0.5 shrink-0 ml-2 hover:underline"
+                title="Double-validate this enactment on official Government of India portal"
+              >
+                <span>Verify</span>
+                <ExternalLink className="w-2.5 h-2.5 opacity-80" />
+              </a>
+            )}
+          </div>
+        )}
+
       </div>
 
       {/* Footer Action Bar */}
@@ -194,6 +231,21 @@ export const CircularCard: React.FC<CircularCardProps> = ({
           >
             {copiedCitation ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
+
+          {circular.sourceUrl && (
+            <a
+              href={circular.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-emerald-800 hover:text-emerald-950 font-semibold transition-all flex items-center space-x-1 cursor-pointer shadow-2xs"
+              title={`Double-validate on official portal: ${circular.sourceName || circular.sourceUrl}`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+              <span className="hidden sm:inline">Verify Source</span>
+              <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+            </a>
+          )}
 
           <button
             type="button"

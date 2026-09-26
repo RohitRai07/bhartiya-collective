@@ -34,6 +34,7 @@ import { ContentEditorModal, ContentEntityType } from '../components/admin/Conte
 import { ImageUploadWithUrl } from '../components/admin/ImageUploadWithUrl';
 import { TaxonomyManager } from '../components/admin/TaxonomyManager';
 import { taxonomyService } from '../services/taxonomyService';
+import { gazetteSyncService } from '../services/gazetteSyncService';
 
 import { 
   ShieldCheck, 
@@ -43,6 +44,7 @@ import {
   Archive, 
   ArrowLeft, 
   LogOut, 
+  RefreshCw, 
   UserCheck, 
   FileText, 
   Mail, 
@@ -120,6 +122,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const [contentEditorOpen, setContentEditorOpen] = useState(false);
   const [editorType, setEditorType] = useState<ContentEntityType>('publication');
   const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [adminGazetteSyncing, setAdminGazetteSyncing] = useState(false);
+  const [adminGazetteSyncMsg, setAdminGazetteSyncMsg] = useState<string | null>(null);
 
   // Security & Settings state
   const [adminCreds, setAdminCreds] = useState<AdminCredentials>(authService.getAdminCredentials());
@@ -447,6 +451,21 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     if (type === 'news') await newsService.togglePublish(id);
     if (type === 'expert') await expertService.toggleArchive(id);
     await loadAllData();
+  };
+
+  const handleAdminGazetteSync = async () => {
+    try {
+      setAdminGazetteSyncing(true);
+      const res = await gazetteSyncService.syncNow();
+      setAdminGazetteSyncMsg(res.message);
+      setTimeout(() => setAdminGazetteSyncMsg(null), 6000);
+      const updated = await circularService.getCirculars({ includeDrafts: true });
+      setCirculars(updated);
+    } catch (err: any) {
+      alert(err.message || 'Failed to sync with official gazette repository');
+    } finally {
+      setAdminGazetteSyncing(false);
+    }
   };
 
   // -------------------------------------------------------------
@@ -1044,112 +1063,184 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
             {/* 1.5 CIRCULARS & LEGAL GUIDELINES TABLE */}
             {contentSubTab === 'circulars' && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
-                      <tr>
-                        <th className="p-3.5">Title & Reference</th>
-                        <th className="p-3.5">Category</th>
-                        <th className="p-3.5">Issuing Authority</th>
-                        <th className="p-3.5">Enacted Date</th>
-                        <th className="p-3.5">PDF Document</th>
-                        <th className="p-3.5">Status</th>
-                        <th className="p-3.5 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {circulars.map(c => (
-                        <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3.5 max-w-sm">
-                            <div className="flex items-center space-x-1.5">
-                              {c.important && (
-                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-500 text-white shrink-0">
-                                  Landmark
+              <div className="space-y-4">
+                {/* Live Gazette Ingestion & Synchronization Command Banner */}
+                <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950 text-white rounded-2xl p-4.5 border border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <h4 className="font-serif font-bold text-sm text-white">
+                        e-Gazette & Statutory Repository Auto-Sync
+                      </h4>
+                      <span className="text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                        Live Feed Active
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                      Continuous statutory discovery from official Government of India portals (<code className="text-amber-300 font-mono text-[11px]">egazette.gov.in</code>, <code className="text-amber-300 font-mono text-[11px]">legislative.gov.in</code>, and Supreme Court registry). Ingested enactments include authentic government source URLs for public double-validation.
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleAdminGazetteSync}
+                      disabled={adminGazetteSyncing}
+                      className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors flex items-center space-x-1.5 shadow-xs cursor-pointer disabled:opacity-70"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${adminGazetteSyncing ? 'animate-spin' : ''}`} />
+                      <span>{adminGazetteSyncing ? 'Checking Feeds...' : '⚡ Sync Live e-Gazette Now'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Admin Sync Notification Alert */}
+                {adminGazetteSyncMsg && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs flex items-center justify-between animate-in fade-in duration-150">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="font-medium">{adminGazetteSyncMsg}</span>
+                    </div>
+                    <button
+                      onClick={() => setAdminGazetteSyncMsg(null)}
+                      className="text-emerald-700 hover:text-emerald-950 font-bold text-xs cursor-pointer ml-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                        <tr>
+                          <th className="p-3.5">Title & Reference</th>
+                          <th className="p-3.5">Category</th>
+                          <th className="p-3.5">Issuing Authority</th>
+                          <th className="p-3.5">Official Source & Validation</th>
+                          <th className="p-3.5">Enacted Date</th>
+                          <th className="p-3.5">PDF Document</th>
+                          <th className="p-3.5">Status</th>
+                          <th className="p-3.5 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {circulars.map(c => (
+                          <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="p-3.5 max-w-sm">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                {c.important && (
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-500 text-white shrink-0">
+                                    Landmark
+                                  </span>
+                                )}
+                                {c.isAutoSynced && (
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-sky-100 text-sky-900 border border-sky-300 shrink-0">
+                                    ⚡ e-Gazette
+                                  </span>
+                                )}
+                                <span className="font-serif font-bold text-slate-900 text-xs truncate">
+                                  {c.shortTitle || c.title}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-slate-500 font-mono mt-0.5 block truncate">
+                                {c.circularNumber}
+                              </span>
+                            </td>
+                            <td className="p-3.5">
+                              <span className="text-[10px] uppercase font-semibold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded">
+                                {c.category.replace(/_/g, ' ')}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-slate-700 max-w-xs truncate">
+                              {c.issuingAuthority}
+                            </td>
+                            <td className="p-3.5 max-w-[200px]">
+                              <div className="text-[11px] font-medium text-slate-800 truncate" title={c.sourceName || 'Government of India Gazette'}>
+                                {c.sourceName || 'Official Gazette'}
+                              </div>
+                              {c.sourceUrl ? (
+                                <a
+                                  href={c.sourceUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[10px] text-amber-700 hover:text-amber-900 font-semibold inline-flex items-center space-x-0.5 hover:underline mt-0.5"
+                                  title="Verify source on official government portal"
+                                >
+                                  <span>Double-Validate</span>
+                                  <ExternalLink className="w-2.5 h-2.5" />
+                                </a>
+                              ) : (
+                                <span className="text-[10px] text-slate-400">Institutional</span>
+                              )}
+                            </td>
+                            <td className="p-3.5 text-slate-600 font-mono text-[11px] whitespace-nowrap">
+                              {c.releaseDate}
+                            </td>
+                            <td className="p-3.5 whitespace-nowrap">
+                              {c.pdfDataUrl ? (
+                                <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                  <span>Uploaded PDF</span>
+                                  <span className="font-mono text-[9px] text-emerald-700">({c.fileSize || 'Local'})</span>
+                                </span>
+                              ) : c.pdfUrl && c.pdfUrl !== '#' ? (
+                                <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                                  <span>Gazette Link</span>
+                                  <span className="font-mono text-[9px] text-blue-700">({c.fileSize || 'PDF'})</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">
+                                  Institutional PDF
                                 </span>
                               )}
-                              <span className="font-serif font-bold text-slate-900 text-xs truncate">
-                                {c.shortTitle || c.title}
+                            </td>
+                            <td className="p-3.5">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                c.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                              }`}>
+                                {c.status || 'published'}
                               </span>
-                            </div>
-                            <span className="text-[10px] text-slate-500 font-mono mt-0.5 block truncate">
-                              {c.circularNumber}
-                            </span>
-                          </td>
-                          <td className="p-3.5">
-                            <span className="text-[10px] uppercase font-semibold text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded">
-                              {c.category.replace(/_/g, ' ')}
-                            </span>
-                          </td>
-                          <td className="p-3.5 text-slate-700 max-w-xs truncate">
-                            {c.issuingAuthority}
-                          </td>
-                          <td className="p-3.5 text-slate-600 font-mono text-[11px] whitespace-nowrap">
-                            {c.releaseDate}
-                          </td>
-                          <td className="p-3.5 whitespace-nowrap">
-                            {c.pdfDataUrl ? (
-                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                                <span>Uploaded PDF</span>
-                                <span className="font-mono text-[9px] text-emerald-700">({c.fileSize || 'Local'})</span>
-                              </span>
-                            ) : c.pdfUrl && c.pdfUrl !== '#' ? (
-                              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
-                                <span>Gazette Link</span>
-                                <span className="font-mono text-[9px] text-blue-700">({c.fileSize || 'PDF'})</span>
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">
-                                Institutional PDF
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-3.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              c.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                            }`}>
-                              {c.status || 'published'}
-                            </span>
-                          </td>
-                          <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
-                            <button
-                              onClick={async () => {
-                                try {
-                                  await pdfService.downloadCircularPdf(c);
-                                } catch (e) {
-                                  alert('Error downloading circular PDF');
-                                }
-                              }}
-                              className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded transition-colors inline-flex cursor-pointer"
-                              title="Download Official Legal PDF"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleTogglePublish('circular', c.id)}
-                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
-                            >
-                              {c.status === 'published' ? 'Unpublish' : 'Publish'}
-                            </button>
-                            <button
-                              onClick={() => handleOpenEditContent('circular', c)}
-                              className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition-colors inline-flex cursor-pointer"
-                              title="Edit Circular / Guidelines"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteContent('circular', c.id)}
-                              className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
-                              title="Delete Circular"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                            </td>
+                            <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await pdfService.downloadCircularPdf(c);
+                                  } catch (e) {
+                                    alert('Error downloading circular PDF');
+                                  }
+                                }}
+                                className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded transition-colors inline-flex cursor-pointer"
+                                title="Download Official Legal PDF"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleTogglePublish('circular', c.id)}
+                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
+                              >
+                                {c.status === 'published' ? 'Unpublish' : 'Publish'}
+                              </button>
+                              <button
+                                onClick={() => handleOpenEditContent('circular', c)}
+                                className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition-colors inline-flex cursor-pointer"
+                                title="Edit Circular / Guidelines"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteContent('circular', c.id)}
+                                className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
+                                title="Delete Circular"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}

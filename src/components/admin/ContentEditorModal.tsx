@@ -12,7 +12,8 @@ import {
   BellRing,
   Image as ImageIcon,
   Scale,
-  FileText
+  FileText,
+  ShieldCheck
 } from 'lucide-react';
 import { Publication, PublicationCategory, ContentStatus } from '../../types/publication';
 import { Circular, CircularCategory, CircularStatus } from '../../types/circular';
@@ -86,6 +87,9 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
           keyProvisions: '§ 1. Institutional Governance Scope\n§ 2. Procedural Guidelines & Standard Operating Procedures\n§ 3. Statutory Compliance and Redressal',
           pdfUrl: '',
           pdfDataUrl: '',
+          sourceUrl: '',
+          sourceName: '',
+          isAutoSynced: false,
           fileName: 'Official_Circular.pdf',
           fileSize: '1.2 MB',
           pageCount: 16,
@@ -218,6 +222,9 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
         }
         if (!payload.pageCount) payload.pageCount = 12;
         if (!payload.fileName) payload.fileName = `${(payload.shortTitle || 'Circular').replace(/\s+/g, '_')}.pdf`;
+        payload.sourceUrl = payload.sourceUrl || '';
+        payload.sourceName = payload.sourceName || '';
+        payload.isAutoSynced = Boolean(payload.isAutoSynced);
       }
 
       await onSave(type, payload, notifyUsers);
@@ -398,6 +405,62 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                   placeholder="§ 1. Preamble & Constitutional Foundation&#10;§ 2. Fundamental Rights and Judicial Review&#10;§ 3. Directive Principles of State Policy"
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-xs font-mono"
                 />
+              </div>
+
+              {/* Official Government Source Provenance (For Citizen Double-Validation) */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Official Government Source & Double-Validation Link</span>
+                  </label>
+                  <span className="text-[10px] text-slate-500 font-medium">For citizen/advocate verification</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-700">Official Source Name / Ministry</label>
+                    <input
+                      type="text"
+                      value={formData.sourceName || ''}
+                      onChange={e => setFormData({ ...formData, sourceName: e.target.value })}
+                      placeholder="e.g. e-Gazette of India (egazette.gov.in)"
+                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-slate-700">Official Portal Verification URL</label>
+                    <input
+                      type="url"
+                      value={formData.sourceUrl || ''}
+                      onChange={e => setFormData({ ...formData, sourceUrl: e.target.value })}
+                      placeholder="https://egazette.gov.in/... or https://legislative.gov.in/..."
+                      className="w-full px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* 1-Click Helper Presets */}
+                <div className="pt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
+                  <span className="text-slate-500 font-semibold">1-Click Official Presets:</span>
+                  {[
+                    { label: 'e-Gazette of India', url: 'https://egazette.gov.in', name: 'The Gazette of India (egazette.gov.in)' },
+                    { label: 'Legislative Dept', url: 'https://legislative.gov.in', name: 'Ministry of Law & Justice, Legislative Dept (legislative.gov.in)' },
+                    { label: 'Supreme Court', url: 'https://sci.gov.in/practice-directions-circulars/', name: 'Supreme Court of India (sci.gov.in)' },
+                    { label: 'Home Affairs (MHA)', url: 'https://www.mha.gov.in', name: 'Ministry of Home Affairs (mha.gov.in)' },
+                    { label: 'PIB Legal', url: 'https://pib.gov.in', name: 'Press Information Bureau (pib.gov.in)' }
+                  ].map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, sourceName: preset.name, sourceUrl: preset.url })}
+                      className="px-2 py-0.5 rounded bg-white hover:bg-amber-100 border border-slate-200 hover:border-amber-300 text-slate-700 hover:text-amber-900 font-medium transition-colors cursor-pointer"
+                    >
+                      + {preset.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Drag & Drop PDF Document Zone */}

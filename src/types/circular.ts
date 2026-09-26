@@ -37,6 +37,11 @@ export interface Circular {
   status: CircularStatus;
   downloadsCount?: number;
   contentPreview?: string; // Rich legal text or bare act excerpt for in-modal preview
+  sourceUrl?: string; // Official government portal link for double-validation (e.g. egazette.gov.in, legislative.gov.in)
+  sourceName?: string; // Official source name (e.g. "e-Gazette of India", "Ministry of Law & Justice")
+  isAutoSynced?: boolean; // Flag indicating if item was automatically fetched/ingested from official government gazettes
+  lastSyncedAt?: string; // ISO date timestamp when document was auto-synced / verified against official gazette
+  syncFeedId?: string; // ID of originating official government feed
 }
 
 export interface CircularCategoryOption {
@@ -45,3 +50,4 @@ export interface CircularCategoryOption {
   description: string;
   count?: number;
 }
+

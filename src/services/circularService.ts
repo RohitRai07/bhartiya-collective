@@ -116,8 +116,13 @@ export const circularService = {
       tags: input.tags || ['Legal', 'Guideline'],
       important: Boolean(input.important),
       status: input.status || 'published',
-      downloadsCount: 0,
+      downloadsCount: input.downloadsCount || 0,
       contentPreview: input.contentPreview || input.summary || '',
+      sourceUrl: input.sourceUrl || '',
+      sourceName: input.sourceName || '',
+      isAutoSynced: Boolean(input.isAutoSynced),
+      lastSyncedAt: input.lastSyncedAt || (input.isAutoSynced ? new Date().toISOString() : undefined),
+      syncFeedId: input.syncFeedId,
     };
 
     saveCirculars([newDoc, ...list]);
