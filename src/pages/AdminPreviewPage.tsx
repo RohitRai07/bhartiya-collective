@@ -586,25 +586,25 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     <div className="min-h-screen bg-slate-100 text-slate-900 pb-20">
       
       {/* Top Admin Navbar */}
-      <header className="bg-slate-900 text-white px-4 sm:px-8 py-3.5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-40 shadow-md">
-        <div className="flex items-center space-x-3">
+      <header className="bg-slate-900 text-white px-3 sm:px-8 py-3 sm:py-3.5 border-b border-slate-800 flex items-center justify-between gap-2 sm:gap-4 sticky top-0 z-40 shadow-md">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
           <button
             onClick={onBackToPublicSite}
-            className="flex items-center space-x-1.5 text-xs text-amber-400 hover:text-amber-300 font-semibold bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition-colors border border-slate-700"
+            className="flex items-center space-x-1 sm:space-x-1.5 text-xs text-amber-400 hover:text-amber-300 font-semibold bg-slate-800 hover:bg-slate-700 px-2.5 sm:px-3 py-1.5 rounded-lg transition-colors border border-slate-700 shrink-0 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Public Site</span>
+            <span className="hidden xs:inline">Public Site</span>
           </button>
           <span className="text-slate-600 hidden sm:inline">|</span>
-          <div className="flex items-center space-x-2">
-            <ShieldCheck className="w-4 h-4 text-amber-500" />
-            <span className="font-serif font-bold text-sm tracking-wide text-white">
-              Bharat Collective • Unified Administration Portal
+          <div className="flex items-center space-x-2 min-w-0">
+            <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0" />
+            <span className="font-serif font-bold text-xs sm:text-sm tracking-wide text-white truncate">
+              Bharat Collective • Admin Portal
             </span>
           </div>
         </div>
 
-        <div className="flex items-center space-x-4 text-xs">
+        <div className="flex items-center space-x-2 sm:space-x-4 text-xs shrink-0">
           <div className="hidden lg:flex items-center space-x-2 text-slate-300">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>Administrator: <strong className="text-white font-mono">{session.user.email}</strong></span>
@@ -612,7 +612,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 transition-colors font-semibold"
+            className="flex items-center space-x-1 px-2.5 sm:px-3 py-1.5 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30 transition-colors font-semibold cursor-pointer text-xs"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out</span>
@@ -624,7 +624,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         
         {/* Main Navigation Tabs */}
-        <div className="bg-white rounded-2xl p-2 shadow-xs border border-slate-200 flex flex-wrap gap-2">
+        <div className="bg-white rounded-2xl p-2 shadow-xs border border-slate-200 flex overflow-x-auto no-scrollbar gap-2 sm:flex-wrap">
           {[
             { id: 'registrations', label: `Registrations (${registrations.length})`, icon: UserCheck },
             { id: 'content', label: 'Website Content Management', icon: BookOpen },
@@ -639,7 +639,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as MainTab)}
-                className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center space-x-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                   isActive
                     ? 'bg-amber-800 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -873,8 +873,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
           <div className="space-y-4">
             
             {/* Content Sub-Tabs Header (Matched exactly to reference design) */}
-            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
                 {[
                   { id: 'publications', label: `Publications (${publications.length})`, icon: BookOpen },
                   { id: 'events', label: `Symposia & Events (${events.length})`, icon: Calendar },
@@ -889,7 +889,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     <button
                       key={sub.id}
                       onClick={() => setContentSubTab(sub.id as ContentSubTab)}
-                      className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      className={`flex items-center space-x-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
                         isActive
                           ? 'bg-amber-100/90 text-amber-950 border border-amber-300 font-bold shadow-2xs ring-1 ring-amber-400/30'
                           : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'

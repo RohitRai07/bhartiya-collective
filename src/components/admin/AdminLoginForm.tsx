@@ -112,8 +112,37 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 px-4">
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-center pt-24 pb-12 sm:px-6 lg:px-8 px-4">
       
+      {/* Top Header Bar */}
+      <header className="fixed top-0 inset-x-0 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between z-30 shadow-md">
+        <div 
+          onClick={onBackToPublicSite}
+          className="flex items-center space-x-2.5 cursor-pointer group"
+        >
+          <div className="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
+            <ShieldCheck className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="block font-serif text-sm sm:text-base font-bold text-white leading-tight">
+              {siteConfig.name}
+            </span>
+            <span className="block text-[10px] uppercase tracking-wider font-semibold text-amber-400">
+              Administrative Secretariat
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onBackToPublicSite}
+          className="flex items-center space-x-1.5 text-xs text-amber-400 hover:text-amber-300 font-semibold bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Public Website</span>
+        </button>
+      </header>
+
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
         <div className="w-14 h-14 bg-amber-600 rounded-2xl mx-auto flex items-center justify-center text-white shadow-xl shadow-amber-600/30">
           {step === '2fa' ? <ShieldCheck className="w-7 h-7 text-amber-200" /> : <Lock className="w-7 h-7" />}

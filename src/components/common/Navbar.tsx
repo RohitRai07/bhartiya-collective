@@ -52,21 +52,21 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           
           {/* Logo & Brand Identity */}
           <div 
             onClick={() => handleLinkClick('/')}
-            className="flex items-center space-x-3 cursor-pointer group"
+            className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer group py-1 min-w-0"
           >
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 flex items-center justify-center text-white shadow-md shadow-amber-600/20 group-hover:scale-105 transition-transform flex-shrink-0">
-              <Landmark className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 flex items-center justify-center text-white shadow-md shadow-amber-600/20 group-hover:scale-105 transition-transform shrink-0">
+              <Landmark className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <span className="block font-serif text-lg sm:text-2xl font-bold tracking-tight text-slate-900 leading-tight">
+            <div className="min-w-0">
+              <span className="block font-serif text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-slate-900 leading-tight truncate">
                 {siteConfig.name}
               </span>
-              <span className="block text-[11px] uppercase tracking-wider font-semibold text-amber-700">
+              <span className="block text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold text-amber-700 truncate">
                 {siteConfig.tagline}
               </span>
             </div>
@@ -81,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
                   key={item.id}
                   type="button"
                   onClick={() => handleLinkClick(item.path)}
-                  className={`px-3 py-2 rounded-xl text-sm font-semibold transition-colors ${
+                  className={`px-3 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${
                     isActive
                       ? 'text-amber-800 bg-amber-50 font-bold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -93,58 +93,61 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
             })}
           </nav>
 
-          {/* Action CTAs */}
-          <div className="hidden sm:flex items-center space-x-3">
-            {actionItems.map((action) => {
-              const isSupport = action.id === 'support';
-              const isRegister = action.id === 'register';
+          {/* Right Action Area */}
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+            {/* Action CTAs */}
+            <div className="hidden sm:flex items-center space-x-2 sm:space-x-3">
+              {actionItems.map((action) => {
+                const isSupport = action.id === 'support';
+                const isRegister = action.id === 'register';
 
-              return (
-                <button
-                  key={action.id}
-                  type="button"
-                  onClick={() => handleLinkClick(action.path)}
-                  className={`inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs ${
-                    isSupport
-                      ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
-                      : 'bg-amber-600 text-white hover:bg-amber-700 shadow-amber-600/20'
-                  }`}
-                >
-                  {isSupport && <Heart className="w-4 h-4 text-amber-700" />}
-                  {isRegister && <UserPlus className="w-4 h-4 text-white" />}
-                  <span>{action.label}</span>
-                </button>
-              );
-            })}
-          </div>
+                return (
+                  <button
+                    key={action.id}
+                    type="button"
+                    onClick={() => handleLinkClick(action.path)}
+                    className={`inline-flex items-center space-x-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs cursor-pointer ${
+                      isSupport
+                        ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
+                        : 'bg-amber-600 text-white hover:bg-amber-700 shadow-amber-600/20'
+                    }`}
+                  >
+                    {isSupport && <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-700" />}
+                    {isRegister && <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />}
+                    <span>{action.label}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Mobile menu trigger */}
-          <div className="flex sm:hidden items-center space-x-2">
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-700 hover:bg-slate-100"
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            {/* Mobile / Tablet Menu Trigger (Visible on all screens below lg: < 1024px) */}
+            <div className="flex lg:hidden items-center">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 sm:p-2.5 rounded-xl text-slate-700 hover:text-amber-800 hover:bg-amber-50 border border-slate-200/80 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer transition-colors"
+                aria-label="Toggle navigation menu"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6 text-amber-800" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
 
         </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile / Tablet Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-2 shadow-lg animate-in slide-in-from-top duration-200">
+        <div className="lg:hidden border-t border-slate-200 bg-white/98 backdrop-blur-md px-4 pt-3 pb-6 space-y-3 shadow-xl animate-in slide-in-from-top duration-200">
           <div className="space-y-1">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => handleLinkClick(item.path)}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-base font-medium ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-sm sm:text-base font-medium transition-colors cursor-pointer ${
                   currentPath === item.path
-                    ? 'bg-amber-50 text-amber-900 font-bold'
+                    ? 'bg-amber-50 text-amber-900 font-bold border-l-4 border-amber-600 pl-2.5'
                     : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >
@@ -153,17 +156,28 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
             ))}
           </div>
 
-          <div className="pt-4 border-t border-slate-100 space-y-2">
+          <div className="pt-3 border-t border-slate-100 space-y-2 sm:hidden">
             {actionItems.map((action) => (
               <button
                 key={action.id}
                 type="button"
                 onClick={() => handleLinkClick(action.path)}
-                className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-bold bg-amber-600 text-white hover:bg-amber-700"
+                className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-sm font-bold bg-amber-600 text-white hover:bg-amber-700 transition-colors cursor-pointer"
               >
                 <span>{action.label}</span>
               </button>
             ))}
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 px-1">
+            <span className="font-serif italic">{siteConfig.tagline}</span>
+            <button
+              type="button"
+              onClick={() => handleLinkClick('/admin')}
+              className="text-amber-800 hover:text-amber-950 font-semibold underline cursor-pointer"
+            >
+              Admin Portal
+            </button>
           </div>
         </div>
       )}

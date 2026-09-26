@@ -11,3 +11,13 @@
     font-family: Georgia, Cambria, "Times New Roman", Times, serif;
   }
 }
+
+/* Hide scrollbar for smooth touch and wheel scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
