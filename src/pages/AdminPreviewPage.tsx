@@ -32,6 +32,8 @@ import { RegistrationDetailModal } from '../components/admin/RegistrationDetailM
 import { SendNotificationModal } from '../components/admin/SendNotificationModal';
 import { ContentEditorModal, ContentEntityType } from '../components/admin/ContentEditorModal';
 import { ImageUploadWithUrl } from '../components/admin/ImageUploadWithUrl';
+import { TaxonomyManager } from '../components/admin/TaxonomyManager';
+import { taxonomyService } from '../services/taxonomyService';
 
 import { 
   ShieldCheck, 
@@ -39,36 +41,37 @@ import {
   Search, 
   CheckCircle, 
   Archive, 
-  ArrowLeft,
-  LogOut,
-  UserCheck,
-  FileText,
-  Mail,
-  Send,
-  Plus,
-  Edit3,
-  Trash2,
-  Eye,
-  BookOpen,
-  Calendar,
-  Compass,
-  Newspaper,
-  CheckSquare,
-  Square,
-  Sparkles,
-  Users,
-  UserPlus,
-  Lock,
-  KeyRound,
-  Check,
-  Copy,
-  AlertCircle,
-  Info,
-  SendHorizontal,
-  UploadCloud,
-  Image as ImageIcon,
-  ExternalLink,
-  Scale
+  ArrowLeft, 
+  LogOut, 
+  UserCheck, 
+  FileText, 
+  Mail, 
+  Send, 
+  Plus, 
+  Edit3, 
+  Trash2, 
+  Eye, 
+  BookOpen, 
+  Calendar, 
+  Compass, 
+  Newspaper, 
+  CheckSquare, 
+  Square, 
+  Sparkles, 
+  Users, 
+  UserPlus, 
+  Lock, 
+  KeyRound, 
+  Check, 
+  Copy, 
+  AlertCircle, 
+  Info, 
+  SendHorizontal, 
+  UploadCloud, 
+  Image as ImageIcon, 
+  ExternalLink, 
+  Scale,
+  Tag
 } from 'lucide-react';
 
 interface AdminPreviewPageProps {
@@ -76,7 +79,7 @@ interface AdminPreviewPageProps {
 }
 
 type MainTab = 'registrations' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings';
-type ContentSubTab = 'publications' | 'circulars' | 'events' | 'research' | 'experts' | 'news' | 'media';
+type ContentSubTab = 'publications' | 'circulars' | 'events' | 'research' | 'experts' | 'news' | 'media' | 'taxonomy';
 
 export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPublicSite }) => {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -898,6 +901,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   { id: 'experts', label: `Council & Fellows (${experts.length})`, icon: Users },
                   { id: 'news', label: `News & Insights (${newsList.length})`, icon: Newspaper },
                   { id: 'media', label: `Media & Uploads (${mediaList.length})`, icon: UploadCloud },
+                  { id: 'taxonomy', label: 'Custom Tags & Dropdowns', icon: Tag },
                 ].map(sub => {
                   const Icon = sub.icon;
                   const isActive = contentSubTab === sub.id;
@@ -919,7 +923,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               </div>
 
               <div>
-                {contentSubTab !== 'media' && (
+                {contentSubTab !== 'media' && contentSubTab !== 'taxonomy' && (
                   <button
                     onClick={() => {
                       const typeMap: Record<string, ContentEntityType> = {
@@ -1597,6 +1601,11 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               </div>
             )}
 
+            {/* SUB-TAB 7: CUSTOM TAGS & DROPDOWN OPTIONS MANAGER */}
+            {contentSubTab === 'taxonomy' && (
+              <TaxonomyManager />
+            )}
+
           </div>
         )}
 
@@ -1773,10 +1782,11 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                           onChange={e => handleCfpStatusChange(sub.id, e.target.value as PaperSubmissionStatus)}
                           className="px-2.5 py-1 text-xs rounded-lg border border-slate-300 bg-slate-50 font-semibold cursor-pointer"
                         >
-                          <option value="submitted">Submitted</option>
-                          <option value="under_review">Under Review</option>
-                          <option value="accepted">Accepted</option>
-                          <option value="rejected">Rejected</option>
+                          {taxonomyService.getOptions('cfp_status').map(opt => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
                         </select>
 
                         <button

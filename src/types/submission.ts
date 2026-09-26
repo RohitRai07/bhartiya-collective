@@ -1,4 +1,4 @@
-export type PaperSubmissionStatus = 'submitted' | 'under_peer_review' | 'accepted' | 'revision_requested' | 'rejected';
+export type PaperSubmissionStatus = 'submitted' | 'under_peer_review' | 'under_review' | 'accepted' | 'revision_requested' | 'rejected' | (string & {});
 
 export interface PaperSubmissionInput {
   authorName: string;

@@ -60,7 +60,11 @@ export const publicationService = {
     }
 
     if (params?.category) {
-      results = results.filter(p => p.category === params.category);
+      const targetCat = params.category.toLowerCase().replace(/_/g, ' ');
+      results = results.filter(p => {
+        const cat = (p.category || '').toLowerCase().replace(/_/g, ' ');
+        return cat === targetCat;
+      });
     }
     if (params?.search) {
       const q = params.search.toLowerCase();

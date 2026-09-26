@@ -22,6 +22,8 @@ import { ScholarExpert, ExpertRole } from '../../types/expert';
 import { NewsArticle } from '../../types/news';
 import { ImageUploadWithUrl } from './ImageUploadWithUrl';
 import { PdfUploadWithUrl } from './PdfUploadWithUrl';
+import { CustomizableSelect } from './CustomizableSelect';
+import { CustomTagInput } from './CustomTagInput';
 
 export type ContentEntityType = 'publication' | 'circular' | 'event' | 'research' | 'expert' | 'news';
 
@@ -311,20 +313,13 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-900">Document Category *</label>
-                  <select
-                    value={formData.category || 'guidelines'}
-                    onChange={e => setFormData({ ...formData, category: e.target.value as CircularCategory })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold"
-                  >
-                    <option value="constitution">Constitutional Framework & Amendment</option>
-                    <option value="acts_statutes">Central Act & Statutory Code</option>
-                    <option value="circulars_rules">Administrative Circular & Rules</option>
-                    <option value="guidelines">Legal Guideline & Advisory</option>
-                    <option value="model_bills">Model Legislative Bill & Blueprint</option>
-                  </select>
-                </div>
+                <CustomizableSelect
+                  label="Document Category"
+                  groupKey="circular_category"
+                  value={formData.category || 'guidelines'}
+                  onChange={val => setFormData({ ...formData, category: val as CircularCategory })}
+                  required
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -374,18 +369,12 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-900">Official Language</label>
-                  <select
-                    value={formData.language || 'English'}
-                    onChange={e => setFormData({ ...formData, language: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
-                  >
-                    <option value="English">English</option>
-                    <option value="Hindi">Hindi</option>
-                    <option value="Bilingual">Bilingual (English + Hindi)</option>
-                  </select>
-                </div>
+                <CustomizableSelect
+                  label="Official Language"
+                  groupKey="circular_language"
+                  value={formData.language || 'English'}
+                  onChange={val => setFormData({ ...formData, language: val })}
+                />
               </div>
 
               <div className="space-y-1">
@@ -430,16 +419,12 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                 helperText="Upload official PDF file or link external gazette document"
               />
 
-              <div className="space-y-1">
-                <label className="font-bold text-slate-900">Taxonomy & Citation Tags (Comma separated)</label>
-                <input
-                  type="text"
-                  value={formData.tags || ''}
-                  onChange={e => setFormData({ ...formData, tags: e.target.value })}
-                  placeholder="Constitution, Article 44, Criminal Code, Bare Act"
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
-                />
-              </div>
+              <CustomTagInput
+                label="Taxonomy & Citation Tags"
+                tags={Array.isArray(formData.tags) ? formData.tags : typeof formData.tags === 'string' ? formData.tags.split(',').map((s: string) => s.trim()).filter(Boolean) : []}
+                onChange={newTags => setFormData({ ...formData, tags: newTags })}
+                helperText="Add custom tags or select from pool. Tags are visible and searchable on the website."
+              />
 
               <div className="flex items-center space-x-2 pt-2 border-t border-slate-100">
                 <input
@@ -472,19 +457,13 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-900">Category</label>
-                  <select
-                    value={formData.category || 'monograph'}
-                    onChange={e => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
-                  >
-                    <option value="monograph">Monograph</option>
-                    <option value="policy_brief">Policy Brief</option>
-                    <option value="research_paper">Research Paper</option>
-                    <option value="commentary">Commentary</option>
-                  </select>
-                </div>
+                <CustomizableSelect
+                  label="Category"
+                  groupKey="publication_category"
+                  value={formData.category || 'Monograph'}
+                  onChange={val => setFormData({ ...formData, category: val as PublicationCategory })}
+                  required
+                />
 
                 <div className="space-y-1">
                   <label className="font-bold text-slate-900">Author(s) (comma-separated)</label>
@@ -529,18 +508,12 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-900">Status</label>
-                  <select
-                    value={formData.status || 'published'}
-                    onChange={e => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold"
-                  >
-                    <option value="published">Published</option>
-                    <option value="draft">Draft</option>
-                    <option value="archived">Archived</option>
-                  </select>
-                </div>
+                <CustomizableSelect
+                  label="Status"
+                  groupKey="content_status"
+                  value={formData.status || 'published'}
+                  onChange={val => setFormData({ ...formData, status: val as ContentStatus })}
+                />
               </div>
 
               <ImageUploadWithUrl
@@ -550,6 +523,13 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                 aspectRatio="portrait"
                 helperText="Drag & drop cover book art or paste external URL"
                 placeholder="https://..."
+              />
+
+              <CustomTagInput
+                label="Publication Topics & Tags"
+                tags={Array.isArray(formData.tags) ? formData.tags : typeof formData.tags === 'string' ? formData.tags.split(',').map((s: string) => s.trim()).filter(Boolean) : []}
+                onChange={newTags => setFormData({ ...formData, tags: newTags })}
+                helperText="Press Enter to add custom tags or choose from pool. Displayed on public website."
               />
 
               <div className="flex items-center space-x-2 pt-1">
@@ -583,19 +563,13 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-900">Category</label>
-                  <select
-                    value={formData.category || 'symposium'}
-                    onChange={e => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
-                  >
-                    <option value="symposium">Symposium</option>
-                    <option value="roundtable">Roundtable</option>
-                    <option value="colloquium">Colloquium</option>
-                    <option value="lecture">Public Lecture</option>
-                  </select>
-                </div>
+                <CustomizableSelect
+                  label="Category / Type"
+                  groupKey="event_category"
+                  value={formData.category || formData.type || 'Symposium'}
+                  onChange={val => setFormData({ ...formData, category: val, type: val })}
+                  required
+                />
                 <div className="space-y-1">
                   <label className="font-bold text-slate-900">Date</label>
                   <input
@@ -684,14 +658,12 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                 </label>
 
                 <div className="space-y-0.5">
-                  <select
+                  <CustomizableSelect
+                    label="Status"
+                    groupKey="content_status"
                     value={formData.status || 'published'}
-                    onChange={e => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-2 py-1 rounded border border-slate-200 text-xs"
-                  >
-                    <option value="published">Published</option>
-                    <option value="draft">Draft</option>
-                  </select>
+                    onChange={val => setFormData({ ...formData, status: val as ContentStatus })}
+                  />
                 </div>
               </div>
 
@@ -702,6 +674,13 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                 aspectRatio="landscape"
                 helperText="Drag & drop symposium banner or paste event poster image URL"
                 placeholder="https://..."
+              />
+
+              <CustomTagInput
+                label="Event Themes & Tags"
+                tags={Array.isArray(formData.tags) ? formData.tags : typeof formData.tags === 'string' ? formData.tags.split(',').map((s: string) => s.trim()).filter(Boolean) : []}
+                onChange={newTags => setFormData({ ...formData, tags: newTags })}
+                helperText="Add custom tags or select from pool. Tags are visible and searchable on the website."
               />
             </>
           )}
@@ -743,16 +722,12 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="font-bold text-slate-900">Focus Areas (comma-separated)</label>
-                <input
-                  type="text"
-                  value={Array.isArray(formData.focusAreas) ? formData.focusAreas.join(', ') : formData.focusAreas || ''}
-                  onChange={e => setFormData({ ...formData, focusAreas: e.target.value })}
-                  placeholder="Nyaya, Epistemology, Computational Panini"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
-                />
-              </div>
+              <CustomTagInput
+                label="Research Focus Areas & Themes"
+                tags={Array.isArray(formData.focusAreas) ? formData.focusAreas : typeof formData.focusAreas === 'string' ? formData.focusAreas.split(',').map((s: string) => s.trim()).filter(Boolean) : []}
+                onChange={newAreas => setFormData({ ...formData, focusAreas: newAreas, keyThemes: newAreas })}
+                helperText="Press Enter to add custom focus area or select from pool."
+              />
 
               <ImageUploadWithUrl
                 label="Research Domain Banner (Drag & Drop or URL)"
@@ -781,18 +756,13 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-900">Council / Fellowship Role</label>
-                  <select
-                    value={formData.councilRole || 'advisory_council'}
-                    onChange={e => setFormData({ ...formData, councilRole: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold"
-                  >
-                    <option value="advisory_council">Advisory Council Member</option>
-                    <option value="senior_fellow">Senior Research Fellow</option>
-                    <option value="visiting_fellow">Visiting Research Scholar</option>
-                  </select>
-                </div>
+                <CustomizableSelect
+                  label="Council / Fellowship Role"
+                  groupKey="expert_role"
+                  value={formData.councilRole || 'advisory_council'}
+                  onChange={val => setFormData({ ...formData, councilRole: val as ExpertRole })}
+                  required
+                />
 
                 <div className="space-y-1">
                   <label className="font-bold text-slate-900">Designation / Role Title</label>
@@ -828,16 +798,12 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="font-bold text-slate-900">Focus Areas (comma-separated)</label>
-                <input
-                  type="text"
-                  value={Array.isArray(formData.focusAreas) ? formData.focusAreas.join(', ') : formData.focusAreas || ''}
-                  onChange={e => setFormData({ ...formData, focusAreas: e.target.value })}
-                  placeholder="Rajadharma, Comparative Law"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
-                />
-              </div>
+              <CustomTagInput
+                label="Specialty & Focus Areas"
+                tags={Array.isArray(formData.focusAreas) ? formData.focusAreas : typeof formData.focusAreas === 'string' ? formData.focusAreas.split(',').map((s: string) => s.trim()).filter(Boolean) : []}
+                onChange={newAreas => setFormData({ ...formData, focusAreas: newAreas })}
+                helperText="Press Enter to add specialty or select from pool."
+              />
 
               <ImageUploadWithUrl
                 label="Scholar Portrait Photo (Drag & Drop or URL)"
@@ -866,19 +832,13 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-900">Category</label>
-                  <select
-                    value={formData.category || 'Discourse'}
-                    onChange={e => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
-                  >
-                    <option value="Discourse">Discourse</option>
-                    <option value="Perspective">Perspective</option>
-                    <option value="Press Release">Press Release</option>
-                    <option value="Announcement">Announcement</option>
-                  </select>
-                </div>
+                <CustomizableSelect
+                  label="Category"
+                  groupKey="news_category"
+                  value={formData.category || 'Discourse'}
+                  onChange={val => setFormData({ ...formData, category: val as any })}
+                  required
+                />
 
                 <div className="space-y-1">
                   <label className="font-bold text-slate-900">Author</label>
@@ -890,17 +850,12 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-900">Status</label>
-                  <select
-                    value={formData.status || 'published'}
-                    onChange={e => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
-                  >
-                    <option value="published">Published</option>
-                    <option value="draft">Draft</option>
-                  </select>
-                </div>
+                <CustomizableSelect
+                  label="Status"
+                  groupKey="content_status"
+                  value={formData.status || 'published'}
+                  onChange={val => setFormData({ ...formData, status: val as ContentStatus })}
+                />
               </div>
 
               <div className="space-y-1">
@@ -933,6 +888,13 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                 aspectRatio="landscape"
                 helperText="Upload article header photo or paste web image URL"
                 placeholder="https://..."
+              />
+
+              <CustomTagInput
+                label="Article Tags & Keywords"
+                tags={Array.isArray(formData.tags) ? formData.tags : typeof formData.tags === 'string' ? formData.tags.split(',').map((s: string) => s.trim()).filter(Boolean) : []}
+                onChange={newTags => setFormData({ ...formData, tags: newTags })}
+                helperText="Press Enter to add custom tags or keywords. Displayed on public website."
               />
             </>
           )}

@@ -1,6 +1,6 @@
 import { ContentStatus } from './publication';
 
-export type EventType = 'Symposium' | 'Roundtable' | 'Public Lecture' | 'Colloquium' | 'Workshop';
+export type EventType = 'Symposium' | 'Roundtable' | 'Public Lecture' | 'Colloquium' | 'Workshop' | (string & {});
 export type EventMode = 'In-Person' | 'Online Webinar' | 'Hybrid';
 
 export interface EventSpeaker {

@@ -10,7 +10,8 @@ export type CircularCategory =
   | 'acts_statutes'    // Central Acts & Statutory Codes
   | 'circulars_rules'  // Administrative Circulars & Rules
   | 'guidelines'       // Legal Guidelines & Advisories
-  | 'model_bills';     // Model Legislative Bills & Civilizational Frameworks
+  | 'model_bills'      // Model Legislative Bills & Civilizational Frameworks
+  | (string & {});
 
 export type CircularStatus = 'published' | 'draft' | 'archived';
 

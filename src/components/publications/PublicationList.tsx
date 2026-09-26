@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { publicationService } from '../../services/publicationService';
 import { pdfService } from '../../services/pdfService';
+import { taxonomyService } from '../../services/taxonomyService';
 import { Publication, PublicationCategory } from '../../types/publication';
 import { BookOpen, Search, Download, FileText, Tag, Calendar, User, Loader2, Check } from 'lucide-react';
 
@@ -11,6 +12,11 @@ export const PublicationList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadedId, setDownloadedId] = useState<string | null>(null);
+  const [categories, setCategories] = useState<(PublicationCategory | 'All')[]>(() => [
+    'All',
+    ...taxonomyService.getOptions('publication_category').map(o => o.value as PublicationCategory),
+  ]);
+  const [tagsPool, setTagsPool] = useState<string[]>(taxonomyService.getTags());
 
   useEffect(() => {
     const load = async () => {
@@ -24,18 +30,21 @@ export const PublicationList: React.FC = () => {
     };
     load();
 
-    const handleUpdate = () => load();
+    const handleUpdate = () => {
+      load();
+      setCategories([
+        'All',
+        ...taxonomyService.getOptions('publication_category').map(o => o.value as PublicationCategory),
+      ]);
+      setTagsPool(taxonomyService.getTags());
+    };
     window.addEventListener('bharat:content-updated', handleUpdate);
-    return () => window.removeEventListener('bharat:content-updated', handleUpdate);
+    window.addEventListener('bharat:taxonomy-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('bharat:content-updated', handleUpdate);
+      window.removeEventListener('bharat:taxonomy-updated', handleUpdate);
+    };
   }, [selectedCategory, searchQuery]);
-
-  const categories: (PublicationCategory | 'All')[] = [
-    'All',
-    'Monograph',
-    'Policy Paper',
-    'Occasional Paper',
-    'Civilizational Brief',
-  ];
 
   const handleDownloadPdf = async (pub: Publication) => {
     try {
@@ -61,9 +70,9 @@ export const PublicationList: React.FC = () => {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 selectedCategory === cat
-                  ? 'bg-amber-600 text-white shadow-sm'
+                  ? 'bg-amber-700 text-white shadow-xs font-bold'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -82,8 +91,42 @@ export const PublicationList: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-amber-600"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Dynamic Tag Strip */}
+      {tagsPool.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 text-xs">
+          <span className="flex items-center text-slate-500 font-bold shrink-0 text-[11px] uppercase tracking-wider">
+            <Tag className="w-3.5 h-3.5 mr-1 text-amber-700" />
+            <span>Topics:</span>
+          </span>
+          {tagsPool.slice(0, 16).map((tag, idx) => {
+            const isActive = searchQuery.toLowerCase().trim() === tag.toLowerCase();
+            return (
+              <button
+                key={idx}
+                onClick={() => setSearchQuery(isActive ? '' : tag)}
+                className={`px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer shrink-0 font-medium ${
+                  isActive
+                    ? 'bg-amber-800 text-white font-bold shadow-2xs'
+                    : 'bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-900 border border-slate-200'
+                }`}
+              >
+                #{tag}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Publications Grid / List */}
       {loading ? (

@@ -1,5 +1,7 @@
 import { ContentStatus } from './publication';
 
+export type NewsCategory = 'Discourse' | 'Press Release' | 'Announcement' | 'Perspective' | (string & {});
+
 export interface NewsArticle {
   id: string;
   title: string;
@@ -8,7 +10,7 @@ export interface NewsArticle {
   content: string;
   author: string;
   authorTitle: string;
-  category: 'Discourse' | 'Press Release' | 'Announcement' | 'Perspective';
+  category: NewsCategory;
   publishedDate: string;
   readTime: string;
   imageUrl?: string;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { eventService } from '../../services/eventService';
+import { taxonomyService } from '../../services/taxonomyService';
 import { EventItem } from '../../types/event';
-import { Calendar, Clock, MapPin, Users, Video, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Video, ArrowRight, CheckCircle2, Sparkles, Filter } from 'lucide-react';
 
 interface EventListProps {
   onRegisterInterest?: (event: EventItem) => void;
@@ -21,14 +22,29 @@ const DEFAULT_EVENT_IMAGE = 'https://images.unsplash.com/photo-1517457373958-b7b
 export const EventList: React.FC<EventListProps> = ({ onRegisterInterest }) => {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [registeredEvents, setRegisteredEvents] = useState<Set<string>>(new Set());
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [categories, setCategories] = useState<string[]>(() => [
+    'All',
+    ...taxonomyService.getOptions('event_category').map(o => o.value),
+  ]);
 
   useEffect(() => {
     const load = () => eventService.getEvents().then(setEvents);
     load();
 
-    const handleUpdate = () => load();
+    const handleUpdate = () => {
+      load();
+      setCategories([
+        'All',
+        ...taxonomyService.getOptions('event_category').map(o => o.value),
+      ]);
+    };
     window.addEventListener('bharat:content-updated', handleUpdate);
-    return () => window.removeEventListener('bharat:content-updated', handleUpdate);
+    window.addEventListener('bharat:taxonomy-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('bharat:content-updated', handleUpdate);
+      window.removeEventListener('bharat:taxonomy-updated', handleUpdate);
+    };
   }, []);
 
   const handleRegister = (event: EventItem) => {
@@ -36,10 +52,34 @@ export const EventList: React.FC<EventListProps> = ({ onRegisterInterest }) => {
     if (onRegisterInterest) onRegisterInterest(event);
   };
 
+  const filteredEvents = events.filter(evt => {
+    if (selectedCategory === 'All') return true;
+    const cat = (evt.type || '').toLowerCase().replace(/_/g, ' ');
+    const target = selectedCategory.toLowerCase().replace(/_/g, ' ');
+    return cat === target;
+  });
+
   return (
     <div className="space-y-6">
+      {/* Dynamic Category Filter Pills */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+              selectedCategory === cat
+                ? 'bg-amber-800 text-white shadow-xs font-bold'
+                : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+            }`}
+          >
+            {cat === 'All' ? 'All Formats & Symposia' : cat}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {events.map((evt) => {
+        {filteredEvents.map((evt) => {
           const isRegistered = registeredEvents.has(evt.id);
           const isFlagship = evt.id === 'evt-ucc-flagship';
           const imageUrl = resolveEventImage(evt.bannerImage) || DEFAULT_EVENT_IMAGE;

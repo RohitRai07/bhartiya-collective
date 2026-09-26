@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { siteConfig } from '../config/siteConfig';
 import { expertService } from '../services/expertService';
+import { taxonomyService } from '../services/taxonomyService';
 import { ScholarExpert } from '../types/expert';
 import { Landmark, Scroll, Compass, Shield, Award, Users } from 'lucide-react';
 
 export const AboutPage: React.FC = () => {
   const [experts, setExperts] = useState<ScholarExpert[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>('All');
+  const [roles, setRoles] = useState<{ value: string; label: string }[]>(() => [
+    { value: 'All', label: 'All Faculty & Council' },
+    ...taxonomyService.getOptions('expert_role'),
+  ]);
 
   useEffect(() => {
     const load = () => {
@@ -13,10 +19,25 @@ export const AboutPage: React.FC = () => {
     };
     load();
 
-    const handleUpdate = () => load();
+    const handleUpdate = () => {
+      load();
+      setRoles([
+        { value: 'All', label: 'All Faculty & Council' },
+        ...taxonomyService.getOptions('expert_role'),
+      ]);
+    };
     window.addEventListener('bharat:content-updated', handleUpdate);
-    return () => window.removeEventListener('bharat:content-updated', handleUpdate);
+    window.addEventListener('bharat:taxonomy-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('bharat:content-updated', handleUpdate);
+      window.removeEventListener('bharat:taxonomy-updated', handleUpdate);
+    };
   }, []);
+
+  const filteredExperts = experts.filter(exp => {
+    if (selectedRole === 'All') return true;
+    return (exp.councilRole || '').toLowerCase() === selectedRole.toLowerCase();
+  });
 
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-16">
@@ -81,8 +102,25 @@ export const AboutPage: React.FC = () => {
           </p>
         </div>
 
+        {/* Role Filter Pills */}
+        <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+          {roles.map((r) => (
+            <button
+              key={r.value}
+              onClick={() => setSelectedRole(r.value)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                selectedRole === r.value
+                  ? 'bg-amber-800 text-white shadow-xs font-bold'
+                  : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {experts.map((expert) => (
+          {filteredExperts.map((expert) => (
             <div
               key={expert.id}
               className="bg-white rounded-2xl p-6 border border-slate-200 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xs"
@@ -91,8 +129,15 @@ export const AboutPage: React.FC = () => {
                 <img
                   src={expert.photoUrl}
                   alt={expert.name}
-                  className="w-20 h-20 rounded-full object-cover mb-4 border-2 border-amber-200 mx-auto"
+                  className="w-20 h-20 rounded-full object-cover mb-3 border-2 border-amber-200 mx-auto"
                 />
+                {expert.councilRole && (
+                  <div className="text-center mb-2">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                      {expert.councilRole.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                )}
                 <h3 className="font-serif text-base font-bold text-slate-900 text-center">
                   {expert.name}
                 </h3>

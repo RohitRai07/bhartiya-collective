@@ -3,7 +3,8 @@ export type PublicationCategory =
   | 'Policy Paper' 
   | 'Occasional Paper' 
   | 'Journal Article' 
-  | 'Civilizational Brief';
+  | 'Civilizational Brief'
+  | (string & {});
 
 export type ContentStatus = 'published' | 'draft' | 'archived';
 

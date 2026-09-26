@@ -18,6 +18,7 @@ import { registrationCsvExporter, REGISTRATION_CSV_COLUMNS } from '../export/reg
 import { fileService } from '../services/fileService';
 import { pdfService } from '../services/pdfService';
 import { circularService } from '../services/circularService';
+import { taxonomyService } from '../services/taxonomyService';
 import { UserRegistrationInput } from '../types/registration';
 
 async function runTests() {
@@ -285,6 +286,38 @@ async function runTests() {
   await circularService.deleteCircular(testCirc.id);
   const afterDelete = await circularService.getCircularById(testCirc.id);
   assert(afterDelete === null, 'Test circular cleaned up successfully');
+
+  // 12. Dynamic Taxonomy & Custom Dropdown Options Suite
+  console.log('\n📌 Testing Dynamic Taxonomy & Custom Dropdowns (Enter-to-add & delete):');
+  const initialCircOptions = taxonomyService.getOptions('circular_category');
+  assert(initialCircOptions.length >= 5, 'Circular categories loaded with institutional defaults');
+
+  // Add custom option
+  const customCat = taxonomyService.addOption('circular_category', 'Judicial Precedents & Tribunals');
+  assert(customCat.isCustom === true, 'Custom option is correctly marked with isCustom: true');
+  assert(customCat.label === 'Judicial Precedents & Tribunals', 'Custom option label matches user input');
+  
+  const updatedCircOptions = taxonomyService.getOptions('circular_category');
+  assert(updatedCircOptions.some(o => o.value === customCat.value), 'Newly added option is selectable in dropdown list');
+
+  // Delete custom option
+  taxonomyService.removeOption('circular_category', customCat.value);
+  const afterRemoveCircOptions = taxonomyService.getOptions('circular_category');
+  assert(!afterRemoveCircOptions.some(o => o.value === customCat.value), 'Custom option is deleted from dropdown list');
+
+  // Add custom tag
+  const initialTagsCount = taxonomyService.getTags().length;
+  taxonomyService.addTag('Jan Vishwas Act');
+  assert(taxonomyService.getTags().includes('Jan Vishwas Act'), 'Custom tag added successfully to global pool');
+
+  // Duplicate tag prevention
+  taxonomyService.addTag('Jan Vishwas Act');
+  assert(taxonomyService.getTags().filter(t => t.toLowerCase() === 'jan vishwas act').length === 1, 'Duplicate tag submission prevented');
+
+  // Delete tag
+  taxonomyService.removeTag('Jan Vishwas Act');
+  assert(!taxonomyService.getTags().includes('Jan Vishwas Act'), 'Tag deleted successfully from pool');
+  assert(taxonomyService.getTags().length === initialTagsCount, 'Tags count restores accurately after deletion');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

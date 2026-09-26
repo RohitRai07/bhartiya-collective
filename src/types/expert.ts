@@ -1,4 +1,4 @@
-export type ExpertRole = 'advisory_council' | 'senior_fellow' | 'visiting_fellow';
+export type ExpertRole = 'advisory_council' | 'senior_fellow' | 'visiting_fellow' | (string & {});
 
 export interface ScholarExpert {
   id: string;

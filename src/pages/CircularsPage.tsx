@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Circular, CircularCategory } from '../types/circular';
 import { circularService } from '../services/circularService';
+import { taxonomyService } from '../services/taxonomyService';
 import { CircularCard } from '../components/circulars/CircularCard';
 import { CircularPreviewModal } from '../components/circulars/CircularPreviewModal';
 import { 
@@ -15,7 +16,8 @@ import {
   FileText,
   RotateCcw,
   CheckCircle2,
-  FileCheck2
+  FileCheck2,
+  Tag
 } from 'lucide-react';
 
 interface CircularsPageProps {
@@ -31,6 +33,8 @@ export const CircularsPage: React.FC<CircularsPageProps> = () => {
   const [sortBy, setSortBy] = useState<'landmark' | 'newest' | 'downloads' | 'title'>('landmark');
   const [previewingCircular, setPreviewingCircular] = useState<Circular | null>(null);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [dynamicCategories, setDynamicCategories] = useState(taxonomyService.getOptions('circular_category'));
+  const [tagsPool, setTagsPool] = useState<string[]>(taxonomyService.getTags());
 
   const loadData = async () => {
     try {
@@ -50,9 +54,17 @@ export const CircularsPage: React.FC<CircularsPageProps> = () => {
 
   useEffect(() => {
     loadData();
-    const handleUpdate = () => loadData();
+    const handleUpdate = () => {
+      loadData();
+      setDynamicCategories(taxonomyService.getOptions('circular_category'));
+      setTagsPool(taxonomyService.getTags());
+    };
     window.addEventListener('bharat:content-updated', handleUpdate);
-    return () => window.removeEventListener('bharat:content-updated', handleUpdate);
+    window.addEventListener('bharat:taxonomy-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('bharat:content-updated', handleUpdate);
+      window.removeEventListener('bharat:taxonomy-updated', handleUpdate);
+    };
   }, []);
 
   // Filter and sort items
@@ -73,7 +85,7 @@ export const CircularsPage: React.FC<CircularsPageProps> = () => {
         const matchesRef = c.circularNumber.toLowerCase().includes(q);
         const matchesAuth = c.issuingAuthority.toLowerCase().includes(q);
         const matchesSummary = c.summary.toLowerCase().includes(q);
-        const matchesTags = c.tags.some(t => t.toLowerCase().includes(q));
+        const matchesTags = c.tags?.some(t => t.toLowerCase().includes(q));
         const matchesProvisions = c.keyProvisions?.some(p => p.toLowerCase().includes(q));
         return matchesTitle || matchesRef || matchesAuth || matchesSummary || matchesTags || matchesProvisions;
       }
@@ -101,13 +113,13 @@ export const CircularsPage: React.FC<CircularsPageProps> = () => {
     new Set(circulars.map(c => c.issuingAuthority))
   ).filter(Boolean);
 
-  const TABS: { id: CircularCategory | 'all'; label: string; desc: string }[] = [
+  const TABS: { id: CircularCategory | 'all'; label: string; desc?: string }[] = [
     { id: 'all', label: 'All Documents', desc: 'Complete statutory compendium' },
-    { id: 'constitution', label: 'Constitutional Lex', desc: 'Bare Act, Preamble & Amendments' },
-    { id: 'acts_statutes', label: 'Acts & Penal Codes', desc: 'BNS, BNSS, DPDP & Statutes' },
-    { id: 'circulars_rules', label: 'Gazettes & Rules', desc: 'DoPT & Ministerial circulars' },
-    { id: 'guidelines', label: 'Legal Guidelines', desc: 'Judicial SOPs & Advisories' },
-    { id: 'model_bills', label: 'Model Frameworks', desc: 'Civilizational draft legislation' },
+    ...dynamicCategories.map(cat => ({
+      id: cat.value as CircularCategory,
+      label: cat.label,
+      desc: cat.isCustom ? 'Custom statutory category' : undefined,
+    })),
   ];
 
   return (
@@ -272,10 +284,34 @@ export const CircularsPage: React.FC<CircularsPageProps> = () => {
               <span>Reset</span>
             </button>
           )}
-
         </div>
-
       </div>
+
+      {/* 4.5. DYNAMIC TAXONOMY & KEYWORD TAGS */}
+      {tagsPool.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 text-xs">
+          <span className="flex items-center text-slate-500 font-bold shrink-0 text-[11px] uppercase tracking-wider">
+            <Tag className="w-3.5 h-3.5 mr-1 text-amber-700" />
+            <span>Filter by Tag:</span>
+          </span>
+          {tagsPool.slice(0, 16).map((tag, idx) => {
+            const isActive = searchQuery.toLowerCase().trim() === tag.toLowerCase();
+            return (
+              <button
+                key={idx}
+                onClick={() => setSearchQuery(isActive ? '' : tag)}
+                className={`px-2.5 py-1 rounded-lg text-xs transition-all cursor-pointer shrink-0 font-medium ${
+                  isActive
+                    ? 'bg-amber-800 text-white font-bold shadow-2xs'
+                    : 'bg-white hover:bg-amber-50 text-slate-700 hover:text-amber-900 border border-slate-200'
+                }`}
+              >
+                #{tag}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* 5. CIRCULARS GRID */}
       {loading ? (
