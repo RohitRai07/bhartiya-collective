@@ -29,6 +29,7 @@ const SEED_MAGAZINES: MagazineIssue[] = [
       'Book Reviews: Ancient Indian Statecraft Revisited'
     ],
     downloadCount: 342,
+    status: 'published',
   },
   {
     id: 'mag-2',
@@ -53,6 +54,7 @@ const SEED_MAGAZINES: MagazineIssue[] = [
       'Judicial Perspectives on Civil Rights Safeguards'
     ],
     downloadCount: 518,
+    status: 'published',
   }
 ];
 
@@ -85,12 +87,30 @@ class MagazineService {
     }
   }
 
-  async getIssues(): Promise<MagazineIssue[]> {
-    return this.getStore();
+  async getIssues(includeDrafts: boolean = false): Promise<MagazineIssue[]> {
+    const all = this.getStore();
+    if (includeDrafts) return all;
+    return all.filter(m => !m.status || m.status === 'published');
   }
 
-  getAll(): MagazineIssue[] {
-    return this.getStore();
+  getAll(includeDrafts: boolean = true): MagazineIssue[] {
+    const all = this.getStore();
+    if (includeDrafts) return all;
+    return all.filter(m => !m.status || m.status === 'published');
+  }
+
+  togglePublish(id: string): MagazineIssue | null {
+    const current = this.getStore();
+    const index = current.findIndex(m => m.id === id);
+    if (index === -1) return null;
+    const existing = current[index];
+    const nextStatus = existing.status === 'draft' ? 'published' : 'draft';
+    current[index] = {
+      ...existing,
+      status: nextStatus,
+    };
+    this.setStore([...current]);
+    return current[index];
   }
 
   create(input: MagazineIssueInput): MagazineIssue {
@@ -100,6 +120,7 @@ class MagazineService {
       id: `mag-${Date.now()}`,
       price: input.price ?? 100, // Strictly ₹100
       downloadCount: 0,
+      status: input.status || 'published',
     };
 
     this.setStore([newIssue, ...current]);

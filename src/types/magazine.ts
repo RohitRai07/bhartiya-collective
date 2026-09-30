@@ -15,6 +15,7 @@ export interface MagazineIssue {
   editorialLead: string;
   tableOfContents: string[];
   downloadCount: number;
+  status?: 'published' | 'draft';
 }
 
 export interface MagazineIssueInput {
@@ -32,4 +33,5 @@ export interface MagazineIssueInput {
   description: string;
   editorialLead: string;
   tableOfContents: string[];
+  status?: 'published' | 'draft';
 }

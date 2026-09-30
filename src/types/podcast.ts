@@ -11,6 +11,7 @@ export interface PodcastEpisode {
   date: string;
   description: string;
   featured?: boolean;
+  status?: 'published' | 'draft';
 }
 
 export interface PodcastInput {
@@ -24,4 +25,5 @@ export interface PodcastInput {
   description: string;
   customThumbnailUrl?: string;
   featured?: boolean;
+  status?: 'published' | 'draft';
 }

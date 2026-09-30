@@ -12,6 +12,7 @@ export const mockResearchDomains: ResearchDomain[] = [
     activeProjectsCount: 4,
     publishedPapersCount: 14,
     iconName: 'Landmark',
+    status: 'published',
   },
   {
     id: 'res-domain-2',
@@ -24,6 +25,7 @@ export const mockResearchDomains: ResearchDomain[] = [
     activeProjectsCount: 6,
     publishedPapersCount: 22,
     iconName: 'BookOpen',
+    status: 'published',
   },
   {
     id: 'res-domain-3',
@@ -36,6 +38,7 @@ export const mockResearchDomains: ResearchDomain[] = [
     activeProjectsCount: 3,
     publishedPapersCount: 11,
     iconName: 'Leaf',
+    status: 'published',
   },
   {
     id: 'res-domain-4',
@@ -48,5 +51,6 @@ export const mockResearchDomains: ResearchDomain[] = [
     activeProjectsCount: 5,
     publishedPapersCount: 18,
     iconName: 'Compass',
+    status: 'published',
   },
 ];

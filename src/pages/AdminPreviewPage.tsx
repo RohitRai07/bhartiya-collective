@@ -482,12 +482,15 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     await loadAllData();
   };
 
-  const handleTogglePublish = async (type: ContentEntityType, id: string) => {
+  const handleTogglePublish = async (type: ContentEntityType | 'podcast' | 'magazine', id: string) => {
     if (type === 'circular') await circularService.togglePublish(id);
     if (type === 'publication') await publicationService.togglePublish(id);
     if (type === 'event') await eventService.togglePublish(id);
     if (type === 'news') await newsService.togglePublish(id);
+    if (type === 'research') await researchService.togglePublish(id);
     if (type === 'expert') await expertService.toggleArchive(id);
+    if (type === 'podcast') podcastService.togglePublish(id);
+    if (type === 'magazine') magazineService.togglePublish(id);
     await loadAllData();
   };
 
@@ -1650,6 +1653,13 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         </div>
                         <div className="flex items-center space-x-1">
                           <button
+                            onClick={() => handleTogglePublish('research', d.id)}
+                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
+                            title="Publish / Unpublish Research Domain"
+                          >
+                            {d.status === 'draft' ? 'Publish' : 'Unpublish'}
+                          </button>
+                          <button
                             onClick={() => handleOpenEditContent('research', d)}
                             className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg transition-colors cursor-pointer"
                             title="Edit Domain"
@@ -1669,7 +1679,9 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                       
                       <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                         <span className="text-[11px] text-slate-500 font-medium">Lead: <strong className="text-slate-700">{leadPerson}</strong></span>
-                        <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold rounded">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          d.status === 'draft' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-800'
+                        }`}>
                           {d.status || 'published'}
                         </span>
                       </div>
@@ -1716,27 +1728,29 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     </div>
 
                     <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                      <span className={`text-[10px] font-bold uppercase ${
-                        exp.status === 'archived' ? 'text-slate-400' : 'text-emerald-700'
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        exp.status === 'archived' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-800'
                       }`}>
-                        {exp.status || 'active'}
+                        {exp.status === 'archived' ? 'draft' : 'published'}
                       </span>
                       <div className="flex items-center space-x-1.5">
                         <button
                           onClick={() => handleTogglePublish('expert', exp.id)}
-                          className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] cursor-pointer"
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
                         >
-                          {exp.status === 'archived' ? 'Activate' : 'Archive'}
+                          {exp.status === 'archived' ? 'Publish' : 'Unpublish'}
                         </button>
                         <button
                           onClick={() => handleOpenEditContent('expert', exp)}
                           className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded cursor-pointer"
+                          title="Edit Scholar"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteContent('expert', exp.id)}
                           className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded cursor-pointer"
+                          title="Delete Scholar"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1822,6 +1836,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         <th className="p-3.5">Duration</th>
                         <th className="p-3.5">Date</th>
                         <th className="p-3.5">Featured</th>
+                        <th className="p-3.5">Status</th>
                         <th className="p-3.5 text-right">Actions</th>
                       </tr>
                     </thead>
@@ -1873,7 +1888,20 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                               <span className="text-slate-400 text-[10px]">—</span>
                             )}
                           </td>
+                          <td className="p-3.5">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              pod.status === 'draft' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-800'
+                            }`}>
+                              {pod.status || 'published'}
+                            </span>
+                          </td>
                           <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                            <button
+                              onClick={() => handleTogglePublish('podcast', pod.id)}
+                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
+                            >
+                              {pod.status === 'draft' ? 'Publish' : 'Unpublish'}
+                            </button>
                             <button
                               onClick={() => {
                                 setEditingPodcast(pod);
@@ -1919,6 +1947,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         <th className="p-3.5">Pages</th>
                         <th className="p-3.5">Price</th>
                         <th className="p-3.5">Downloads</th>
+                        <th className="p-3.5">Status</th>
                         <th className="p-3.5 text-right">Actions</th>
                       </tr>
                     </thead>
@@ -1946,6 +1975,13 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                           <td className="p-3.5 font-mono text-emerald-700 font-semibold">
                             {mag.downloadCount}
                           </td>
+                          <td className="p-3.5">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              mag.status === 'draft' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-800'
+                            }`}>
+                              {mag.status || 'published'}
+                            </span>
+                          </td>
                           <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
                             <button
                               onClick={() => handleTestDownloadMagazine(mag)}
@@ -1954,6 +1990,12 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                             >
                               <Download className="w-3.5 h-3.5 text-amber-800" />
                               <span>Test PDF</span>
+                            </button>
+                            <button
+                              onClick={() => handleTogglePublish('magazine', mag.id)}
+                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
+                            >
+                              {mag.status === 'draft' ? 'Publish' : 'Unpublish'}
                             </button>
                             <button
                               onClick={() => {

@@ -38,6 +38,7 @@ const SEED_PODCASTS: PodcastEpisode[] = [
     date: '2026-09-15',
     description: 'An exhaustive exploration of Article 44, gender justice under personal laws, and synthesizing civilizational equity with modern constitutional democracy.',
     featured: true,
+    status: 'published',
   },
   {
     id: 'pod-2',
@@ -52,6 +53,7 @@ const SEED_PODCASTS: PodcastEpisode[] = [
     date: '2026-09-02',
     description: 'Examining the epistemological foundations of Indian jurisprudence, Pramana Shastra in statutory interpretation, and the evolution of the Bharatiya Nyaya Sanhita.',
     featured: true,
+    status: 'published',
   },
   {
     id: 'pod-3',
@@ -66,6 +68,7 @@ const SEED_PODCASTS: PodcastEpisode[] = [
     date: '2026-08-20',
     description: 'Applying Kautilyan statecraft, Mandala theory, and the maritime heritage of the Chola empire to contemporary Indo-Pacific strategic dilemmas.',
     featured: false,
+    status: 'published',
   }
 ];
 
@@ -98,12 +101,30 @@ class PodcastService {
     }
   }
 
-  async getPodcasts(): Promise<PodcastEpisode[]> {
-    return this.getStore();
+  async getPodcasts(includeDrafts: boolean = false): Promise<PodcastEpisode[]> {
+    const all = this.getStore();
+    if (includeDrafts) return all;
+    return all.filter(p => !p.status || p.status === 'published');
   }
 
-  getAll(): PodcastEpisode[] {
-    return this.getStore();
+  getAll(includeDrafts: boolean = true): PodcastEpisode[] {
+    const all = this.getStore();
+    if (includeDrafts) return all;
+    return all.filter(p => !p.status || p.status === 'published');
+  }
+
+  togglePublish(id: string): PodcastEpisode | null {
+    const current = this.getStore();
+    const index = current.findIndex(p => p.id === id);
+    if (index === -1) return null;
+    const existing = current[index];
+    const nextStatus = existing.status === 'draft' ? 'published' : 'draft';
+    current[index] = {
+      ...existing,
+      status: nextStatus,
+    };
+    this.setStore([...current]);
+    return current[index];
   }
 
   create(input: PodcastInput): PodcastEpisode {
@@ -125,6 +146,7 @@ class PodcastService {
       date: input.date || new Date().toISOString().split('T')[0],
       description: input.description.trim(),
       featured: input.featured ?? false,
+      status: input.status || 'published',
     };
 
     this.setStore([newEpisode, ...current]);

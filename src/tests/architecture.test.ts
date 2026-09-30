@@ -159,6 +159,12 @@ async function runTests() {
 
   const domains = await researchService.getDomains();
   assert(Array.isArray(domains) && domains.length > 0, 'Research service functions independently');
+  if (domains.length > 0) {
+    const toggled = await researchService.togglePublish(domains[0].id);
+    assert(toggled.status === 'draft', 'Research domain status toggles from published to draft');
+    const restored = await researchService.togglePublish(domains[0].id);
+    assert(restored.status === 'published', 'Research domain status toggles back to published');
+  }
 
   // 8. Admin Credentials & Two-Factor Authentication (2FA) Security
   console.log('\n📌 Testing Admin Credentials & 2FA Lifecycle:');
@@ -416,6 +422,10 @@ async function runTests() {
     featured: false,
   });
   assert(newPod.youtubeId === 'kJQP7kiw5Fk', 'Auto-extracts YouTube ID during episode creation');
+  const toggledPod = podcastService.togglePublish(newPod.id);
+  assert(toggledPod?.status === 'draft', 'Podcast episode toggles from published to draft');
+  const restoredPod = podcastService.togglePublish(newPod.id);
+  assert(restoredPod?.status === 'published', 'Podcast episode toggles back to published');
   podcastService.delete(newPod.id);
   assert(podcastService.getAll().length === podcastList.length, 'Test podcast cleaned up successfully');
 
@@ -436,6 +446,10 @@ async function runTests() {
     description: 'Comprehensive research edition.',
   });
   assert(newMag.id.startsWith('mag-'), 'New magazine edition generated with valid ID');
+  const toggledMag = magazineService.togglePublish(newMag.id);
+  assert(toggledMag?.status === 'draft', 'Magazine edition toggles from published to draft');
+  const restoredMag = magazineService.togglePublish(newMag.id);
+  assert(restoredMag?.status === 'published', 'Magazine edition toggles back to published');
   magazineService.delete(newMag.id);
   assert(magazineService.getAll().length === magIssues.length, 'Test magazine edition cleaned up');
 

@@ -27,6 +27,7 @@ export const MagazineEditorModal: React.FC<MagazineEditorModalProps> = ({
     description: '',
     editorialLead: '',
     tableOfContents: [],
+    status: 'published',
   });
 
   const [tocText, setTocText] = useState('');
@@ -46,6 +47,7 @@ export const MagazineEditorModal: React.FC<MagazineEditorModalProps> = ({
         description: initialData.description || '',
         editorialLead: initialData.editorialLead || '',
         tableOfContents: initialData.tableOfContents || [],
+        status: initialData.status || 'published',
       });
       setTocText(initialData.tableOfContents ? initialData.tableOfContents.join('\n') : '');
     } else {
@@ -60,6 +62,7 @@ export const MagazineEditorModal: React.FC<MagazineEditorModalProps> = ({
         description: '',
         editorialLead: 'Editorial Board • Bharat Collective Review',
         tableOfContents: [],
+        status: 'published',
       });
       setTocText('');
     }
@@ -184,8 +187,8 @@ export const MagazineEditorModal: React.FC<MagazineEditorModalProps> = ({
             </div>
           </div>
 
-          {/* Price, Page Count & Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Price, Page Count, Date, Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div>
               <label className="block font-semibold text-slate-800 mb-1">
                 Reader Token Price (₹)
@@ -224,6 +227,19 @@ export const MagazineEditorModal: React.FC<MagazineEditorModalProps> = ({
                 onChange={e => setFormData({ ...formData, publicationDate: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-1 focus:ring-amber-700 focus:border-amber-700 bg-white"
               />
+            </div>
+            <div>
+              <label className="block font-semibold text-slate-800 mb-1">
+                Publishing Status
+              </label>
+              <select
+                value={formData.status || 'published'}
+                onChange={e => setFormData({ ...formData, status: e.target.value as 'published' | 'draft' })}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-1 focus:ring-amber-700 focus:border-amber-700 bg-white"
+              >
+                <option value="published">Published</option>
+                <option value="draft">Draft (Hidden)</option>
+              </select>
             </div>
           </div>
 

@@ -785,6 +785,15 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                 />
               </div>
 
+              <div className="space-y-0.5">
+                <CustomizableSelect
+                  label="Status"
+                  groupKey="content_status"
+                  value={formData.status || 'published'}
+                  onChange={val => setFormData({ ...formData, status: val as ContentStatus })}
+                />
+              </div>
+
               <CustomTagInput
                 label="Research Focus Areas & Themes"
                 tags={Array.isArray(formData.focusAreas) ? formData.focusAreas : typeof formData.focusAreas === 'string' ? formData.focusAreas.split(',').map((s: string) => s.trim()).filter(Boolean) : []}
@@ -818,7 +827,7 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <CustomizableSelect
                   label="Council / Fellowship Role"
                   groupKey="expert_role"
@@ -836,6 +845,18 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
                     placeholder="Senior Fellow & Chair, Statecraft Initiative"
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
                   />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-900">Status</label>
+                  <select
+                    value={formData.status === 'archived' ? 'archived' : 'active'}
+                    onChange={e => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs"
+                  >
+                    <option value="active">Published (Active)</option>
+                    <option value="archived">Unpublished (Archived)</option>
+                  </select>
                 </div>
               </div>
 

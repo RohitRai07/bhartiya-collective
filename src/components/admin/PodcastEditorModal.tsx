@@ -28,6 +28,7 @@ export const PodcastEditorModal: React.FC<PodcastEditorModalProps> = ({
     description: '',
     featured: false,
     thumbnailUrl: '',
+    status: 'published',
   });
 
   const [saving, setSaving] = useState(false);
@@ -46,6 +47,7 @@ export const PodcastEditorModal: React.FC<PodcastEditorModalProps> = ({
         description: initialData.description || '',
         featured: initialData.featured ?? false,
         thumbnailUrl: initialData.thumbnailUrl || '',
+        status: initialData.status || 'published',
       });
     } else {
       setFormData({
@@ -59,6 +61,7 @@ export const PodcastEditorModal: React.FC<PodcastEditorModalProps> = ({
         description: '',
         featured: false,
         thumbnailUrl: '',
+        status: 'published',
       });
     }
     setError(null);
@@ -274,18 +277,34 @@ export const PodcastEditorModal: React.FC<PodcastEditorModalProps> = ({
             />
           </div>
 
-          {/* Featured Toggle */}
-          <div className="flex items-center space-x-2 pt-1">
-            <input
-              type="checkbox"
-              id="pod-featured"
-              checked={formData.featured}
-              onChange={e => setFormData({ ...formData, featured: e.target.checked })}
-              className="rounded text-amber-700 focus:ring-amber-600 h-4 w-4"
-            />
-            <label htmlFor="pod-featured" className="font-semibold text-slate-700 cursor-pointer">
-              Pin as Featured Episode on Podcasts Page
-            </label>
+          {/* Status & Featured */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 items-center">
+            <div>
+              <label className="block font-semibold text-slate-800 mb-1">
+                Publishing Status
+              </label>
+              <select
+                value={formData.status || 'published'}
+                onChange={e => setFormData({ ...formData, status: e.target.value as 'published' | 'draft' })}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-1 focus:ring-amber-700 focus:border-amber-700 bg-white"
+              >
+                <option value="published">Published (Visible on site)</option>
+                <option value="draft">Draft (Unpublished / Hidden)</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-2 sm:pt-5">
+              <input
+                type="checkbox"
+                id="pod-featured"
+                checked={formData.featured}
+                onChange={e => setFormData({ ...formData, featured: e.target.checked })}
+                className="rounded text-amber-700 focus:ring-amber-600 h-4 w-4"
+              />
+              <label htmlFor="pod-featured" className="font-semibold text-slate-700 cursor-pointer">
+                Pin as Featured Episode
+              </label>
+            </div>
           </div>
 
           {/* Modal Action Buttons */}

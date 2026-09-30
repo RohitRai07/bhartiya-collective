@@ -12,22 +12,24 @@ import { mockResearchDomains } from '../data/mockResearch';
 
 const STORAGE_KEY = 'bharat_collective_research_domains';
 
+let memoryDomains: ResearchDomain[] = mockResearchDomains.map(d => ({ ...d, status: 'published' as const }));
+
 function loadStoredDomains(): ResearchDomain[] {
-  if (typeof window === 'undefined') return mockResearchDomains;
+  if (typeof window === 'undefined') return memoryDomains;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      const initial = mockResearchDomains.map(d => ({ ...d, status: 'published' as const }));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-      return initial;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(memoryDomains));
+      return memoryDomains;
     }
     return JSON.parse(raw);
   } catch {
-    return mockResearchDomains;
+    return memoryDomains;
   }
 }
 
 function saveDomains(list: ResearchDomain[]) {
+  memoryDomains = list;
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
@@ -105,7 +107,8 @@ export const researchService = {
   async togglePublish(id: string): Promise<ResearchDomain> {
     const item = (await this.getDomains(true)).find(d => d.id === id);
     if (!item) throw new Error('Domain not found');
-    const newStatus = item.status === 'published' ? 'draft' : 'published';
+    const isPublished = item.status === 'published';
+    const newStatus = isPublished ? 'draft' : 'published';
     return this.updateDomain(id, { status: newStatus });
   }
 };
