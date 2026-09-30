@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { navigationConfig, NavItem } from '../../config/navigationConfig';
 import { siteConfig } from '../../config/siteConfig';
-import { Menu, X, Landmark, Heart, UserPlus } from 'lucide-react';
+import { Menu, X, Landmark, Heart, UserPlus, ChevronDown } from 'lucide-react';
 
 interface NavbarProps {
   currentPath: string;
@@ -12,6 +12,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [navItems, setNavItems] = useState<NavItem[]>([]);
   const [actionItems, setActionItems] = useState<NavItem[]>([]);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [mobileExpandedId, setMobileExpandedId] = useState<string | null>('centres');
+
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const refreshNav = () => {
@@ -24,9 +28,21 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
     return () => window.removeEventListener('bhartiya:feature-change', refreshNav);
   }, []);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdownId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleLinkClick = (path: string) => {
     onNavigate(path);
     setMobileMenuOpen(false);
+    setOpenDropdownId(null);
   };
 
   return (
@@ -73,9 +89,63 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2">
+          <nav ref={dropdownRef} className="hidden lg:flex items-center space-x-0.5 xl:space-x-1.5">
             {navItems.map((item) => {
-              const isActive = currentPath === item.path;
+              const isActive = currentPath === item.path || (item.children && item.children.some(c => currentPath === c.path));
+              const hasChildren = item.children && item.children.length > 0;
+              const isDropdownOpen = openDropdownId === item.id;
+
+              if (hasChildren) {
+                return (
+                  <div
+                    key={item.id}
+                    className="relative"
+                    onMouseEnter={() => setOpenDropdownId(item.id)}
+                    onMouseLeave={() => setOpenDropdownId(null)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpenDropdownId(prev => prev === item.id ? null : item.id)}
+                      className={`inline-flex items-center space-x-1 px-3 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${
+                        isActive
+                          ? 'text-amber-800 bg-amber-50 font-bold'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180 text-amber-700' : ''}`} />
+                    </button>
+
+                    {/* Multilevel Dropdown Menu */}
+                    {isDropdownOpen && (
+                      <div className="absolute left-0 mt-1 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                        <div className="px-3.5 py-1.5 border-b border-slate-100 text-[10px] uppercase font-bold text-amber-800 tracking-wider">
+                          Centres & Institutes
+                        </div>
+
+                        {item.children!.map((child) => (
+                          <button
+                            key={child.id}
+                            type="button"
+                            onClick={() => handleLinkClick(child.path)}
+                            className="w-full text-left px-3.5 py-2 text-xs hover:bg-amber-50/70 transition-colors flex flex-col group cursor-pointer"
+                          >
+                            <span className="font-semibold text-slate-800 group-hover:text-amber-900">
+                              {child.label}
+                            </span>
+                            {child.sanskritName && (
+                              <span className="text-[10px] text-slate-400 font-serif group-hover:text-amber-700">
+                                {child.sanskritName}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <button
                   key={item.id}
@@ -120,7 +190,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
               })}
             </div>
 
-            {/* Mobile / Tablet Menu Trigger (Visible on all screens below lg: < 1024px) */}
+            {/* Mobile / Tablet Menu Trigger */}
             <div className="flex lg:hidden items-center">
               <button
                 type="button"
@@ -138,22 +208,58 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
 
       {/* Mobile / Tablet Drawer */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-slate-200 bg-white/98 backdrop-blur-md px-4 pt-3 pb-6 space-y-3 shadow-xl animate-in slide-in-from-top duration-200">
+        <div className="lg:hidden border-t border-slate-200 bg-white/98 backdrop-blur-md px-4 pt-3 pb-6 space-y-3 shadow-xl max-h-[85vh] overflow-y-auto animate-in slide-in-from-top duration-200">
           <div className="space-y-1">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleLinkClick(item.path)}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-sm sm:text-base font-medium transition-colors cursor-pointer ${
-                  currentPath === item.path
-                    ? 'bg-amber-50 text-amber-900 font-bold border-l-4 border-amber-600 pl-2.5'
-                    : 'text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+            {navItems.map((item) => {
+              const hasChildren = item.children && item.children.length > 0;
+              const isExpanded = mobileExpandedId === item.id;
+              const isActive = currentPath === item.path;
+
+              if (hasChildren) {
+                return (
+                  <div key={item.id} className="border-b border-slate-100 pb-1">
+                    <button
+                      type="button"
+                      onClick={() => setMobileExpandedId(isExpanded ? null : item.id)}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-800 hover:bg-slate-50 cursor-pointer"
+                    >
+                      <span>{item.label}</span>
+                      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180 text-amber-700' : ''}`} />
+                    </button>
+
+                    {isExpanded && (
+                      <div className="pl-3 pr-1 py-1 space-y-1 bg-amber-50/50 rounded-xl my-1 border border-amber-100">
+                        {item.children!.map((child) => (
+                          <button
+                            key={child.id}
+                            type="button"
+                            onClick={() => handleLinkClick(child.path)}
+                            className="w-full text-left px-3 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-white hover:text-amber-900 cursor-pointer"
+                          >
+                            {child.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleLinkClick(item.path)}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-sm sm:text-base font-medium transition-colors cursor-pointer ${
+                    isActive
+                      ? 'bg-amber-50 text-amber-900 font-bold border-l-4 border-amber-600 pl-2.5'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
 
           <div className="pt-3 border-t border-slate-100 space-y-2 sm:hidden">
@@ -181,6 +287,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
           </div>
         </div>
       )}
+
     </header>
   );
 };

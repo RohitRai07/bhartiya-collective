@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
-import { siteConfig } from './config/siteConfig';
 
 // Pages
 import { HomePage } from './pages/HomePage';
 import { AboutPage } from './pages/AboutPage';
-import { ResearchPage } from './pages/ResearchPage';
+import { CentresPage } from './pages/CentresPage';
 import { PublicationsPage } from './pages/PublicationsPage';
+import { MagazinePage } from './pages/MagazinePage';
+import { PodcastsPage } from './pages/PodcastsPage';
+import { CareerPage } from './pages/CareerPage';
 import { CircularsPage } from './pages/CircularsPage';
 import { EventsPage } from './pages/EventsPage';
 import { NewsPage } from './pages/NewsPage';
@@ -38,6 +40,16 @@ export function App() {
   }, []);
 
   const navigateTo = useCallback((path: string) => {
+    // If it's an in-page anchor like #newsletter
+    if (path.startsWith('#')) {
+      const targetId = path.replace('#', '');
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
+
     const formatted = path.startsWith('/') ? path : `/${path}`;
     const targetHash = `#${formatted}`;
 
@@ -45,7 +57,19 @@ export function App() {
       window.location.hash = targetHash;
     }
     setCurrentPath(formatted);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // If destination has a hash anchor like /about#who-is-who
+    if (formatted.includes('#')) {
+      const targetId = formatted.split('#')[1];
+      setTimeout(() => {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, []);
 
   // Isolated Admin Portal Route (Protected by Admin Credentials)
@@ -55,17 +79,27 @@ export function App() {
     );
   }
 
+  // Base route without hash anchor
+  const baseRoute = currentPath.split('#')[0] || '/';
+
   // Render appropriate public page based on route
   const renderPage = () => {
-    switch (currentPath) {
+    switch (baseRoute) {
       case '/':
         return <HomePage onNavigate={navigateTo} />;
       case '/about':
         return <AboutPage />;
+      case '/centres':
       case '/research':
-        return <ResearchPage />;
+        return <CentresPage onNavigate={navigateTo} />;
       case '/publications':
         return <PublicationsPage />;
+      case '/magazine':
+        return <MagazinePage />;
+      case '/podcasts':
+        return <PodcastsPage />;
+      case '/careers':
+        return <CareerPage onNavigate={navigateTo} />;
       case '/circulars':
         return <CircularsPage onNavigate={navigateTo} />;
       case '/events':

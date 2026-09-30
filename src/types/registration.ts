@@ -22,12 +22,16 @@ export interface FormattedPhoneNumber {
   fullFormatted: string;  // e.g. "+91 9876543210"
 }
 
+export type EngagementType = 'membership' | 'volunteering' | 'both';
+
 export interface UserRegistrationInput {
   firstName: string;
   middleName?: string;
   lastName: string;
   email: string;
   phoneNumber: FormattedPhoneNumber;
+  profession?: string;
+  engagementType?: EngagementType;
   collegeName: string;
   address: string;
   pincode: string;

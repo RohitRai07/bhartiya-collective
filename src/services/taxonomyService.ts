@@ -49,7 +49,7 @@ const DEFAULT_OPTIONS: Record<TaxonomyGroupKey, DropdownOption[]> = {
   event_category: [
     { value: 'Symposium', label: 'Symposium' },
     { value: 'Roundtable', label: 'Roundtable' },
-    { value: 'Colloquium', label: 'Colloquium' },
+    { value: 'Panel Discussion', label: 'Panel Discussion' },
     { value: 'Public Lecture', label: 'Public Lecture' },
     { value: 'Workshop', label: 'Workshop' },
   ],

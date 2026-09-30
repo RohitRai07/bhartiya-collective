@@ -26,6 +26,13 @@ import { NotificationLog, NotificationRecipient } from '../types/notification';
 import { EmailGatewayConfig } from '../services/notificationService';
 import { DEFAULT_ADMIN_CREDS } from '../services/authService';
 import { fileService } from '../services/fileService';
+import { careerService } from '../services/careerService';
+import { podcastService } from '../services/podcastService';
+import { magazineService } from '../services/magazineService';
+import { featureConfig, FeatureFlags } from '../config/featureConfig';
+import { CareerApplicationRecord, CareerApplicationStatus } from '../types/career';
+import { PodcastEpisode, PodcastInput } from '../types/podcast';
+import { MagazineIssue, MagazineIssueInput } from '../types/magazine';
 
 import { AdminLoginForm } from '../components/admin/AdminLoginForm';
 import { RegistrationDetailModal } from '../components/admin/RegistrationDetailModal';
@@ -33,6 +40,9 @@ import { SendNotificationModal } from '../components/admin/SendNotificationModal
 import { ContentEditorModal, ContentEntityType } from '../components/admin/ContentEditorModal';
 import { ImageUploadWithUrl } from '../components/admin/ImageUploadWithUrl';
 import { TaxonomyManager } from '../components/admin/TaxonomyManager';
+import { CareerDetailModal } from '../components/admin/CareerDetailModal';
+import { PodcastEditorModal } from '../components/admin/PodcastEditorModal';
+import { MagazineEditorModal } from '../components/admin/MagazineEditorModal';
 import { taxonomyService } from '../services/taxonomyService';
 import { gazetteSyncService } from '../services/gazetteSyncService';
 
@@ -73,15 +83,20 @@ import {
   Image as ImageIcon, 
   ExternalLink, 
   Scale,
-  Tag
+  Tag,
+  Briefcase,
+  Video,
+  Sliders,
+  CheckCircle2,
+  FileDown
 } from 'lucide-react';
 
 interface AdminPreviewPageProps {
   onBackToPublicSite: () => void;
 }
 
-type MainTab = 'registrations' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings';
-type ContentSubTab = 'publications' | 'circulars' | 'events' | 'research' | 'experts' | 'news' | 'media' | 'taxonomy';
+type MainTab = 'registrations' | 'careers' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings';
+type ContentSubTab = 'publications' | 'circulars' | 'events' | 'research' | 'experts' | 'news' | 'podcasts' | 'magazine' | 'media' | 'taxonomy';
 
 export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPublicSite }) => {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -95,6 +110,25 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const [regSearch, setRegSearch] = useState('');
   const [selectedRegIds, setSelectedRegIds] = useState<string[]>([]);
   const [viewingRecord, setViewingRecord] = useState<UserRegistrationRecord | null>(null);
+
+  // Careers state
+  const [careerApplications, setCareerApplications] = useState<CareerApplicationRecord[]>([]);
+  const [careerFilter, setCareerFilter] = useState<'all' | 'internship' | 'job' | 'pending' | 'reviewing' | 'shortlisted' | 'rejected'>('all');
+  const [careerSearch, setCareerSearch] = useState('');
+  const [viewingCareerRecord, setViewingCareerRecord] = useState<CareerApplicationRecord | null>(null);
+
+  // Podcasts state
+  const [podcasts, setPodcasts] = useState<PodcastEpisode[]>([]);
+  const [podcastEditorOpen, setPodcastEditorOpen] = useState(false);
+  const [editingPodcast, setEditingPodcast] = useState<PodcastEpisode | null>(null);
+
+  // Magazine state
+  const [magazines, setMagazines] = useState<MagazineIssue[]>([]);
+  const [magazineEditorOpen, setMagazineEditorOpen] = useState(false);
+  const [editingMagazine, setEditingMagazine] = useState<MagazineIssue | null>(null);
+
+  // Feature Flags state
+  const [features, setFeatures] = useState<FeatureFlags>(featureConfig.get());
 
   // Content state
   const [publications, setPublications] = useState<Publication[]>([]);
@@ -199,6 +233,10 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       setNewsList(nws || []);
       setNotificationLogs(logs || []);
       setSubscribers(newsletterService.getSubscribers() || []);
+      setCareerApplications(careerService.getAll() || []);
+      setPodcasts(podcastService.getAll() || []);
+      setMagazines(magazineService.getAll() || []);
+      setFeatures(featureConfig.get());
     } catch (err) {
       console.error('Error loading admin data:', err);
     } finally {
@@ -582,6 +620,91 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     }
   };
 
+  // Career Handlers
+  const handleCareerStatusChange = (id: string, newStatus: CareerApplicationStatus) => {
+    careerService.updateStatus(id, newStatus);
+    setCareerApplications(careerService.getAll());
+    if (viewingCareerRecord && viewingCareerRecord.id === id) {
+      setViewingCareerRecord({ ...viewingCareerRecord, status: newStatus });
+    }
+  };
+
+  const handleDeleteCareer = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this candidate application record?')) {
+      careerService.delete(id);
+      setCareerApplications(careerService.getAll());
+      if (viewingCareerRecord && viewingCareerRecord.id === id) {
+        setViewingCareerRecord(null);
+      }
+    }
+  };
+
+  const handleDownloadCv = (rec: CareerApplicationRecord) => {
+    if (!rec.cvDataUrl) {
+      alert('CV data not available for this candidate.');
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = rec.cvDataUrl;
+    link.download = rec.cvFileName || `CV_${rec.fullName.replace(/\s+/g, '_')}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Podcast Handlers
+  const handleSavePodcast = async (input: PodcastInput) => {
+    if (editingPodcast) {
+      podcastService.update(editingPodcast.id, input);
+    } else {
+      podcastService.create(input);
+    }
+    setPodcasts(podcastService.getAll());
+    setPodcastEditorOpen(false);
+    setEditingPodcast(null);
+  };
+
+  const handleDeletePodcast = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this podcast episode?')) {
+      podcastService.delete(id);
+      setPodcasts(podcastService.getAll());
+    }
+  };
+
+  // Magazine Handlers
+  const handleSaveMagazine = async (input: MagazineIssueInput) => {
+    if (editingMagazine) {
+      magazineService.update(editingMagazine.id, input);
+    } else {
+      magazineService.create(input);
+    }
+    setMagazines(magazineService.getAll());
+    setMagazineEditorOpen(false);
+    setEditingMagazine(null);
+  };
+
+  const handleDeleteMagazine = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this magazine edition?')) {
+      magazineService.delete(id);
+      setMagazines(magazineService.getAll());
+    }
+  };
+
+  const handleTestDownloadMagazine = (mag: MagazineIssue) => {
+    try {
+      magazineService.generateAndDownloadPdf(mag);
+    } catch (err) {
+      console.error(err);
+      alert('Error generating magazine PDF.');
+    }
+  };
+
+  // Feature Flag Handler
+  const handleToggleFeature = (key: keyof FeatureFlags) => {
+    const updated = featureConfig.update({ [key]: !features[key] });
+    setFeatures(updated);
+  };
+
   // If not logged in as admin, render Admin Login screen
   if (!session) {
     return (
@@ -605,6 +728,27 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
   const isAllSelected = filteredRegistrations.length > 0 && 
     filteredRegistrations.every(r => selectedRegIds.includes(r.id));
+
+  // Filtered Career Applications
+  const filteredCareerApplications = (careerApplications || []).filter(app => {
+    const matchesFilter =
+      careerFilter === 'all'
+        ? true
+        : careerFilter === 'internship' || careerFilter === 'job'
+        ? app.type === careerFilter
+        : app.status === careerFilter;
+
+    const matchesSearch =
+      !careerSearch ||
+      app.fullName.toLowerCase().includes(careerSearch.toLowerCase()) ||
+      app.email.toLowerCase().includes(careerSearch.toLowerCase()) ||
+      app.currentInstitution.toLowerCase().includes(careerSearch.toLowerCase()) ||
+      app.qualification.toLowerCase().includes(careerSearch.toLowerCase()) ||
+      app.areaOfInterest.toLowerCase().includes(careerSearch.toLowerCase()) ||
+      app.applicationCode.toLowerCase().includes(careerSearch.toLowerCase());
+
+    return matchesFilter && matchesSearch;
+  });
 
   // Filtered subscribers
   const filteredSubscribers = (subscribers || []).filter(s => 
@@ -664,11 +808,12 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         <div className="bg-white rounded-2xl p-2 shadow-xs border border-slate-200 flex overflow-x-auto no-scrollbar gap-2 sm:flex-wrap">
           {[
             { id: 'registrations', label: `Registrations (${registrations.length})`, icon: UserCheck },
+            { id: 'careers', label: `Careers (${careerApplications.length})`, icon: Briefcase },
             { id: 'content', label: 'Website Content Management', icon: BookOpen },
             { id: 'communications', label: `Communications & Logs (${notificationLogs.length})`, icon: Send },
             { id: 'submissions', label: `Call for Papers (${submissions.length})`, icon: FileText },
             { id: 'newsletter', label: `Subscribers (${subscribers.length})`, icon: Mail },
-            { id: 'settings', label: 'Security & 2FA Settings', icon: KeyRound },
+            { id: 'settings', label: 'Security & Settings', icon: KeyRound },
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -904,6 +1049,155 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         )}
 
         {/* ============================================================== */}
+        {/* TAB: CAREER APPLICATIONS MANAGEMENT */}
+        {/* ============================================================== */}
+        {activeTab === 'careers' && (
+          <div className="space-y-4">
+            
+            {/* Filter and Top Action Bar */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'all', label: `All (${careerApplications.length})` },
+                  { id: 'internship', label: `Internships (${careerApplications.filter(a => a.type === 'internship').length})` },
+                  { id: 'job', label: `Jobs (${careerApplications.filter(a => a.type === 'job').length})` },
+                  { id: 'pending', label: `Pending (${careerApplications.filter(a => a.status === 'pending').length})` },
+                  { id: 'reviewing', label: `Reviewing (${careerApplications.filter(a => a.status === 'reviewing').length})` },
+                  { id: 'shortlisted', label: `Shortlisted (${careerApplications.filter(a => a.status === 'shortlisted').length})` },
+                  { id: 'rejected', label: `Rejected (${careerApplications.filter(a => a.status === 'rejected').length})` },
+                ].map(filter => (
+                  <button
+                    key={filter.id}
+                    onClick={() => setCareerFilter(filter.id as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors cursor-pointer ${
+                      careerFilter === filter.id
+                        ? 'bg-amber-700 text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="relative flex-grow sm:flex-grow-0">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="Search candidate, college, area..."
+                    value={careerSearch}
+                    onChange={e => setCareerSearch(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white w-full sm:w-64"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Candidates Table */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="p-3.5">Candidate & Code</th>
+                      <th className="p-3.5">Type</th>
+                      <th className="p-3.5">Institution & Degree</th>
+                      <th className="p-3.5">Area of Interest</th>
+                      <th className="p-3.5">CV File (PDF)</th>
+                      <th className="p-3.5">Date</th>
+                      <th className="p-3.5">Status</th>
+                      <th className="p-3.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredCareerApplications.map(app => (
+                      <tr key={app.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3.5">
+                          <div className="font-semibold text-slate-900">{app.fullName}</div>
+                          <div className="text-[10px] text-slate-400 font-mono">{app.applicationCode}</div>
+                          <div className="text-[10px] text-slate-500">{app.email} • {app.phone}</div>
+                        </td>
+                        <td className="p-3.5">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                            app.type === 'job'
+                              ? 'bg-amber-100 text-amber-900 border-amber-300'
+                              : 'bg-sky-100 text-sky-900 border-sky-300'
+                          }`}>
+                            {app.type}
+                          </span>
+                        </td>
+                        <td className="p-3.5 max-w-xs">
+                          <div className="font-medium text-slate-800 truncate" title={app.currentInstitution}>
+                            {app.currentInstitution}
+                          </div>
+                          <div className="text-[10px] text-slate-500 truncate" title={app.qualification}>
+                            {app.qualification}
+                          </div>
+                        </td>
+                        <td className="p-3.5 text-slate-700 max-w-xs truncate" title={app.areaOfInterest}>
+                          {app.areaOfInterest}
+                        </td>
+                        <td className="p-3.5">
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadCv(app)}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-slate-200"
+                            title="Download PDF CV (Strictly ≤ 1 MB)"
+                          >
+                            <FileDown className="w-3.5 h-3.5 text-rose-600" />
+                            <span className="truncate max-w-[100px]">{app.cvFileName || 'Resume.pdf'}</span>
+                          </button>
+                        </td>
+                        <td className="p-3.5 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                          {new Date(app.submittedAt).toLocaleDateString('en-IN')}
+                        </td>
+                        <td className="p-3.5">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            app.status === 'shortlisted'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : app.status === 'reviewing'
+                              ? 'bg-blue-100 text-blue-800'
+                              : app.status === 'rejected'
+                              ? 'bg-rose-100 text-rose-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {app.status}
+                          </span>
+                        </td>
+                        <td className="p-3.5 text-right space-x-1 whitespace-nowrap">
+                          <button
+                            onClick={() => setViewingCareerRecord(app)}
+                            className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-xs font-semibold transition-colors inline-flex items-center space-x-1 cursor-pointer"
+                            title="View Candidate Dossier"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Dossier</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCareer(app.id)}
+                            className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors inline-flex cursor-pointer"
+                            title="Delete Application"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {filteredCareerApplications.length === 0 && (
+                <div className="text-center py-12 text-xs text-slate-400">
+                  No career applications found matching the search or filter criteria.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================== */}
         {/* TAB 2: WEBSITE CONTENT MANAGEMENT (CRUD) */}
         {/* ============================================================== */}
         {activeTab === 'content' && (
@@ -919,6 +1213,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   { id: 'research', label: `Research Domains (${domains.length})`, icon: Compass },
                   { id: 'experts', label: `Council & Fellows (${experts.length})`, icon: Users },
                   { id: 'news', label: `News & Insights (${newsList.length})`, icon: Newspaper },
+                  { id: 'podcasts', label: `Podcasts (${podcasts.length})`, icon: Video },
+                  { id: 'magazine', label: `Magazine (${magazines.length})`, icon: BookOpen },
                   { id: 'media', label: `Media & Uploads (${mediaList.length})`, icon: UploadCloud },
                   { id: 'taxonomy', label: 'Custom Tags & Dropdowns', icon: Tag },
                 ].map(sub => {
@@ -945,6 +1241,16 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {contentSubTab !== 'media' && contentSubTab !== 'taxonomy' && (
                   <button
                     onClick={() => {
+                      if (contentSubTab === 'podcasts') {
+                        setEditingPodcast(null);
+                        setPodcastEditorOpen(true);
+                        return;
+                      }
+                      if (contentSubTab === 'magazine') {
+                        setEditingMagazine(null);
+                        setMagazineEditorOpen(true);
+                        return;
+                      }
                       const typeMap: Record<string, ContentEntityType> = {
                         publications: 'publication',
                         circulars: 'circular',
@@ -966,7 +1272,9 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         contentSubTab === 'circulars' ? 'Legal Circular' :
                         contentSubTab === 'events' ? 'Event' :
                         contentSubTab === 'research' ? 'Domain' :
-                        contentSubTab === 'experts' ? 'Scholar' : 'Article'
+                        contentSubTab === 'experts' ? 'Scholar' :
+                        contentSubTab === 'podcasts' ? 'Podcast Episode' :
+                        contentSubTab === 'magazine' ? 'Magazine Edition' : 'Article'
                       }
                     </span>
                   </button>
@@ -1498,6 +1806,184 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+
+            {/* SUB-TAB: PODCASTS MANAGEMENT */}
+            {contentSubTab === 'podcasts' && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                      <tr>
+                        <th className="p-3.5">Episode Title & Topic</th>
+                        <th className="p-3.5">Guest / Speaker</th>
+                        <th className="p-3.5">YouTube Stream</th>
+                        <th className="p-3.5">Duration</th>
+                        <th className="p-3.5">Date</th>
+                        <th className="p-3.5">Featured</th>
+                        <th className="p-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {podcasts.map(pod => (
+                        <tr key={pod.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3.5 max-w-sm">
+                            <div className="font-serif font-bold text-slate-900 text-xs">{pod.title}</div>
+                            <span className="text-[10px] uppercase font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded mt-0.5 inline-block">
+                              {pod.topic}
+                            </span>
+                          </td>
+                          <td className="p-3.5">
+                            <div className="font-medium text-slate-900">{pod.speaker}</div>
+                            {pod.speakerRole && (
+                              <div className="text-[10px] text-slate-500 truncate max-w-xs">{pod.speakerRole}</div>
+                            )}
+                          </td>
+                          <td className="p-3.5">
+                            <div className="flex items-center space-x-2">
+                              {pod.thumbnailUrl && (
+                                <img
+                                  src={pod.thumbnailUrl}
+                                  alt=""
+                                  className="w-14 h-9 object-cover rounded border border-slate-200"
+                                />
+                              )}
+                              <a
+                                href={pod.youtubeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center space-x-1 text-red-600 hover:text-red-700 font-semibold"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                <span>Watch</span>
+                              </a>
+                            </div>
+                          </td>
+                          <td className="p-3.5 text-slate-600 font-mono">
+                            {pod.duration}
+                          </td>
+                          <td className="p-3.5 text-slate-600 font-mono">
+                            {pod.date}
+                          </td>
+                          <td className="p-3.5">
+                            {pod.featured ? (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">Featured</span>
+                            ) : (
+                              <span className="text-slate-400 text-[10px]">—</span>
+                            )}
+                          </td>
+                          <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                            <button
+                              onClick={() => {
+                                setEditingPodcast(pod);
+                                setPodcastEditorOpen(true);
+                              }}
+                              className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded transition-colors inline-flex cursor-pointer"
+                              title="Edit Episode"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeletePodcast(pod.id)}
+                              className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
+                              title="Delete Episode"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {podcasts.length === 0 && (
+                  <div className="text-center py-12 text-xs text-slate-400">
+                    No podcast episodes found. Click &quot;Add New Podcast Episode&quot; to publish one.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SUB-TAB: MAGAZINE MANAGEMENT */}
+            {contentSubTab === 'magazine' && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                      <tr>
+                        <th className="p-3.5">Edition & Volume</th>
+                        <th className="p-3.5">Theme / Focus</th>
+                        <th className="p-3.5">Publication Date</th>
+                        <th className="p-3.5">Pages</th>
+                        <th className="p-3.5">Price</th>
+                        <th className="p-3.5">Downloads</th>
+                        <th className="p-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {magazines.map(mag => (
+                        <tr key={mag.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3.5 max-w-sm">
+                            <div className="font-serif font-bold text-slate-900 text-xs">{mag.title}</div>
+                            <span className="text-[10px] text-amber-800 font-semibold block mt-0.5">
+                              {mag.issueNumber}
+                            </span>
+                          </td>
+                          <td className="p-3.5 text-slate-700 max-w-xs truncate" title={mag.theme}>
+                            {mag.theme}
+                          </td>
+                          <td className="p-3.5 text-slate-600 font-mono">
+                            {mag.publicationDate}
+                          </td>
+                          <td className="p-3.5 text-slate-600">
+                            {mag.pageCount} pp
+                          </td>
+                          <td className="p-3.5 font-bold text-slate-800">
+                            ₹{mag.price}
+                          </td>
+                          <td className="p-3.5 font-mono text-emerald-700 font-semibold">
+                            {mag.downloadCount}
+                          </td>
+                          <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                            <button
+                              onClick={() => handleTestDownloadMagazine(mag)}
+                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors inline-flex items-center space-x-1 cursor-pointer"
+                              title="Generate and Download Client-Side Compressed PDF"
+                            >
+                              <Download className="w-3.5 h-3.5 text-amber-800" />
+                              <span>Test PDF</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setEditingMagazine(mag);
+                                setMagazineEditorOpen(true);
+                              }}
+                              className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded transition-colors inline-flex cursor-pointer"
+                              title="Edit Magazine Edition"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMagazine(mag.id)}
+                              className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
+                              title="Delete Magazine Edition"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {magazines.length === 0 && (
+                  <div className="text-center py-12 text-xs text-slate-400">
+                    No magazine editions found. Click &quot;Add New Magazine Edition&quot; to publish one.
+                  </div>
+                )}
               </div>
             )}
 
@@ -2119,6 +2605,170 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               </div>
             )}
 
+            {/* Feature Flags & Module Visibility Card */}
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2 text-amber-800 font-bold text-xs uppercase tracking-wider">
+                    <Sliders className="w-4 h-4" />
+                    <span>Public Feature Flags & Module Visibility</span>
+                  </div>
+                  <h3 className="font-serif font-bold text-slate-900 text-lg">
+                    Website Section Toggles
+                  </h3>
+                  <p className="text-xs text-slate-500 max-w-2xl">
+                    Configure which specialized sections appear in the public navigation and footer. Changes take effect immediately across all visitors without redeploying code.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Circulars & Legal Materials Toggle */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Scale className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Circulars & Legal Materials
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.circulars 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.circulars ? 'Live on Site' : 'Hidden by Default'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Official gazettes & legal notifications. Per specification, this module is hidden from the public navigation by default, but can be enabled whenever needed.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('circulars')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.circulars ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        features.circulars ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Podcasts Toggle */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Video className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Podcasts & Video Dispatches
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.podcasts 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.podcasts ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Interactive video dialogs and YouTube embed cards located at <code>/podcasts</code>.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('podcasts')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.podcasts ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        features.podcasts ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Magazine Toggle */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <BookOpen className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Magazine (Bharat Review)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.magazine 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.magazine ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Quarterly digital magazine with ₹100 contribution modal and client-side PDF engine at <code>/magazine</code>.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('magazine')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.magazine ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        features.magazine ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Careers Toggle */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Briefcase className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Career & Internship Applications
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.careers 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.careers ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Internship and job application form with strict 1 MB PDF CV upload at <code>/careers</code>.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('careers')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.careers ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        features.careers ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Grid Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -2525,6 +3175,35 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         initialData={editingItem}
         onClose={() => setContentEditorOpen(false)}
         onSave={handleSaveContent}
+      />
+
+      {/* Career Application Dossier Detail Modal */}
+      <CareerDetailModal
+        record={viewingCareerRecord}
+        onClose={() => setViewingCareerRecord(null)}
+        onStatusChange={handleCareerStatusChange}
+      />
+
+      {/* Podcast Editor Modal */}
+      <PodcastEditorModal
+        isOpen={podcastEditorOpen}
+        initialData={editingPodcast}
+        onClose={() => {
+          setPodcastEditorOpen(false);
+          setEditingPodcast(null);
+        }}
+        onSave={handleSavePodcast}
+      />
+
+      {/* Magazine Editor Modal */}
+      <MagazineEditorModal
+        isOpen={magazineEditorOpen}
+        initialData={editingMagazine}
+        onClose={() => {
+          setMagazineEditorOpen(false);
+          setEditingMagazine(null);
+        }}
+        onSave={handleSaveMagazine}
       />
 
     </div>

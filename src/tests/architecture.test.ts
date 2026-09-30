@@ -20,6 +20,10 @@ import { pdfService } from '../services/pdfService';
 import { circularService } from '../services/circularService';
 import { taxonomyService } from '../services/taxonomyService';
 import { gazetteSyncService } from '../services/gazetteSyncService';
+import { careerService } from '../services/careerService';
+import { podcastService, extractYouTubeId } from '../services/podcastService';
+import { magazineService } from '../services/magazineService';
+import { MAX_CV_SIZE_BYTES } from '../types/career';
 import { UserRegistrationInput } from '../types/registration';
 
 async function runTests() {
@@ -359,6 +363,92 @@ async function runTests() {
   assert(updatedSettings.autoSyncEnabled === false, 'Auto-sync toggle settings persisted');
   gazetteSyncService.updateSyncSettings({ autoSyncEnabled: true });
   assert(gazetteSyncService.getSyncSettings().autoSyncEnabled === true, 'Auto-sync toggle restored to active state');
+
+  // 10. Career Applications Workflow & CV Validation
+  console.log('\n📌 Testing Career Applications & CV Validation Engine:');
+  assert(MAX_CV_SIZE_BYTES === 1024 * 1024, 'Max CV file size limit strictly enforced at 1 MB (1,048,576 bytes)');
+  const initialCareers = careerService.getAll();
+  assert(initialCareers.length >= 2, 'Seeded career applications loaded successfully');
+  assert(initialCareers.some(c => c.type === 'internship'), 'Contains seeded internship applications');
+  assert(initialCareers.some(c => c.type === 'job'), 'Contains seeded research fellow/job applications');
+
+  const newApp = careerService.create({
+    type: 'internship',
+    fullName: 'Aditya Vardhan Sharma',
+    email: 'aditya.sharma@du.ac.in',
+    phone: '+91 98111 22334',
+    currentInstitution: 'Faculty of Law, Delhi University',
+    qualification: 'Final Year LL.B',
+    areaOfInterest: 'Center for HR & Legal Aid',
+    coverLetter: 'Interested in civilizational research on personal laws and legal epistemology.',
+    cvFileName: 'Aditya_Sharma_Resume.pdf',
+    cvFileSize: 512000,
+    cvDataUrl: 'data:application/pdf;base64,JVBERi0xLjQK...',
+  });
+  assert(newApp.applicationCode.startsWith('BC-CAR-'), 'Generated application code follows standard BC-CAR- prefix');
+  assert(newApp.status === 'pending', 'New application initial status defaults to pending');
+  
+  careerService.updateStatus(newApp.id, 'shortlisted');
+  const updatedApp = careerService.getById(newApp.id);
+  assert(updatedApp?.status === 'shortlisted', 'Candidate status updated cleanly to shortlisted');
+  
+  careerService.delete(newApp.id);
+  assert(!careerService.getById(newApp.id), 'Test application cleaned up successfully');
+
+  // 11. Podcasts & YouTube Embed Integration
+  console.log('\n📌 Testing Podcasts & YouTube Video Streaming Integration:');
+  assert(extractYouTubeId('https://www.youtube.com/watch?v=dQw4w9WgXcQ') === 'dQw4w9WgXcQ', 'Standard youtube.com/watch?v= parser extracts video ID');
+  assert(extractYouTubeId('https://youtu.be/kJQP7kiw5Fk') === 'kJQP7kiw5Fk', 'Shortened youtu.be/ parser extracts video ID');
+  assert(extractYouTubeId('https://www.youtube.com/embed/3JZ_D3ELwOQ') === '3JZ_D3ELwOQ', 'Embed URL parser extracts video ID');
+  
+  const podcastList = podcastService.getAll();
+  assert(podcastList.length >= 3, 'Seeded podcast episodes loaded');
+  assert(podcastList.some(p => p.featured), 'Featured podcast episode exists');
+  
+  const newPod = podcastService.create({
+    title: 'The Constitution & Indic Epistemology',
+    youtubeUrl: 'https://youtu.be/kJQP7kiw5Fk',
+    speaker: 'Prof. Ananya Someshwar',
+    topic: 'Constitutional Law',
+    duration: '48 min',
+    date: '2026-09-25',
+    description: 'Special dialogue on epistemic jurisprudence.',
+    featured: false,
+  });
+  assert(newPod.youtubeId === 'kJQP7kiw5Fk', 'Auto-extracts YouTube ID during episode creation');
+  podcastService.delete(newPod.id);
+  assert(podcastService.getAll().length === podcastList.length, 'Test podcast cleaned up successfully');
+
+  // 12. Magazine & Client-Side PDF Generation
+  console.log('\n📌 Testing Magazine & Digital Edition Engine:');
+  const magIssues = magazineService.getAll();
+  assert(magIssues.length >= 2, 'Seeded magazine issues loaded');
+  assert(magIssues.every(m => m.price === 100), 'All magazine issues have ₹100 reader contribution price');
+  assert(magIssues[0].tableOfContents && magIssues[0].tableOfContents.length > 0, 'Table of contents parsed into indexed articles');
+
+  const newMag = magazineService.create({
+    title: 'Special Autumn Volume',
+    issueNumber: 'Volume I • Issue 3',
+    theme: 'Legal Hermeneutics',
+    publicationDate: '2026-10-01',
+    price: 100,
+    pageCount: 50,
+    description: 'Comprehensive research edition.',
+  });
+  assert(newMag.id.startsWith('mag-'), 'New magazine edition generated with valid ID');
+  magazineService.delete(newMag.id);
+  assert(magazineService.getAll().length === magIssues.length, 'Test magazine edition cleaned up');
+
+  // 13. Feature Configuration & Circulars Toggle
+  console.log('\n📌 Testing Feature Flags & Module Visibility:');
+  assert(featureConfig.isEnabled('circulars') === false, 'Circulars & Legal Materials hidden on public site by default per spec');
+  featureConfig.update({ circulars: true });
+  assert(featureConfig.isEnabled('circulars') === true, 'Circulars module toggles to active');
+  featureConfig.update({ circulars: false });
+  assert(featureConfig.isEnabled('circulars') === false, 'Circulars module restored to default hidden state');
+  assert(featureConfig.isEnabled('podcasts') === true, 'Podcasts module enabled');
+  assert(featureConfig.isEnabled('magazine') === true, 'Magazine module enabled');
+  assert(featureConfig.isEnabled('careers') === true, 'Careers module enabled');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

@@ -93,7 +93,10 @@ export const ContactPage: React.FC = () => {
                 <Phone className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <strong className="block text-slate-800 text-sm">Telephone</strong>
-                  <span>{siteConfig.contact.phone}</span>
+                  <div className="space-y-0.5">
+                    <span className="block">{siteConfig.contact.phone}</span>
+                    <span className="block">{siteConfig.contact.phoneSecondary}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -107,7 +110,7 @@ export const ContactPage: React.FC = () => {
               Call for Papers & Scholarly Abstracts
             </h3>
             <p className="text-xs text-slate-500 mb-6">
-              Submit your abstract for consideration in the Bhartiya Collective Occasional Papers series.
+              Submit your abstract for consideration in the Magazine & News Letter
             </p>
 
             {submissionSuccessCode ? (

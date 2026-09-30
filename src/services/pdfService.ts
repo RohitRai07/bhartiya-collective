@@ -180,7 +180,7 @@ export const pdfService = {
     doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
     doc.text('Licensed under Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0).', margin, footerY + 5);
-    doc.text('Bharat Collective Foundation • Constitution Club Area, Rafi Marg, New Delhi 110001 • secretariat@bharatcollective.org', margin, footerY + 9);
+    doc.text(`Bharat Collective Foundation • ${siteConfig.contact.address} • secretariat@bharatcollective.org`, margin, footerY + 9);
     doc.text(`Page 1 of 1 • Official Electronic Release • ${siteConfig.name}`, pageWidth - margin, footerY + 5, { align: 'right' });
 
     return doc;
@@ -344,7 +344,7 @@ export const pdfService = {
     doc.setFontSize(8);
     doc.setTextColor(100, 116, 139);
     doc.text('Public Interest Legal Archive • Preserving Constitutional Jurisprudence & Open Law Access.', margin, footerY + 5);
-    doc.text('Bharat Collective Foundation • Constitution Club Area, Rafi Marg, New Delhi 110001 • legal@bharatcollective.org', margin, footerY + 9);
+    doc.text(`Bharat Collective Foundation • ${siteConfig.contact.address} • legal@bharatcollective.org`, margin, footerY + 9);
     doc.text(`Official Document Archive • ${siteConfig.name}`, pageWidth - margin, footerY + 5, { align: 'right' });
 
     return doc;

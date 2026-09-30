@@ -22,17 +22,18 @@ export const SupportUsPage: React.FC = () => {
   return (
     <div className="space-y-12 pb-16">
       
-      {/* Top Banner */}
-      <section className="bg-gradient-to-b from-amber-500/10 to-transparent pt-12 pb-8 border-b border-amber-900/10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
-            Scholarly Independence
-          </span>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-slate-900">
-            Patronage & Research Endowment
+      {/* Top Header */}
+      <section className="bg-gradient-to-b from-amber-500/10 to-transparent pt-12 pb-6 border-b border-amber-900/10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-3">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-semibold">
+            <Heart className="w-3.5 h-3.5 text-amber-700" />
+            <span>Support Us</span>
+          </div>
+          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-slate-900">
+            Support Bharat Collective Foundation
           </h1>
           <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Support foundational Indian thought, translation of rare manuscripts, and public policy formulation free from corporate lobbying or partisan constraints.
+            We operate as an independent foundation. Every rupee pledged directly supports Independent research, Legal, Events, and workshops.
           </p>
         </div>
       </section>

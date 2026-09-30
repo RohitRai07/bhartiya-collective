@@ -145,6 +145,21 @@ export const RegistrationDetailModal: React.FC<RegistrationDetailModalProps> = (
                 </a>
               </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200">
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Role / Engagement</span>
+                <span className="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 capitalize">
+                  {record.engagementType || 'Membership'}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Profession</span>
+                <span className="font-semibold text-slate-900 text-xs mt-0.5 block">
+                  {record.profession || 'Student / Scholar'}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Academic Affiliation */}

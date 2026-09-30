@@ -49,14 +49,22 @@ export const DonationSection: React.FC = () => {
   const [submissionResult, setSubmissionResult] = useState<DonationIntentResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const finalAmount = customAmount ? parseInt(customAmount, 10) || 0 : selectedAmount;
+  const finalAmount = customAmount ? parseFloat(customAmount) || 0 : selectedAmount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (finalAmount < 100) {
-      setErrorMessage('Contribution amount must be at least ₹100.');
+    if (finalAmount <= 0) {
+      setErrorMessage('Contribution amount must be greater than ₹0.');
+      return;
+    }
+    if (customAmount && !/^\d+(\.\d{1,2})?$/.test(customAmount)) {
+      setErrorMessage('Contribution amount can have at most two decimal places and must be positive.');
+      return;
+    }
+    if (finalAmount < 10) {
+      setErrorMessage('Contribution amount must be at least ₹10.');
       return;
     }
     if (!donorName.trim()) {
@@ -100,20 +108,6 @@ export const DonationSection: React.FC = () => {
   return (
     <section className="relative overflow-hidden py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-semibold mb-3">
-            <Heart className="w-3.5 h-3.5 text-amber-700" />
-            <span>Patronage & Scholarly Endowment</span>
-          </div>
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-            Support Rigorous, Independent Inquiry
-          </h2>
-          <p className="mt-3 text-base text-slate-600 max-w-2xl mx-auto">
-            The Core Bhartiya Collective is entirely sustained through individual contributions, philanthropic fellowships, and institutional grants.
-          </p>
-        </div>
 
         {/* If donation intent is prepared (Clean Phase 1 Service Boundary) */}
         {submissionResult ? (
@@ -139,16 +133,16 @@ export const DonationSection: React.FC = () => {
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-600">Pledged Amount:</span>
-                <span className="font-bold text-slate-900">₹{submissionResult.amount.toLocaleString('en-IN')}</span>
+                <span className="font-bold text-slate-900">₹{submissionResult.amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-600">Frequency:</span>
                 <span className="capitalize font-semibold text-slate-800">{frequency.replace('_', ' ')}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-600">Designated Cause:</span>
+                <span className="text-slate-600">Contribution Purpose:</span>
                 <span className="font-medium text-slate-800">
-                  {CAUSE_OPTIONS.find(c => c.id === submissionResult.cause)?.title}
+                  Independent Research, Legal, Events & Workshops
                 </span>
               </div>
             </div>
@@ -166,7 +160,7 @@ export const DonationSection: React.FC = () => {
 
             <button
               onClick={handleReset}
-              className="px-6 py-2.5 rounded-xl text-sm font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50"
+              className="px-6 py-2.5 rounded-xl text-sm font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer"
             >
               Back to Support Form
             </button>
@@ -186,7 +180,7 @@ export const DonationSection: React.FC = () => {
                       key={freq}
                       type="button"
                       onClick={() => setFrequency(freq)}
-                      className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                      className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                         frequency === freq
                           ? 'bg-white text-slate-900 shadow-sm'
                           : 'text-slate-600 hover:text-slate-900'
@@ -212,7 +206,7 @@ export const DonationSection: React.FC = () => {
                         setSelectedAmount(amt);
                         setCustomAmount('');
                       }}
-                      className={`py-3 px-4 rounded-xl border text-sm font-semibold transition-all ${
+                      className={`py-3 px-4 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
                         selectedAmount === amt && !customAmount
                           ? 'border-amber-600 bg-amber-50 text-amber-900 ring-2 ring-amber-600'
                           : 'border-slate-200 text-slate-700 hover:border-slate-300 bg-slate-50/50'
@@ -226,39 +220,28 @@ export const DonationSection: React.FC = () => {
                 <div className="relative max-w-xs">
                   <span className="absolute left-3.5 top-2.5 text-slate-400 font-semibold text-sm">₹</span>
                   <input
-                    type="number"
-                    placeholder="Other Amount"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Other Amount (e.g. 500)"
                     value={customAmount}
                     onChange={e => {
-                      setCustomAmount(e.target.value);
-                      setSelectedAmount(0);
+                      const val = e.target.value.trim();
+                      if (val === '') {
+                        setCustomAmount('');
+                        return;
+                      }
+                      // Strictly reject negative values, allow only positive numbers with at most 2 decimal places
+                      if (/^\d+(\.\d{0,2})?$/.test(val)) {
+                        setCustomAmount(val);
+                        setSelectedAmount(0);
+                      }
                     }}
                     className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder-slate-400 focus:border-amber-600"
                   />
                 </div>
-              </div>
-
-              {/* Cause Designation */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-3">
-                  Designate Your Patronage
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {CAUSE_OPTIONS.map(c => (
-                    <div
-                      key={c.id}
-                      onClick={() => setSelectedCause(c.id)}
-                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                        selectedCause === c.id
-                          ? 'border-amber-600 bg-amber-50/60 ring-1 ring-amber-600'
-                          : 'border-slate-200 hover:border-slate-300 bg-white'
-                      }`}
-                    >
-                      <h4 className="text-sm font-semibold text-slate-900">{c.title}</h4>
-                      <p className="text-xs text-slate-500 mt-1 leading-relaxed">{c.desc}</p>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-[11px] text-slate-500 mt-1.5">
+                  Positive values only. Maximum 2 decimal places accepted.
+                </p>
               </div>
 
               {/* Donor Information */}

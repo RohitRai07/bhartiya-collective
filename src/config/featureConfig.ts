@@ -30,6 +30,14 @@ export interface FeatureFlags {
   pincodeAutoFetch: boolean;
   /** Real-time Architecture Inspector widget for pair-programming and review */
   architectureInspector: boolean;
+  /** Circulars & Legal Materials public section (Disabled by default, toggleable via admin) */
+  circulars: boolean;
+  /** Podcasts section */
+  podcasts: boolean;
+  /** Magazine section */
+  magazine: boolean;
+  /** Career section */
+  careers: boolean;
 }
 
 export const defaultFeatureConfig: FeatureFlags = {
@@ -45,10 +53,36 @@ export const defaultFeatureConfig: FeatureFlags = {
   publications: true,
   pincodeAutoFetch: true,       // Integrated via isolated pincodeService
   architectureInspector: true,  // Handy debug/architecture audit tool
+  circulars: false,             // Disabled by default per user specification #18 & #19
+  podcasts: true,
+  magazine: true,
+  careers: true,
 };
 
-// In-memory runtime state that can be observed or overridden during testing
-let currentFeatures: FeatureFlags = { ...defaultFeatureConfig };
+const STORAGE_KEY = 'bharat_feature_flags';
+
+function loadStoredFeatures(): FeatureFlags {
+  if (typeof window === 'undefined') return { ...defaultFeatureConfig };
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { ...defaultFeatureConfig };
+    const parsed = JSON.parse(raw);
+    return { ...defaultFeatureConfig, ...parsed };
+  } catch {
+    return { ...defaultFeatureConfig };
+  }
+}
+
+function saveFeatures(flags: FeatureFlags) {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(flags));
+    } catch {}
+  }
+}
+
+// Runtime state that can be observed or overridden during testing
+let currentFeatures: FeatureFlags = loadStoredFeatures();
 
 export const featureConfig = {
   /**
@@ -66,10 +100,11 @@ export const featureConfig = {
   },
 
   /**
-   * Dynamically toggle or update feature flags at runtime (useful for demonstration)
+   * Dynamically toggle or update feature flags at runtime (persists to localStorage)
    */
   update(newFlags: Partial<FeatureFlags>): FeatureFlags {
     currentFeatures = { ...currentFeatures, ...newFlags };
+    saveFeatures(currentFeatures);
     // Notify listeners if needed
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('bhartiya:feature-change', { detail: currentFeatures }));
@@ -82,6 +117,7 @@ export const featureConfig = {
    */
   reset(): FeatureFlags {
     currentFeatures = { ...defaultFeatureConfig };
+    saveFeatures(currentFeatures);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('bhartiya:feature-change', { detail: currentFeatures }));
     }

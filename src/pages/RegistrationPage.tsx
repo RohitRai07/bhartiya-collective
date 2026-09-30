@@ -13,7 +13,7 @@ export const RegistrationPage: React.FC = () => {
       <div className="text-center max-w-3xl mx-auto space-y-3">
         <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-semibold">
           <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
-          <span>Academic Admissions & Fellowship Intake</span>
+          <span>Membership & Volunteer Form</span>
         </div>
 
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
@@ -21,7 +21,7 @@ export const RegistrationPage: React.FC = () => {
         </h1>
 
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-          Open to university students, research scholars, academic faculty, and intellectuals committed to civilizational inquiry and public discourse.
+          Open to students, researchers, Lawyer's, academician, Legal Experts and intellectuals committed to civilizational inquiry and public discourse.
         </p>
       </div>
 
@@ -62,13 +62,6 @@ export const RegistrationPage: React.FC = () => {
                   <span>Peer-review support for young scholars publishing in indexed journals.</span>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-amber-50/60 rounded-2xl p-6 border border-amber-200/70 text-xs text-slate-700 space-y-2">
-              <h4 className="font-semibold text-amber-950">Institutional Protocol</h4>
-              <p className="text-slate-600 leading-relaxed">
-                All registrations are assigned a unique tracking identifier (e.g., <code className="font-mono bg-amber-100 px-1 py-0.5 rounded text-amber-900">BC-2026-REG-XXXX</code>). Your postal code auto-resolves your institutional cluster for regional research convenings.
-              </p>
             </div>
           </div>
 

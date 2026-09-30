@@ -13,14 +13,11 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate }) => {
       
       {/* Intro Header */}
       <div className="max-w-3xl mx-auto text-center space-y-3">
-        <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3.5 py-1 rounded-full">
-          National Dialogues & Convenings
-        </span>
         <h1 className="font-serif text-3xl sm:text-5xl font-bold text-slate-900">
-          #BharatDialogue Series & Symposia
+          #BharatDialogue: National Symposium
         </h1>
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-          National dialogues convening leading constitutional jurists, scholars, and scientists to address critical national questions.
+          National Workshops Leading Constitutional jurists, scholars, & Legal Experts, Sr Advocate's, Criticals, Legals Issues.
         </p>
       </div>
 

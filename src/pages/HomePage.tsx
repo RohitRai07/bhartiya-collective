@@ -2,24 +2,31 @@ import React from 'react';
 import { siteConfig } from '../config/siteConfig';
 import { featureConfig } from '../config/featureConfig';
 import { FlagshipBanner } from '../components/common/FlagshipBanner';
-import { PublicationList } from '../components/publications/PublicationList';
 import { EventList } from '../components/events/EventList';
-import { ResearchList } from '../components/research/ResearchList';
-import { NewsList } from '../components/news/NewsList';
+import { BHARAT_CENTRES } from '../data/centresData';
 import { 
-  Landmark, 
   ArrowRight, 
   Scroll, 
   Heart,
+  Scale,
   Users,
-  Compass,
-  BookOpen,
-  Scale
+  Landmark,
+  Shield,
+  Compass
 } from 'lucide-react';
 
 interface HomePageProps {
   onNavigate: (path: string) => void;
 }
+
+const CENTRE_ICON_MAP: Record<string, React.ReactNode> = {
+  Scale: <Scale className="w-5 h-5 text-amber-700" />,
+  Users: <Users className="w-5 h-5 text-amber-700" />,
+  Landmark: <Landmark className="w-5 h-5 text-amber-700" />,
+  Heart: <Heart className="w-5 h-5 text-amber-700" />,
+  Shield: <Shield className="w-5 h-5 text-amber-700" />,
+  Compass: <Compass className="w-5 h-5 text-amber-700" />,
+};
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   return (
@@ -50,9 +57,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 <button
                   type="button"
                   onClick={() => onNavigate('/register')}
-                  className="px-6 py-3.5 rounded-xl font-bold text-sm bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/25 transition-all flex items-center space-x-2"
+                  className="px-6 py-3.5 rounded-xl font-bold text-sm bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/25 transition-all flex items-center space-x-2 cursor-pointer"
                 >
-                  <span>Join the Community</span>
+                  <span>Join Us</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               )}
@@ -60,121 +67,120 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <button
                 type="button"
                 onClick={() => onNavigate('/events')}
-                className="px-6 py-3.5 rounded-xl font-bold text-sm bg-slate-900 text-white hover:bg-slate-800 shadow-md transition-all flex items-center space-x-2"
+                className="px-6 py-3.5 rounded-xl font-bold text-sm bg-slate-900 text-white hover:bg-slate-800 shadow-md transition-all flex items-center space-x-2 cursor-pointer"
               >
-                <span>#BharatDialogue Events</span>
+                <span>#BharatDialogue Event</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
               <button
                 type="button"
-                onClick={() => onNavigate('/publications')}
-                className="px-5 py-3.5 rounded-xl font-semibold text-sm bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 transition-colors"
+                onClick={() => onNavigate('/centres')}
+                className="px-5 py-3.5 rounded-xl font-semibold text-sm bg-white border border-slate-300 text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer"
               >
-                Read Publications
+                Our Centres
               </button>
 
-              <button
-                type="button"
-                onClick={() => onNavigate('/circulars')}
-                className="px-5 py-3.5 rounded-xl font-semibold text-sm bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 transition-colors flex items-center space-x-1.5"
-              >
-                <Scale className="w-4 h-4 text-amber-800" />
-                <span>Circulars & Legal</span>
-              </button>
+              {featureConfig.isEnabled('circulars') && (
+                <button
+                  type="button"
+                  onClick={() => onNavigate('/circulars')}
+                  className="px-5 py-3.5 rounded-xl font-semibold text-sm bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 transition-colors flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <Scale className="w-4 h-4 text-amber-800" />
+                  <span>Circulars & Legal</span>
+                </button>
+              )}
             </div>
-          </div>
-
-          {/* Quick Metrics Pillar Banner */}
-          <div className="mt-12 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 pt-8 border-t border-amber-900/10">
-            {[
-              { label: 'Dialogues & Symposia', value: 'National Series', desc: 'Apex policy convenings across Bharat' },
-              { label: 'Published Papers', value: '65+ Monographs', desc: 'Peer-reviewed open access papers' },
-              { label: 'Scholarly Network', value: '40+ Fellows', desc: 'Across premier universities & law academies' },
-              { label: 'Public Mission', value: 'Non-Partisan', desc: 'Sustained by independent patronage' },
-            ].map((stat, idx) => (
-              <div key={idx} className="bg-white/80 backdrop-blur-sm p-4 sm:p-5 rounded-2xl border border-amber-900/10 shadow-xs">
-                <span className="block font-serif text-xl sm:text-2xl font-bold text-amber-900">{stat.value}</span>
-                <span className="block text-xs font-bold text-slate-800 mt-1">{stat.label}</span>
-                <span className="block text-[11px] text-slate-500 mt-0.5 leading-snug">{stat.desc}</span>
-              </div>
-            ))}
           </div>
 
         </div>
       </section>
 
-      {/* Flagship Event Banner (Poster Feature requested by user) */}
+      {/* Flagship Event Banner */}
       <FlagshipBanner onRegisterClick={() => onNavigate('/register')} />
 
-      {/* Research Domains Section */}
-      {featureConfig.isEnabled('research') && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-3">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-700 block mb-1">
-                Foundational Research
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-                Core Inquiry Domains
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => onNavigate('/research')}
-              className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center space-x-1"
-            >
-              <span>Explore All Clusters</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+      {/* Bharat Collective Centers Section (Specification 18 & 20) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-3">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 block mb-1">
+              Institutes & Thematic Wings
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
+              Bharat Collective Centers
+            </h2>
           </div>
+          <button
+            type="button"
+            onClick={() => onNavigate('/centres')}
+            className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center space-x-1 cursor-pointer"
+          >
+            <span>Explore All 6 Centres</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
-          <ResearchList />
-        </section>
-      )}
-
-      {/* Featured Publications Section */}
-      {featureConfig.isEnabled('publications') && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-3">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-700 block mb-1">
-                Monographs & Policy Briefs
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-                Featured Scholarly Publications
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => onNavigate('/publications')}
-              className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center space-x-1"
+        {/* 6 Specialized Centres Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {BHARAT_CENTRES.map((centre) => (
+            <div
+              key={centre.id}
+              onClick={() => onNavigate(`/centres`)}
+              className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
             >
-              <span>Browse Catalog</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    {CENTRE_ICON_MAP[centre.icon] || <Compass className="w-5 h-5 text-amber-700" />}
+                  </div>
+                  <span className="text-[11px] font-serif text-amber-900 bg-amber-50/80 px-2 py-0.5 rounded border border-amber-200/50">
+                    {centre.sanskritName}
+                  </span>
+                </div>
 
-          <PublicationList />
-        </section>
-      )}
+                <h3 className="font-serif text-lg font-bold text-slate-900 group-hover:text-amber-800 transition-colors">
+                  {centre.name}
+                </h3>
 
-      {/* Upcoming Events & Symposia Section */}
+                <p className="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">
+                  {centre.description}
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {centre.keyThemes.slice(0, 2).map((t, i) => (
+                    <span key={i} className="text-[10px] bg-slate-50 border border-slate-200 text-slate-600 px-2 py-0.5 rounded">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-amber-800 font-semibold">
+                <span>View Center Details</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Upcoming Events Conclave Section (Specification 21) */}
       {featureConfig.isEnabled('events') && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-3">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-amber-700 block mb-1">
-                Convenings & Roundtables
+                Upcoming Events
               </span>
               <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-                Upcoming #BharatDialogue Series
+                Upcoming #BharatDialogue Conclave
               </h2>
             </div>
             <button
               type="button"
               onClick={() => onNavigate('/events')}
-              className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center space-x-1"
+              className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center space-x-1 cursor-pointer"
             >
               <span>View Full Calendar</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -185,53 +191,25 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
         </section>
       )}
 
-      {/* Insights & Perspectives */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-3">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 block mb-1">
-              Discourse
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-              Insights & Perspectives
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigate('/news')}
-            className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center space-x-1"
-          >
-            <span>Read All Articles</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <NewsList />
-      </section>
-
-      {/* Patronage Banner */}
+      {/* Independent Foundation Support Banner (Specification 22) */}
       {featureConfig.isEnabled('donations') && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-950 rounded-3xl p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-3 max-w-2xl">
-              <div className="flex items-center space-x-2 text-amber-200 text-xs font-semibold uppercase tracking-wider">
-                <Heart className="w-4 h-4 text-amber-300" />
-                <span>Patronage for Civilizational Independence</span>
-              </div>
               <h3 className="font-serif text-2xl sm:text-3xl font-bold">
-                Support Open-Access Bharat Scholarship
+                Support Bharat Collective Foundation
               </h3>
               <p className="text-amber-100/90 text-xs sm:text-sm leading-relaxed">
-                We operate as an independent foundation. Every rupee pledged directly supports visiting fellowships, rare text translations, and public constitutional dialogues.
+                We operate as an independent foundation. Every rupee pledged directly supports Independent research, Legal, Events, and workshops.
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => onNavigate('/support-us')}
-              className="px-8 py-3.5 rounded-xl font-bold text-sm bg-white text-amber-950 hover:bg-amber-50 shadow-md transition-all flex-shrink-0"
+              className="px-8 py-3.5 rounded-xl font-bold text-sm bg-white text-amber-950 hover:bg-amber-50 shadow-md transition-all flex-shrink-0 cursor-pointer"
             >
-              Support the Foundation
+              Support Us
             </button>
           </div>
         </section>

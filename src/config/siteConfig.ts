@@ -13,8 +13,10 @@ export const siteConfig = {
   contact: {
     email: 'contact@bharatcollective.org',
     pressEmail: 'media@bharatcollective.org',
-    phone: '+91 (011) 2345-6789',
-    address: 'Constitution Club Area, Rafi Marg, New Delhi 110001, Bharat',
+    phone: '+91 80768 02450',
+    phoneSecondary: '+91 77658 32852',
+    phones: ['+91 80768 02450', '+91 77658 32852'],
+    address: 'Jasmine Grove Apartment, H-1, 410, Ghaziabad, UP: 201002',
   },
   // Official verified social media channels
   socials: {

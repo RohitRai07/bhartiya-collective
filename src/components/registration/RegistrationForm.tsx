@@ -28,6 +28,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
     lastName: '',
     email: '',
     nationalNumber: '', // 10 digits
+    profession: 'Student',
+    engagementType: 'membership' as 'membership' | 'volunteering' | 'both',
     collegeName: '',
     address: '',
     pincode: '',
@@ -200,6 +202,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
           nationalNumber: cleanPhoneDigits,
           fullFormatted: `+91 ${cleanPhoneDigits}`,
         },
+        profession: formData.profession,
+        engagementType: formData.engagementType,
         collegeName: formData.collegeName.trim(),
         address: formData.address.trim(),
         pincode: formData.pincode.trim(),
@@ -229,6 +233,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
       lastName: '',
       email: '',
       nationalNumber: '',
+      profession: 'Student',
+      engagementType: 'membership',
       collegeName: '',
       address: '',
       pincode: '',
@@ -308,10 +314,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
       <div className="mb-8 border-b border-slate-100 pb-6">
         <div className="flex items-center space-x-2 text-amber-700 font-semibold text-xs uppercase tracking-wider mb-1">
           <ShieldCheck className="w-4 h-4" />
-          <span>Membership & Fellowship Enrollment</span>
+          <span>Membership & Volunteer Form</span>
         </div>
         <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-          Bharat Collective Foundation Membership Registration
+          Bharat Collective Foundation Registration
         </h2>
         <p className="text-slate-600 text-sm mt-1">
           Fill in your details to join our scholarly community. All fields marked <span className="text-amber-600 font-bold">*</span> are required.
@@ -422,6 +428,42 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
             {validationErrors.nationalNumber && (
               <p className="text-[11px] text-red-600 mt-1">{validationErrors.nationalNumber}</p>
             )}
+          </div>
+        </div>
+
+        {/* Engagement Type & Profession */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
+              Volunteering or Membership <span className="text-amber-600">*</span>
+            </label>
+            <select
+              value={formData.engagementType}
+              onChange={e => handleChange('engagementType', e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 bg-slate-50/50 focus:border-amber-600 focus:bg-white"
+            >
+              <option value="membership">Membership</option>
+              <option value="volunteering">Volunteering</option>
+              <option value="both">Both (Membership & Volunteering)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
+              Profession <span className="text-amber-600">*</span>
+            </label>
+            <select
+              value={formData.profession}
+              onChange={e => handleChange('profession', e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 bg-slate-50/50 focus:border-amber-600 focus:bg-white"
+            >
+              <option value="Student">Student</option>
+              <option value="Researcher">Researcher</option>
+              <option value="Lawyer">Lawyer</option>
+              <option value="Academician">Academician</option>
+              <option value="Legal Expert">Legal Expert</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
         </div>
 
@@ -613,7 +655,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
               className="mt-1 w-4 h-4 rounded text-amber-600 border-slate-300 focus:ring-amber-500"
             />
             <span className="text-xs text-slate-700 leading-relaxed">
-              I hereby express my scholarly interest in the initiatives of Bharat Collective Foundation, agree to adhere to civil research integrity guidelines, and consent to receive academic communications. <span className="text-amber-600 font-bold">*</span>
+              I hereby express my interest in the initiatives of Bharat Collective Foundation, agree to adhere to civil research integrity guidelines, and consent to receive academic communications. <span className="text-amber-600 font-bold">*</span>
             </span>
           </label>
           {validationErrors.consent && (
@@ -626,7 +668,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 rounded-xl font-semibold text-sm bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20 transition-all disabled:opacity-70"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 rounded-xl font-semibold text-sm bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20 transition-all disabled:opacity-70 cursor-pointer"
           >
             {isSubmitting ? (
               <>
@@ -634,7 +676,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
                 <span>Processing Application...</span>
               </>
             ) : (
-              <span>Submit Registration</span>
+              <span>Join Us</span>
             )}
           </button>
         </div>
