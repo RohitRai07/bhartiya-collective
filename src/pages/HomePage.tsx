@@ -44,7 +44,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
 
             <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.15] tracking-tight">
               Civilizational Wisdom. <br />
-              <span className="text-amber-800">Rigorous Inquiry.</span> <br />
+              <span className="text-amber-800">Indigenous Thought.</span> <br />
               Future-Focused Policy.
             </h1>
 

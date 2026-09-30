@@ -6,7 +6,7 @@ export const siteConfig = {
   name: 'Bharat Collective Foundation',
   shortName: 'Bharat Collective',
   tagline: 'Connecting Bharat, Bringing Minds Together',
-  secondaryMotto: 'Civilizational Wisdom. Rigorous Inquiry. Future-Focused Policy.',
+  secondaryMotto: 'Civilizational Wisdom. Indigenous Thought. Future-Focused Policy.',
   description: 'An independent, non-partisan intellectual foundation fostering dialogue, deep research, publications, and cross-disciplinary policy grounded in civilizational values.',
   establishedYear: 2024,
   organizationType: 'Non-Profit Research & Policy Foundation',

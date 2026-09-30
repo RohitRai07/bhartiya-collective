@@ -28,8 +28,8 @@ export const navigationConfig = {
       featureFlag: 'research',
       children: [
         { id: 'c-all', label: 'All Centres Overview', path: '/centres' },
-        { id: 'c-hr', label: 'Center for HR & Legal Aid', path: '/centres#hr-legal-aid', sanskritName: 'मानव अधिकार एवं विधि सहायता' },
-        { id: 'c-labor', label: 'Center for Labor Rights Policy', path: '/centres#labor-rights-policy', sanskritName: 'श्रम अधिकार एवं नीति' },
+        { id: 'c-hr', label: 'Center for Human Rights & Legal Aid', path: '/centres#human-rights-legal-aid', sanskritName: 'मानव अधिकार एवं विधि सहायता' },
+        { id: 'c-labour', label: 'Center for Labour Rights Policy', path: '/centres#labour-rights-policy', sanskritName: 'श्रम अधिकार एवं नीति' },
         { id: 'c-policy', label: 'Center for Public Policy / Studies', path: '/centres#public-policy-studies', sanskritName: 'लोक नीति एवं अध्ययन' },
         { id: 'c-women', label: 'Center for Women Rights', path: '/centres#women-rights', sanskritName: 'स्त्री अधिकार एवं कल्याण' },
         { id: 'c-ipr', label: 'Center for IPR Studies', path: '/centres#ipr-studies', sanskritName: 'बौद्धिक संपदा अधिकार' },
@@ -53,8 +53,8 @@ export const navigationConfig = {
 
   footerNav: {
     centres: [
-      { id: 'centre-hr', label: 'Center for HR & Legal Aid', path: '/centres#hr-legal-aid' },
-      { id: 'centre-labor', label: 'Center for Labor Rights Policy', path: '/centres#labor-rights-policy' },
+      { id: 'centre-hr', label: 'Center for Human Rights & Legal Aid', path: '/centres#human-rights-legal-aid' },
+      { id: 'centre-labour', label: 'Center for Labour Rights Policy', path: '/centres#labour-rights-policy' },
       { id: 'centre-policy', label: 'Center for Public Policy / Studies', path: '/centres#public-policy-studies' },
       { id: 'centre-women', label: 'Center for Women Rights', path: '/centres#women-rights' },
       { id: 'centre-ipr', label: 'Center for IPR Studies', path: '/centres#ipr-studies' },

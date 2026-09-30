@@ -206,7 +206,7 @@ export const AboutPage: React.FC = () => {
               role: 'Director of Legal Affairs & Research',
               name: 'Sr. Adv. J. Sai Deepak',
               affiliation: 'Supreme Court of India',
-              desc: 'Oversees the Center for HR & Legal Aid, directing constitutional litigations, civilizational jurisprudence analysis, and model legislative inputs.',
+              desc: 'Oversees the Center for Human Rights & Legal Aid, directing constitutional litigations, civilizational jurisprudence analysis, and model legislative inputs.',
             },
             {
               role: 'Dean of Academic Inquiry & Fellowships',
@@ -251,7 +251,7 @@ export const AboutPage: React.FC = () => {
           {[
             { state: 'Uttar Pradesh Chapter', convener: 'Dr. Devendra Pandey', city: 'Lucknow / Varanasi', focus: 'Civil Courts Legal Aid & Traditional Knowledge' },
             { state: 'Delhi-NCR Chapter', convener: 'Adv. Siddhartha Dave', city: 'New Delhi / Ghaziabad', focus: 'Supreme Court & High Court Advocacy' },
-            { state: 'Maharashtra Chapter', convener: 'Dr. Arvind Deshmukh', city: 'Mumbai / Pune', focus: 'Labor Rights & Industrial Policy' },
+            { state: 'Maharashtra Chapter', convener: 'Dr. Arvind Deshmukh', city: 'Mumbai / Pune', focus: 'Labour Rights & Industrial Policy' },
             { state: 'Karnataka & South Chapter', convener: 'Dr. Ramalingam Iyer', city: 'Bengaluru', focus: 'IPR, Tech Policy & AI Governance' },
             { state: 'Bihar & Jharkhand Chapter', convener: 'Prof. Alok Ranjan', city: 'Patna', focus: 'Panchayat Governance & Agrarian Law' },
             { state: 'Gujarat Chapter', convener: 'Adv. Niharika Patel', city: 'Ahmedabad', focus: 'Artisanal Guilds & Micro-Enterprise' },

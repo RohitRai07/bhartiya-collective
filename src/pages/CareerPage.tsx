@@ -29,7 +29,7 @@ export const CareerPage: React.FC<CareerPageProps> = ({ onNavigate }) => {
   const [phone, setPhone] = useState('');
   const [institution, setInstitution] = useState('');
   const [qualification, setQualification] = useState('');
-  const [areaOfInterest, setAreaOfInterest] = useState('Center for HR & Legal Aid');
+  const [areaOfInterest, setAreaOfInterest] = useState('Center for Human Rights & Legal Aid');
   const [coverLetter, setCoverLetter] = useState('');
 
   // CV File State

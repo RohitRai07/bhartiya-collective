@@ -385,7 +385,7 @@ async function runTests() {
     phone: '+91 98111 22334',
     currentInstitution: 'Faculty of Law, Delhi University',
     qualification: 'Final Year LL.B',
-    areaOfInterest: 'Center for HR & Legal Aid',
+    areaOfInterest: 'Center for Human Rights & Legal Aid',
     coverLetter: 'Interested in civilizational research on personal laws and legal epistemology.',
     cvFileName: 'Aditya_Sharma_Resume.pdf',
     cvFileSize: 512000,

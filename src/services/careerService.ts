@@ -12,7 +12,7 @@ const SEED_APPLICATIONS: CareerApplicationRecord[] = [
     phone: '+91 98112 34567',
     currentInstitution: 'National Law University Delhi (NLU Delhi)',
     qualification: '4th Year, B.A. LL.B (Hons.)',
-    areaOfInterest: 'Center for HR & Legal Aid',
+    areaOfInterest: 'Center for Human Rights & Legal Aid',
     coverLetter: 'Passionate about civilizational jurisprudence and constitutional reforms. Interested in researching uniform civil laws and statecraft.',
     cvFileName: 'Shreya_Narang_NLU_Resume.pdf',
     cvFileSize: 420000,

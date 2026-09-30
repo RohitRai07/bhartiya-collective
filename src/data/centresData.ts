@@ -13,10 +13,10 @@ export interface BharatCentre {
 
 export const BHARAT_CENTRES: BharatCentre[] = [
   {
-    id: 'centre-hr-legal-aid',
-    slug: 'hr-legal-aid',
-    name: 'Center for HR & Legal Aid',
-    shortName: 'HR & Legal Aid',
+    id: 'centre-human-rights-legal-aid',
+    slug: 'human-rights-legal-aid',
+    name: 'Center for Human Rights & Legal Aid',
+    shortName: 'Human Rights & Legal Aid',
     sanskritName: 'मानव अधिकार एवं विधि सहायता केंद्र',
     description: 'Providing pro-bono constitutional advocacy, legal aid clinics for underprivileged citizens, and researching civil rights within indigenous jurisprudence.',
     leadFellow: 'Sr. Adv. J. Sai Deepak & Legal Aid Panel',
@@ -25,12 +25,12 @@ export const BHARAT_CENTRES: BharatCentre[] = [
     icon: 'Scale',
   },
   {
-    id: 'centre-labor-rights',
-    slug: 'labor-rights-policy',
-    name: 'Center for Labor Rights Policy',
-    shortName: 'Labor Rights Policy',
+    id: 'centre-labour-rights',
+    slug: 'labour-rights-policy',
+    name: 'Center for Labour Rights Policy',
+    shortName: 'Labour Rights Policy',
     sanskritName: 'श्रम अधिकार एवं नीति केंद्र',
-    description: 'Analyzing labor welfare legislation, unorganized sector social security, gig worker protections, and traditional artisanal guilds (Shreni) models.',
+    description: 'Analyzing labour welfare legislation, unorganized sector social security, gig worker protections, and traditional artisanal guilds (Shreni) models.',
     leadFellow: 'Prof. Ananya Someshwar',
     keyThemes: ['Gig Economy Protections', 'Unorganized Workforce Welfare', 'Shreni Guild Economics', 'Workplace Safety'],
     focusAreas: ['Social Security Code Implementation', 'Occupational Safety Audits', 'Artisanal Livelihood Protection'],
