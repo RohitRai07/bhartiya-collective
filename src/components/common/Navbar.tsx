@@ -67,29 +67,29 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-2 lg:gap-4">
           
           {/* Logo & Brand Identity */}
           <div 
             onClick={() => handleLinkClick('/')}
-            className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer group py-1 min-w-0"
+            className="flex items-center space-x-2.5 sm:space-x-3 cursor-pointer group py-1 shrink-0"
           >
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 flex items-center justify-center text-white shadow-md shadow-amber-600/20 group-hover:scale-105 transition-transform shrink-0">
               <Landmark className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div className="min-w-0">
-              <span className="block font-serif text-base sm:text-xl lg:text-2xl font-bold tracking-tight text-slate-900 leading-tight truncate">
+            <div className="shrink-0">
+              <span className="block font-serif text-sm sm:text-base lg:text-lg xl:text-xl 2xl:text-2xl font-bold tracking-tight text-slate-900 leading-tight whitespace-nowrap">
                 {siteConfig.name}
               </span>
-              <span className="block text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold text-amber-700 truncate">
+              <span className="block text-[8px] sm:text-[9px] lg:text-[10px] xl:text-[11px] uppercase tracking-wider font-semibold text-amber-700 whitespace-nowrap">
                 {siteConfig.tagline}
               </span>
             </div>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav ref={dropdownRef} className="hidden lg:flex items-center space-x-0.5 xl:space-x-1.5">
+          <nav ref={dropdownRef} className="hidden lg:flex items-center space-x-0.5 xl:space-x-1">
             {navItems.map((item) => {
               const isActive = currentPath === item.path || (item.children && item.children.some(c => currentPath === c.path));
               const hasChildren = item.children && item.children.length > 0;
@@ -106,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
                     <button
                       type="button"
                       onClick={() => setOpenDropdownId(prev => prev === item.id ? null : item.id)}
-                      className={`inline-flex items-center space-x-1 px-3 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${
+                      className={`inline-flex items-center space-x-1 px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                         isActive
                           ? 'text-amber-800 bg-amber-50 font-bold'
                           : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -151,7 +151,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
                   key={item.id}
                   type="button"
                   onClick={() => handleLinkClick(item.path)}
-                  className={`px-3 py-2 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${
+                  className={`px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                     isActive
                       ? 'text-amber-800 bg-amber-50 font-bold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -164,9 +164,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
           </nav>
 
           {/* Right Action Area */}
-          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+          <div className="flex items-center space-x-1.5 sm:space-x-2 xl:space-x-3 shrink-0">
             {/* Action CTAs */}
-            <div className="hidden sm:flex items-center space-x-2 sm:space-x-3">
+            <div className="hidden sm:flex items-center space-x-1.5 sm:space-x-2 xl:space-x-3">
               {actionItems.map((action) => {
                 const isSupport = action.id === 'support';
                 const isRegister = action.id === 'register';
@@ -176,7 +176,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
                     key={action.id}
                     type="button"
                     onClick={() => handleLinkClick(action.path)}
-                    className={`inline-flex items-center space-x-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-xs cursor-pointer ${
+                    className={`inline-flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 xl:px-4 py-1.5 sm:py-2 rounded-xl text-xs xl:text-sm font-bold transition-all shadow-xs cursor-pointer whitespace-nowrap ${
                       isSupport
                         ? 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
                         : 'bg-amber-600 text-white hover:bg-amber-700 shadow-amber-600/20'
