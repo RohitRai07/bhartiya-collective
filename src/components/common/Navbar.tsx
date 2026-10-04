@@ -229,7 +229,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
                     key={item.id}
                     type="button"
                     onClick={() => handleLinkClick(item.path)}
-                    className={`px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-xl text-xs xl:text-[13px] 2xl:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                    className={`shrink-0 px-2 xl:px-2.5 py-1.5 xl:py-2 rounded-xl text-xs xl:text-[13px] 2xl:text-sm font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                       isActive
                         ? 'text-amber-900 bg-amber-50 font-bold border border-amber-200/80 shadow-xs'
                         : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100/80'
@@ -244,16 +244,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
             {/* Right Action & Search Area */}
             <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
               
-              {/* Universal Search (Desktop) */}
+              {/* Universal Search (Compact Icon - Never Stretches) */}
               <button
                 type="button"
                 onClick={() => setSearchModalOpen(true)}
-                className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1.5 xl:px-3 xl:py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-amber-900 bg-slate-100 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 transition-all cursor-pointer shadow-xs"
+                className="p-2 sm:p-2.5 rounded-xl text-slate-700 hover:text-amber-800 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 transition-colors cursor-pointer shadow-xs shrink-0 flex items-center justify-center"
+                aria-label="Universal Search (Ctrl+K)"
                 title="Search website (Ctrl+K or ⌘K)"
               >
-                <Search className="w-3.5 h-3.5 text-amber-800" />
-                <span className="hidden xl:inline text-slate-500 font-normal">Search...</span>
-                <kbd className="hidden 2xl:inline px-1 py-0.5 bg-white rounded border border-slate-200 text-[9px] text-slate-400 font-mono">⌘K</kbd>
+                <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-800" />
               </button>
 
               {/* Action CTAs (Desktop / Tablet) */}
@@ -280,16 +279,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
                   );
                 })}
               </div>
-
-              {/* Universal Search Trigger (Mobile & Tablet - ONLY ONE) */}
-              <button
-                type="button"
-                onClick={() => setSearchModalOpen(true)}
-                className="lg:hidden p-2 sm:p-2.5 rounded-xl text-slate-700 hover:text-amber-800 hover:bg-amber-50 border border-slate-200 cursor-pointer transition-colors shadow-xs"
-                aria-label="Universal Search"
-              >
-                <Search className="w-5 h-5 text-amber-800" />
-              </button>
 
               {/* Hamburger Menu Toggle Button (Mobile & Tablet) */}
               <button

@@ -149,13 +149,19 @@ export const UniversalSearchModal: React.FC<UniversalSearchModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-start justify-center p-3 sm:p-6 pt-12 sm:pt-20 animate-in fade-in duration-150">
+    <div 
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-start justify-center p-3 sm:p-6 pt-12 sm:pt-20 animate-in fade-in duration-150 cursor-pointer"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Universal search modal"
+    >
       <div 
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
+        className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150 cursor-default"
         onClick={e => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div className="p-4 border-b border-slate-200 flex items-center space-x-3 bg-white sticky top-0 z-10">
+        <div className="p-3.5 sm:p-4 border-b border-slate-200 flex items-center space-x-2.5 sm:space-x-3 bg-white sticky top-0 z-10">
           <Search className="w-5 h-5 text-amber-700 shrink-0" />
           <input
             ref={inputRef}
@@ -164,22 +170,28 @@ export const UniversalSearchModal: React.FC<UniversalSearchModalProps> = ({
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
             placeholder="Search centres, research, events, circulars, team, podcasts..."
-            className="w-full text-base sm:text-lg text-slate-900 placeholder-slate-400 bg-transparent outline-hidden font-medium"
+            className="w-full text-sm sm:text-base text-slate-900 placeholder-slate-400 bg-transparent outline-hidden font-medium"
           />
           {loading && <Loader2 className="w-4 h-4 text-amber-700 animate-spin shrink-0" />}
           {query && !loading && (
             <button
+              type="button"
               onClick={() => setQuery('')}
-              className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+              className="px-2 py-1 text-[11px] font-medium text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer shrink-0 transition-colors"
+              title="Clear text"
             >
-              <X className="w-4 h-4" />
+              Clear
             </button>
           )}
+          {/* Prominent Cross Icon (X) to Close on Mobile & Desktop */}
           <button
+            type="button"
             onClick={onClose}
-            className="px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer shrink-0"
+            className="p-1.5 sm:p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 active:bg-slate-200 rounded-xl cursor-pointer shrink-0 transition-colors flex items-center justify-center border border-slate-200/80"
+            aria-label="Close search"
+            title="Close search"
           >
-            ESC
+            <X className="w-5 h-5 text-slate-700" />
           </button>
         </div>
 
