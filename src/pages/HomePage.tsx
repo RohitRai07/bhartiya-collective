@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { siteConfig } from '../config/siteConfig';
 import { featureConfig } from '../config/featureConfig';
 import { FlagshipBanner } from '../components/common/FlagshipBanner';
@@ -29,6 +29,16 @@ const CENTRE_ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
+  const [features, setFeatures] = useState(featureConfig.get());
+
+  useEffect(() => {
+    const handleFeatureChange = () => {
+      setFeatures(featureConfig.get());
+    };
+    window.addEventListener('bhartiya:feature-change', handleFeatureChange);
+    return () => window.removeEventListener('bhartiya:feature-change', handleFeatureChange);
+  }, []);
+
   return (
     <div className="space-y-16 sm:space-y-24 pb-16">
       
@@ -53,7 +63,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             </p>
 
             <div className="pt-2 flex flex-wrap gap-3">
-              {featureConfig.isEnabled('userRegistration') && (
+              {features.userRegistration && (
                 <button
                   type="button"
                   onClick={() => onNavigate('/register')}
@@ -81,7 +91,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 Our Centres
               </button>
 
-              {featureConfig.isEnabled('circulars') && (
+              {features.circulars && (
                 <button
                   type="button"
                   onClick={() => onNavigate('/circulars')}
@@ -98,75 +108,79 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       </section>
 
       {/* Flagship Event Banner */}
-      <FlagshipBanner onRegisterClick={() => onNavigate('/register')} />
+      {features.flagshipBanner && (
+        <FlagshipBanner onRegisterClick={() => onNavigate('/register')} />
+      )}
 
       {/* Bharat Collective Centers Section (Specification 18 & 20) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-3">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 block mb-1">
-              Institutes & Thematic Wings
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-              Bharat Collective Centers
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={() => onNavigate('/centres')}
-            className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center space-x-1 cursor-pointer"
-          >
-            <span>Explore All 6 Centres</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* 6 Specialized Centres Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {BHARAT_CENTRES.map((centre) => (
-            <div
-              key={centre.id}
-              onClick={() => onNavigate(`/centres`)}
-              className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center group-hover:scale-105 transition-transform">
-                    {CENTRE_ICON_MAP[centre.icon] || <Compass className="w-5 h-5 text-amber-700" />}
-                  </div>
-                  <span className="text-[11px] font-serif text-amber-900 bg-amber-50/80 px-2 py-0.5 rounded border border-amber-200/50">
-                    {centre.sanskritName}
-                  </span>
-                </div>
-
-                <h3 className="font-serif text-lg font-bold text-slate-900 group-hover:text-amber-800 transition-colors">
-                  {centre.name}
-                </h3>
-
-                <p className="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">
-                  {centre.description}
-                </p>
-
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {centre.keyThemes.slice(0, 2).map((t, i) => (
-                    <span key={i} className="text-[10px] bg-slate-50 border border-slate-200 text-slate-600 px-2 py-0.5 rounded">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-amber-800 font-semibold">
-                <span>View Center Details</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </div>
+      {features.research && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-3">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-700 block mb-1">
+                Institutes & Thematic Wings
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
+                Bharat Collective Centers
+              </h2>
             </div>
-          ))}
-        </div>
-      </section>
+            <button
+              type="button"
+              onClick={() => onNavigate('/centres')}
+              className="text-xs font-bold text-amber-800 hover:text-amber-900 flex items-center space-x-1 cursor-pointer"
+            >
+              <span>Explore All 6 Centres</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* 6 Specialized Centres Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {BHARAT_CENTRES.map((centre) => (
+              <div
+                key={centre.id}
+                onClick={() => onNavigate(`/centres`)}
+                className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center group-hover:scale-105 transition-transform">
+                      {CENTRE_ICON_MAP[centre.icon] || <Compass className="w-5 h-5 text-amber-700" />}
+                    </div>
+                    <span className="text-[11px] font-serif text-amber-900 bg-amber-50/80 px-2 py-0.5 rounded border border-amber-200/50">
+                      {centre.sanskritName}
+                    </span>
+                  </div>
+
+                  <h3 className="font-serif text-lg font-bold text-slate-900 group-hover:text-amber-800 transition-colors">
+                    {centre.name}
+                  </h3>
+
+                  <p className="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">
+                    {centre.description}
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {centre.keyThemes.slice(0, 2).map((t, i) => (
+                      <span key={i} className="text-[10px] bg-slate-50 border border-slate-200 text-slate-600 px-2 py-0.5 rounded">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-amber-800 font-semibold">
+                  <span>View Center Details</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Upcoming Events Conclave Section (Specification 21) */}
-      {featureConfig.isEnabled('events') && (
+      {features.events && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-3">
             <div>
@@ -192,7 +206,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       )}
 
       {/* Independent Foundation Support Banner (Specification 22) */}
-      {featureConfig.isEnabled('donations') && (
+      {features.donations && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-950 rounded-3xl p-8 sm:p-12 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-3 max-w-2xl">

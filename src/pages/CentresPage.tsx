@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BHARAT_CENTRES, BharatCentre } from '../data/centresData';
+import { featureConfig } from '../config/featureConfig';
 import { Scale, Users, Landmark, Heart, Shield, Compass, ArrowRight, CheckCircle2, BookOpen, ExternalLink } from 'lucide-react';
 
 interface CentresPageProps {
@@ -18,12 +19,31 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 
 export const CentresPage: React.FC<CentresPageProps> = ({ onNavigate, selectedCentreId }) => {
   const [activeCentre, setActiveCentre] = useState<string>(selectedCentreId || 'all');
+  const [isCentresActive, setIsCentresActive] = useState(featureConfig.isEnabled('research'));
+
+  useEffect(() => {
+    const handleUpdate = () => setIsCentresActive(featureConfig.isEnabled('research'));
+    window.addEventListener('bhartiya:feature-change', handleUpdate);
+    return () => window.removeEventListener('bhartiya:feature-change', handleUpdate);
+  }, []);
 
   useEffect(() => {
     if (selectedCentreId) {
       setActiveCentre(selectedCentreId);
     }
   }, [selectedCentreId]);
+
+  if (!isCentresActive) {
+    return (
+      <div className="py-24 px-4 max-w-xl mx-auto text-center space-y-4">
+        <Compass className="w-12 h-12 text-slate-300 mx-auto" />
+        <h2 className="font-serif text-2xl font-bold text-slate-800">Centres & Domains Inactive</h2>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          The research centres and specialized working domains are currently deactivated via administrative configuration (<code className="font-mono">featureConfig.research = false</code>).
+        </p>
+      </div>
+    );
+  }
 
   const displayedCentres = activeCentre === 'all' 
     ? BHARAT_CENTRES 

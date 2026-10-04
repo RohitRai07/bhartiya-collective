@@ -42,6 +42,12 @@ export interface FeatureFlags {
   nationalTeam: boolean;
   /** State Team & Regional Chapters section on About page */
   stateTeam: boolean;
+  /** Who is Who: Governing Council & Fellows section on About page */
+  experts: boolean;
+  /** Insights & Perspectives / News section */
+  news: boolean;
+  /** Flagship event announcement ticker & banner */
+  flagshipBanner: boolean;
 }
 
 export const defaultFeatureConfig: FeatureFlags = {
@@ -63,6 +69,9 @@ export const defaultFeatureConfig: FeatureFlags = {
   careers: true,
   nationalTeam: true,
   stateTeam: true,
+  experts: true,
+  news: true,
+  flagshipBanner: true,
 };
 
 const STORAGE_KEY = 'bharat_feature_flags';

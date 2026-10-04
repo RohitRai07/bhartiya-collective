@@ -119,81 +119,83 @@ export const AboutPage: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION 1: Who is Who */}
-      <section id="who-is-who" className="space-y-8 scroll-mt-28">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
-            The Foundation
-          </span>
-          <h2 className="font-serif text-3xl font-bold text-slate-900">
-            Who is Who
-          </h2>
-          <p className="text-xs text-slate-500">
-            Governing Council, Trustees, and Advisory Council guiding our institutional mission and academic integrity.
-          </p>
-        </div>
+      {/* SECTION 1: Who is Who (Toggleable via featureConfig) */}
+      {featureConfig.isEnabled('experts') && filteredExperts.length > 0 && (
+        <section id="who-is-who" className="space-y-8 scroll-mt-28">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
+              The Foundation
+            </span>
+            <h2 className="font-serif text-3xl font-bold text-slate-900">
+              Who is Who
+            </h2>
+            <p className="text-xs text-slate-500">
+              Governing Council, Trustees, and Advisory Council guiding our institutional mission and academic integrity.
+            </p>
+          </div>
 
-        {/* Role Filter Pills */}
-        <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-          {roles.map((r) => (
-            <button
-              key={r.value}
-              onClick={() => setSelectedRole(r.value)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                selectedRole === r.value
-                  ? 'bg-amber-800 text-white shadow-xs font-bold'
-                  : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
+          {/* Role Filter Pills */}
+          <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+            {roles.map((r) => (
+              <button
+                key={r.value}
+                onClick={() => setSelectedRole(r.value)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                  selectedRole === r.value
+                    ? 'bg-amber-800 text-white shadow-xs font-bold'
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredExperts.map((expert) => (
-            <div
-              key={expert.id}
-              className="bg-white rounded-2xl p-6 border border-slate-200 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xs"
-            >
-              <div>
-                <img
-                  src={expert.photoUrl}
-                  alt={expert.name}
-                  className="w-20 h-20 rounded-full object-cover mb-3 border-2 border-amber-200 mx-auto"
-                />
-                {expert.councilRole && (
-                  <div className="text-center mb-2">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                      {expert.councilRole.replace(/_/g, ' ')}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredExperts.map((expert) => (
+              <div
+                key={expert.id}
+                className="bg-white rounded-2xl p-6 border border-slate-200 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xs"
+              >
+                <div>
+                  <img
+                    src={expert.photoUrl}
+                    alt={expert.name}
+                    className="w-20 h-20 rounded-full object-cover mb-3 border-2 border-amber-200 mx-auto"
+                  />
+                  {expert.councilRole && (
+                    <div className="text-center mb-2">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                        {expert.councilRole.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                  )}
+                  <h3 className="font-serif text-base font-bold text-slate-900 text-center">
+                    {expert.name}
+                  </h3>
+                  <p className="text-[11px] font-semibold text-amber-800 text-center mb-1">
+                    {expert.designation}
+                  </p>
+                  <p className="text-[10px] text-slate-400 text-center mb-3">
+                    {expert.institution}
+                  </p>
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-4">
+                    {expert.biography}
+                  </p>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-1">
+                  {expert.focusAreas.map((f, i) => (
+                    <span key={i} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                      {f}
                     </span>
-                  </div>
-                )}
-                <h3 className="font-serif text-base font-bold text-slate-900 text-center">
-                  {expert.name}
-                </h3>
-                <p className="text-[11px] font-semibold text-amber-800 text-center mb-1">
-                  {expert.designation}
-                </p>
-                <p className="text-[10px] text-slate-400 text-center mb-3">
-                  {expert.institution}
-                </p>
-                <p className="text-xs text-slate-600 leading-relaxed line-clamp-4">
-                  {expert.biography}
-                </p>
+                  ))}
+                </div>
               </div>
-
-              <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-1">
-                {expert.focusAreas.map((f, i) => (
-                  <span key={i} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                    {f}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* SECTION 2: National Team (Toggleable via featureConfig) */}
       {featureConfig.isEnabled('nationalTeam') && nationalTeam.length > 0 && (

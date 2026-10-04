@@ -40,7 +40,7 @@ export const navigationConfig = {
     { id: 'magazine', label: 'Magazine', path: '/magazine', featureFlag: 'magazine' },
     { id: 'podcasts', label: 'Podcasts', path: '/podcasts', featureFlag: 'podcasts' },
     { id: 'events', label: 'Event', path: '/events', featureFlag: 'events' },
-    { id: 'news', label: 'Insights', path: '/news' },
+    { id: 'news', label: 'Insights', path: '/news', featureFlag: 'news' },
     { id: 'careers', label: 'Career', path: '/careers', featureFlag: 'careers' },
     { id: 'circulars', label: 'Circulars & Legal', path: '/circulars', featureFlag: 'circulars' },
     { id: 'contact', label: 'Contact', path: '/contact' },

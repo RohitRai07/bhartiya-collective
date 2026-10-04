@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { navigationConfig } from '../../config/navigationConfig';
 import { siteConfig } from '../../config/siteConfig';
+import { featureConfig } from '../../config/featureConfig';
 import { NewsletterForm } from '../newsletter/NewsletterForm';
 import { 
   Landmark, 
@@ -17,30 +18,41 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const currentYear = new Date().getFullYear();
+  const [features, setFeatures] = useState(featureConfig.get());
+
+  useEffect(() => {
+    const handleFeatureChange = () => {
+      setFeatures(featureConfig.get());
+    };
+    window.addEventListener('bhartiya:feature-change', handleFeatureChange);
+    return () => window.removeEventListener('bhartiya:feature-change', handleFeatureChange);
+  }, []);
 
   return (
     <footer className="bg-slate-950 text-slate-300 pt-16 pb-12 border-t border-amber-900/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Section: Newsletter Subscription (Specification #4) */}
-        <div id="newsletter" className="mb-14 pb-12 border-b border-slate-800">
-          <div className="bg-slate-900/90 rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-xl">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-6 space-y-3">
-                <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white">
-                  Subscribe Our News Letter
-                </h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
-                  Receive our Columns, Magazines, Events & programs directly in your inbox.
-                </p>
-              </div>
+        {features.newsletter && (
+          <div id="newsletter" className="mb-14 pb-12 border-b border-slate-800">
+            <div className="bg-slate-900/90 rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-xl">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div className="lg:col-span-6 space-y-3">
+                  <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white">
+                    Subscribe Our News Letter
+                  </h3>
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    Receive our Columns, Magazines, Events & programs directly in your inbox.
+                  </p>
+                </div>
 
-              <div className="lg:col-span-6">
-                <NewsletterForm source="footer-main" variant="compact" />
+                <div className="lg:col-span-6">
+                  <NewsletterForm source="footer-main" variant="compact" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Middle Section: Connect With Us & Social Media */}
         <div className="mb-12 pb-10 border-b border-slate-800/80">
@@ -157,24 +169,26 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
 
           {/* 1. Centres/Institutes */}
-          <div>
-            <h4 className="font-serif text-sm font-semibold text-white uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
-              Centres / Institutes
-            </h4>
-            <ul className="space-y-2 text-xs">
-              {navigationConfig.footerNav.centres.map(item => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate(item.path)}
-                    className="text-slate-400 hover:text-amber-400 transition-colors text-left cursor-pointer"
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {features.research && (
+            <div>
+              <h4 className="font-serif text-sm font-semibold text-white uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">
+                Centres / Institutes
+              </h4>
+              <ul className="space-y-2 text-xs">
+                {navigationConfig.footerNav.centres.map(item => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(item.path)}
+                      className="text-slate-400 hover:text-amber-400 transition-colors text-left cursor-pointer"
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* 2. Research & Action */}
           <div>
@@ -182,17 +196,25 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               Research & Action
             </h4>
             <ul className="space-y-2 text-xs">
-              {navigationConfig.footerNav.researchAction.map(item => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate(item.path)}
-                    className="text-slate-400 hover:text-amber-400 transition-colors text-left cursor-pointer"
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
+              {navigationConfig.footerNav.researchAction
+                .filter(item => {
+                  if (item.id === 'r-publications') return features.publications;
+                  if (item.id === 'r-magazine') return features.magazine;
+                  if (item.id === 'r-newsletter') return features.newsletter;
+                  if (item.id === 'r-other') return features.news;
+                  return true;
+                })
+                .map(item => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(item.path)}
+                      className="text-slate-400 hover:text-amber-400 transition-colors text-left cursor-pointer"
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
 
@@ -202,17 +224,25 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               The Foundation
             </h4>
             <ul className="space-y-2 text-xs">
-              {navigationConfig.footerNav.foundation.map(item => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate(item.path)}
-                    className="text-slate-400 hover:text-amber-400 transition-colors text-left cursor-pointer"
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
+              {navigationConfig.footerNav.foundation
+                .filter(item => {
+                  if (item.id === 'f-who') return features.experts;
+                  if (item.id === 'f-national') return features.nationalTeam;
+                  if (item.id === 'f-state') return features.stateTeam;
+                  if (item.id === 'f-centres') return features.research;
+                  return true;
+                })
+                .map(item => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(item.path)}
+                      className="text-slate-400 hover:text-amber-400 transition-colors text-left cursor-pointer"
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
             </ul>
           </div>
 
@@ -222,17 +252,25 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               Engage & Portals
             </h4>
             <ul className="space-y-2 text-xs">
-              {navigationConfig.footerNav.engagePortals.map(item => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate(item.path)}
-                    className="text-slate-400 hover:text-amber-400 transition-colors text-left cursor-pointer"
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
+              {navigationConfig.footerNav.engagePortals
+                .filter(item => {
+                  if (item.id === 'e-register') return features.userRegistration;
+                  if (item.id === 'e-cfp') return features.callForPapers;
+                  if (item.id === 'e-support') return features.donations;
+                  if (item.id === 'e-newsletter') return features.newsletter;
+                  return true;
+                })
+                .map(item => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(item.path)}
+                      className="text-slate-400 hover:text-amber-400 transition-colors text-left cursor-pointer"
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
               <li className="pt-2">
                 <button
                   type="button"

@@ -94,7 +94,9 @@ import {
   Sliders,
   CheckCircle2,
   FileDown,
-  MapPin
+  MapPin,
+  Heart,
+  Megaphone
 } from 'lucide-react';
 
 interface AdminPreviewPageProps {
@@ -938,7 +940,47 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         {/* ============================================================== */}
         {activeTab === 'registrations' && (
           <div className="space-y-4">
-            
+            {/* Section Level Toggle Banner */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <UserPlus className="w-4 h-4 text-amber-800 shrink-0" />
+                  <span className="font-serif font-bold text-slate-900 text-sm">
+                    Scholar & Member Registration Portal Visibility
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    features.userRegistration 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {features.userRegistration ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                  Controls whether the public membership & volunteer registration portal appears in the navigation and at <code>/register</code>.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => handleToggleFeature('userRegistration')}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    features.userRegistration ? 'bg-amber-800' : 'bg-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.userRegistration ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+                <span className="text-xs font-semibold text-slate-700">
+                  {features.userRegistration ? 'Enabled' : 'Disabled'}
+                </span>
+              </div>
+            </div>
+
             {/* Filter and Top Action Bar */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-1.5">
@@ -1152,7 +1194,47 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         {/* ============================================================== */}
         {activeTab === 'careers' && (
           <div className="space-y-4">
-            
+            {/* Section Level Toggle Banner */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Briefcase className="w-4 h-4 text-amber-800 shrink-0" />
+                  <span className="font-serif font-bold text-slate-900 text-sm">
+                    Career & Internship Applications Visibility
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    features.careers 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {features.careers ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                  Controls whether the career & internship application portal appears in the navigation and at <code>/careers</code>.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => handleToggleFeature('careers')}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    features.careers ? 'bg-amber-800' : 'bg-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.careers ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+                <span className="text-xs font-semibold text-slate-700">
+                  {features.careers ? 'Enabled' : 'Disabled'}
+                </span>
+              </div>
+            </div>
+
             {/* Filter and Top Action Bar */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-1.5">
@@ -1397,7 +1479,49 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
             {/* 1. PUBLICATIONS TABLE */}
             {contentSubTab === 'publications' && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <FileText className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        Research Publications & Monographs Visibility
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.publications 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.publications ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether the publications repository and monographs directory appear on <code>/publications</code> and in the main navigation.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('publications')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.publications ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.publications ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.publications ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
@@ -1480,11 +1604,53 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   </table>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
             {/* 1.5 CIRCULARS & LEGAL GUIDELINES TABLE */}
             {contentSubTab === 'circulars' && (
               <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Scale className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        Circulars & Legal Materials Section Visibility
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.circulars 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.circulars ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether the official circulars, notifications, and gazette guidelines appear in the navigation and on <code>/circulars</code>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('circulars')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.circulars ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.circulars ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.circulars ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
                 {/* Live Gazette Ingestion & Synchronization Command Banner */}
                 <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950 text-white rounded-2xl p-4.5 border border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1">
@@ -1668,7 +1834,49 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
             {/* 2. EVENTS TABLE */}
             {contentSubTab === 'events' && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        Conferences & Dialogues Section Visibility
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.events 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.events ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether upcoming and past conferences, roundtables, and symposia appear on the homepage and at <code>/events</code>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('events')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.events ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.events ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.events ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
@@ -1735,11 +1943,54 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   </table>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
             {/* 3. RESEARCH DOMAINS (Fully Safe & Resilient) */}
             {contentSubTab === 'research' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Compass className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        Research Centres & Domains Visibility
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.research 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.research ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether the 6 research centres appear on the homepage, navbar dropdown, and at <code>/centres</code>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('research')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.research ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.research ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.research ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {domains.map(d => {
                   const domainTitle = d.name || (d as any).title || 'Research Domain';
                   const leadPerson = d.leadFellow || (d as any).leadResearcher || 'Senior Fellow';
@@ -1807,11 +2058,54 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   );
                 })}
               </div>
-            )}
+            </div>
+          )}
 
             {/* 4. ADVISORY COUNCIL & FELLOWS */}
             {contentSubTab === 'experts' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        Governing Council & Fellows Section Visibility (About Page)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.experts 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.experts ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether Section 1 &ldquo;Who is Who: Governing Council & Advisory Board&rdquo; appears on <code>/about#who-is-who</code>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('experts')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.experts ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.experts ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.experts ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {experts.map(exp => (
                   <div key={exp.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
                     <div className="space-y-3">
@@ -1869,7 +2163,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   </div>
                 ))}
               </div>
-            )}
+            </div>
+          )}
 
             {/* SUB-TAB: NATIONAL TEAM MANAGEMENT */}
             {contentSubTab === 'nationalTeam' && (
@@ -2079,7 +2374,49 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
             {/* 5. NEWS & INSIGHTS */}
             {contentSubTab === 'news' && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Newspaper className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        Insights & Perspectives Section Visibility
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.news 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.news ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether policy insights, opinion columns, and perspectives appear in the main navigation and on <code>/news</code>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('news')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.news ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.news ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.news ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
@@ -2137,11 +2474,54 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   </table>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
             {/* SUB-TAB: PODCASTS MANAGEMENT */}
             {contentSubTab === 'podcasts' && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Video className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        Podcasts & Video Dispatches Section Visibility
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.podcasts 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.podcasts ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether the podcasts, video dialogs, and YouTube embeds appear in the main navigation and on <code>/podcasts</code>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('podcasts')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.podcasts ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.podcasts ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.podcasts ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
@@ -2248,11 +2628,54 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   </div>
                 )}
               </div>
-            )}
+            </div>
+          )}
 
             {/* SUB-TAB: MAGAZINE MANAGEMENT */}
             {contentSubTab === 'magazine' && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <BookOpen className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        Bharat Review Magazine Section Visibility
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.magazine 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.magazine ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether the digital magazine editions, downloads, and ₹100 contribution modal appear in the main navigation and on <code>/magazine</code>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('magazine')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.magazine ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.magazine ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.magazine ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
@@ -2343,7 +2766,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   </div>
                 )}
               </div>
-            )}
+            </div>
+          )}
 
             {/* SUB-TAB 6: MEDIA & UPLOADS */}
             {contentSubTab === 'media' && (
@@ -2667,7 +3091,47 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         {/* ============================================================== */}
         {activeTab === 'submissions' && (
           <div className="space-y-4">
-            
+            {/* Section Level Toggle Banner */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Send className="w-4 h-4 text-amber-800 shrink-0" />
+                  <span className="font-serif font-bold text-slate-900 text-sm">
+                    Call for Papers & Submissions Intake Visibility
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    features.callForPapers 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {features.callForPapers ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                  Controls whether the academic Call for Papers intake portal and abstract submission forms appear on <code>/contact#papers</code>.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => handleToggleFeature('callForPapers')}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    features.callForPapers ? 'bg-amber-800' : 'bg-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.callForPapers ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+                <span className="text-xs font-semibold text-slate-700">
+                  {features.callForPapers ? 'Enabled' : 'Disabled'}
+                </span>
+              </div>
+            </div>
+
             {/* Top Bar */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -2759,7 +3223,47 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         {/* ============================================================== */}
         {activeTab === 'newsletter' && (
           <div className="space-y-4">
-            
+            {/* Section Level Toggle Banner */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <Mail className="w-4 h-4 text-amber-800 shrink-0" />
+                  <span className="font-serif font-bold text-slate-900 text-sm">
+                    Research Digest Newsletter Visibility
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    features.newsletter 
+                      ? 'bg-emerald-100 text-emerald-800' 
+                      : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {features.newsletter ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                  Controls whether the newsletter subscription banner appears on the public website and footer.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => handleToggleFeature('newsletter')}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    features.newsletter ? 'bg-amber-800' : 'bg-slate-300'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.newsletter ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+                <span className="text-xs font-semibold text-slate-700">
+                  {features.newsletter ? 'Enabled' : 'Disabled'}
+                </span>
+              </div>
+            </div>
+
             {/* Top Action & Stats Bar */}
             <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
@@ -2981,151 +3485,38 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Circulars & Legal Materials Toggle */}
+                {/* 1. Governing Council & Advisory Board */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
                     <div className="flex items-center space-x-2">
-                      <Scale className="w-4 h-4 text-amber-800 shrink-0" />
+                      <Users className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
-                        Circulars & Legal Materials
+                        Governing Council & Advisory Board
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        features.circulars 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : 'bg-slate-200 text-slate-600'
+                        features.experts ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
                       }`}>
-                        {features.circulars ? 'Live on Site' : 'Hidden by Default'}
+                        {features.experts ? 'Live on Site' : 'Hidden'}
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Official gazettes & legal notifications. Per specification, this module is hidden from the public navigation by default, but can be enabled whenever needed.
+                      Controls Section 1 &ldquo;Who is Who: Governing Council & Advisory Board&rdquo; on <code>/about#who-is-who</code>.
                     </p>
                   </div>
-
                   <button
                     type="button"
-                    onClick={() => handleToggleFeature('circulars')}
+                    onClick={() => handleToggleFeature('experts')}
                     className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      features.circulars ? 'bg-amber-800' : 'bg-slate-300'
+                      features.experts ? 'bg-amber-800' : 'bg-slate-300'
                     }`}
                   >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        features.circulars ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.experts ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
                   </button>
                 </div>
 
-                {/* Podcasts Toggle */}
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
-                      <Video className="w-4 h-4 text-amber-800 shrink-0" />
-                      <span className="font-bold text-xs text-slate-900">
-                        Podcasts & Video Dispatches
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        features.podcasts 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : 'bg-slate-200 text-slate-600'
-                      }`}>
-                        {features.podcasts ? 'Live on Site' : 'Hidden'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Interactive video dialogs and YouTube embed cards located at <code>/podcasts</code>.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToggleFeature('podcasts')}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      features.podcasts ? 'bg-amber-800' : 'bg-slate-300'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        features.podcasts ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {/* Magazine Toggle */}
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
-                      <BookOpen className="w-4 h-4 text-amber-800 shrink-0" />
-                      <span className="font-bold text-xs text-slate-900">
-                        Magazine (Bharat Review)
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        features.magazine 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : 'bg-slate-200 text-slate-600'
-                      }`}>
-                        {features.magazine ? 'Live on Site' : 'Hidden'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Quarterly digital magazine with ₹100 contribution modal and client-side PDF engine at <code>/magazine</code>.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToggleFeature('magazine')}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      features.magazine ? 'bg-amber-800' : 'bg-slate-300'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        features.magazine ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {/* Careers Toggle */}
-                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
-                      <Briefcase className="w-4 h-4 text-amber-800 shrink-0" />
-                      <span className="font-bold text-xs text-slate-900">
-                        Career & Internship Applications
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        features.careers 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : 'bg-slate-200 text-slate-600'
-                      }`}>
-                        {features.careers ? 'Live on Site' : 'Hidden'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Internship and job application form with strict 1 MB PDF CV upload at <code>/careers</code>.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleToggleFeature('careers')}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      features.careers ? 'bg-amber-800' : 'bg-slate-300'
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        features.careers ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {/* National Team Toggle */}
+                {/* 2. National Executive Team */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
                     <div className="flex items-center space-x-2">
@@ -3134,18 +3525,15 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         National Executive Team Section
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        features.nationalTeam 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : 'bg-slate-200 text-slate-600'
+                        features.nationalTeam ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
                       }`}>
                         {features.nationalTeam ? 'Live on Site' : 'Hidden'}
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Controls visibility of Section 2 &ldquo;National Team&rdquo; on the public About page at <code>/about#national-team</code>.
+                      Controls Section 2 &ldquo;National Executive Team&rdquo; on the public About page at <code>/about#national-team</code>.
                     </p>
                   </div>
-
                   <button
                     type="button"
                     onClick={() => handleToggleFeature('nationalTeam')}
@@ -3153,15 +3541,13 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                       features.nationalTeam ? 'bg-amber-800' : 'bg-slate-300'
                     }`}
                   >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        features.nationalTeam ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.nationalTeam ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
                   </button>
                 </div>
 
-                {/* State Chapters Toggle */}
+                {/* 3. State Chapters */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
                     <div className="flex items-center space-x-2">
@@ -3170,18 +3556,15 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         State Team & Regional Chapters Section
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        features.stateTeam 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : 'bg-slate-200 text-slate-600'
+                        features.stateTeam ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
                       }`}>
                         {features.stateTeam ? 'Live on Site' : 'Hidden'}
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Controls visibility of Section 3 &ldquo;State Team & Regional Chapters&rdquo; on the public About page at <code>/about#state-team</code>.
+                      Controls Section 3 &ldquo;State Team & Regional Chapters&rdquo; on the public About page at <code>/about#state-team</code>.
                     </p>
                   </div>
-
                   <button
                     type="button"
                     onClick={() => handleToggleFeature('stateTeam')}
@@ -3189,11 +3572,412 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                       features.stateTeam ? 'bg-amber-800' : 'bg-slate-300'
                     }`}
                   >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        features.stateTeam ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.stateTeam ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 4. Publications */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <FileText className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Publications & Research Monographs
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.publications ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.publications ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Controls research papers repository in main navigation, homepage featured studies, and <code>/publications</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('publications')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.publications ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.publications ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 5. Circulars & Legal Materials */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Scale className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Circulars & Legal Materials
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.circulars ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.circulars ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Official gazettes & legal notifications. Controls presence in navigation and <code>/circulars</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('circulars')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.circulars ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.circulars ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 6. Events */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Conferences & Dialogues (Events)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.events ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.events ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Controls upcoming conferences, symposia, and roundtables in navigation, homepage, and <code>/events</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('events')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.events ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.events ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 7. Research Centres */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Compass className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Research Centres & Working Domains
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.research ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.research ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Controls the 6 specialized research centres across homepage, navbar dropdown, and <code>/centres</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('research')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.research ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.research ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 8. News / Insights */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Newspaper className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Insights & Perspectives (Articles)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.news ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.news ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Controls policy insights, opinion columns, and perspectives in the main navigation and <code>/news</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('news')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.news ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.news ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 9. Podcasts */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Video className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Podcasts & Video Dispatches
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.podcasts ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.podcasts ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Interactive video dialogs and YouTube embed cards located at <code>/podcasts</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('podcasts')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.podcasts ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.podcasts ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 10. Magazine */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <BookOpen className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Magazine (Bharat Review)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.magazine ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.magazine ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Quarterly digital magazine with ₹100 contribution modal and client-side PDF engine at <code>/magazine</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('magazine')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.magazine ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.magazine ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 11. Careers */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Briefcase className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Career & Internship Applications
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.careers ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.careers ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Internship and job application form with strict 1 MB PDF CV upload at <code>/careers</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('careers')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.careers ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.careers ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 12. Call for Papers */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Send className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Call for Papers & Submissions Intake
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.callForPapers ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.callForPapers ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Academic manuscript abstract submission portal and tracking located at <code>/contact#papers</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('callForPapers')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.callForPapers ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.callForPapers ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 13. Donations & Support */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Heart className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Donations & Patronage Gateway
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.donations ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.donations ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Controls &ldquo;Support Us&rdquo; action button in navbar, homepage contribution callout, and <code>/support-us</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('donations')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.donations ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.donations ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 14. Member Registration */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <UserPlus className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Scholar & Member Registration
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.userRegistration ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.userRegistration ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Controls &ldquo;Join Us&rdquo; button in navbar, homepage intake section, and registration portal at <code>/register</code>.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('userRegistration')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.userRegistration ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.userRegistration ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 15. Newsletter */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Mail className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Research Digest Newsletter
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.newsletter ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.newsletter ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Controls the newsletter signup banner on the homepage and site-wide footer subscription box.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('newsletter')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.newsletter ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.newsletter ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* 16. Flagship Announcement Ticker */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Megaphone className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        Flagship Dialogue Announcement Ticker
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.flagshipBanner ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.flagshipBanner ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Controls the top announcement bar running across all pages above the main navigation header.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('flagshipBanner')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.flagshipBanner ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                      features.flagshipBanner ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
                   </button>
                 </div>
               </div>

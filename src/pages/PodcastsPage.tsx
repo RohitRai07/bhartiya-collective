@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { podcastService } from '../services/podcastService';
+import { featureConfig } from '../config/featureConfig';
 import { PodcastEpisode } from '../types/podcast';
 import { 
   Play, 
@@ -15,17 +16,35 @@ import {
 export const PodcastsPage: React.FC = () => {
   const [podcasts, setPodcasts] = useState<PodcastEpisode[]>([]);
   const [activeVideo, setActiveVideo] = useState<PodcastEpisode | null>(null);
+  const [isPodcastsActive, setIsPodcastsActive] = useState(featureConfig.isEnabled('podcasts'));
 
   useEffect(() => {
     const load = () => {
       podcastService.getPodcasts().then(setPodcasts);
+      setIsPodcastsActive(featureConfig.isEnabled('podcasts'));
     };
     load();
 
     const handleUpdate = () => load();
     window.addEventListener('bharat:podcast-updated', handleUpdate);
-    return () => window.removeEventListener('bharat:podcast-updated', handleUpdate);
+    window.addEventListener('bhartiya:feature-change', handleUpdate);
+    return () => {
+      window.removeEventListener('bharat:podcast-updated', handleUpdate);
+      window.removeEventListener('bhartiya:feature-change', handleUpdate);
+    };
   }, []);
+
+  if (!isPodcastsActive) {
+    return (
+      <div className="py-24 px-4 max-w-xl mx-auto text-center space-y-4">
+        <Tv className="w-12 h-12 text-slate-300 mx-auto" />
+        <h2 className="font-serif text-2xl font-bold text-slate-800">Podcasts Section Inactive</h2>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Broadcast dialogues and video episodes are currently deactivated via administrative configuration (<code className="font-mono">featureConfig.podcasts = false</code>).
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">

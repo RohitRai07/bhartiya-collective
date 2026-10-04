@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { magazineService } from '../services/magazineService';
+import { featureConfig } from '../config/featureConfig';
 import { MagazineIssue } from '../types/magazine';
 import { 
   BookOpen, 
@@ -20,17 +21,35 @@ export const MagazinePage: React.FC = () => {
   const [purchasingIssue, setPurchasingIssue] = useState<MagazineIssue | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState<{ filename: string; sizeKb: number } | null>(null);
+  const [isMagazineActive, setIsMagazineActive] = useState(featureConfig.isEnabled('magazine'));
 
   useEffect(() => {
     const load = () => {
       magazineService.getIssues().then(setIssues);
+      setIsMagazineActive(featureConfig.isEnabled('magazine'));
     };
     load();
 
     const handleUpdate = () => load();
     window.addEventListener('bharat:magazine-updated', handleUpdate);
-    return () => window.removeEventListener('bharat:magazine-updated', handleUpdate);
+    window.addEventListener('bhartiya:feature-change', handleUpdate);
+    return () => {
+      window.removeEventListener('bharat:magazine-updated', handleUpdate);
+      window.removeEventListener('bhartiya:feature-change', handleUpdate);
+    };
   }, []);
+
+  if (!isMagazineActive) {
+    return (
+      <div className="py-24 px-4 max-w-xl mx-auto text-center space-y-4">
+        <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
+        <h2 className="font-serif text-2xl font-bold text-slate-800">Magazine Section Inactive</h2>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Bharat Review Magazine is currently deactivated via administrative configuration (<code className="font-mono">featureConfig.magazine = false</code>).
+        </p>
+      </div>
+    );
+  }
 
   const handleStartPurchase = (issue: MagazineIssue) => {
     setPurchasingIssue(issue);

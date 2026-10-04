@@ -1,10 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { siteConfig } from '../config/siteConfig';
 import { submissionService } from '../services/submissionService';
 import { fileService } from '../services/fileService';
-import { Mail, MapPin, Phone, Send, CheckCircle2, UploadCloud, Loader2 } from 'lucide-react';
+import { featureConfig } from '../config/featureConfig';
+import { Mail, MapPin, Phone, Send, CheckCircle2, UploadCloud, Loader2, FileText } from 'lucide-react';
 
 export const ContactPage: React.FC = () => {
+  const [isCfpActive, setIsCfpActive] = useState(featureConfig.isEnabled('callForPapers'));
+
+  useEffect(() => {
+    const handleUpdate = () => setIsCfpActive(featureConfig.isEnabled('callForPapers'));
+    window.addEventListener('bhartiya:feature-change', handleUpdate);
+    return () => window.removeEventListener('bhartiya:feature-change', handleUpdate);
+  }, []);
+
   // Call for Papers form state
   const [authorName, setAuthorName] = useState('');
   const [authorEmail, setAuthorEmail] = useState('');
@@ -113,7 +122,15 @@ export const ContactPage: React.FC = () => {
               Submit your abstract for consideration in the Magazine & News Letter
             </p>
 
-            {submissionSuccessCode ? (
+            {!isCfpActive ? (
+              <div className="p-8 rounded-2xl bg-amber-50/70 border border-amber-200 text-center space-y-3">
+                <FileText className="w-10 h-10 text-amber-700 mx-auto" />
+                <h4 className="font-serif text-lg font-bold text-amber-950">Call for Papers Window Closed</h4>
+                <p className="text-xs text-amber-800 leading-relaxed max-w-md mx-auto">
+                  Academic manuscript abstract submissions are currently deactivated via administrative configuration (<code className="font-mono">featureConfig.callForPapers = false</code>). Please check back for our next symposium CFP cycle.
+                </p>
+              </div>
+            ) : submissionSuccessCode ? (
               <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-center space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
                 <h4 className="font-serif text-lg font-bold">Manuscript Abstract Received</h4>

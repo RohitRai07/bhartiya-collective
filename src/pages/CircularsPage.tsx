@@ -3,6 +3,7 @@ import { Circular, CircularCategory } from '../types/circular';
 import { circularService } from '../services/circularService';
 import { taxonomyService } from '../services/taxonomyService';
 import { gazetteSyncService, OfficialGazetteFeed } from '../services/gazetteSyncService';
+import { featureConfig } from '../config/featureConfig';
 import { CircularCard } from '../components/circulars/CircularCard';
 import { CircularPreviewModal } from '../components/circulars/CircularPreviewModal';
 import { 
@@ -32,6 +33,14 @@ interface CircularsPageProps {
 export const CircularsPage: React.FC<CircularsPageProps> = () => {
   const [circulars, setCirculars] = useState<Circular[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCircularsActive, setIsCircularsActive] = useState(featureConfig.isEnabled('circulars'));
+
+  useEffect(() => {
+    const handleUpdate = () => setIsCircularsActive(featureConfig.isEnabled('circulars'));
+    window.addEventListener('bhartiya:feature-change', handleUpdate);
+    return () => window.removeEventListener('bhartiya:feature-change', handleUpdate);
+  }, []);
+
   const [selectedCategory, setSelectedCategory] = useState<CircularCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAuthority, setSelectedAuthority] = useState<string>('all');
@@ -164,6 +173,18 @@ export const CircularsPage: React.FC<CircularsPageProps> = () => {
       desc: cat.isCustom ? 'Custom statutory category' : undefined,
     })),
   ];
+
+  if (!isCircularsActive) {
+    return (
+      <div className="py-24 px-4 max-w-xl mx-auto text-center space-y-4">
+        <Scale className="w-12 h-12 text-slate-300 mx-auto" />
+        <h2 className="font-serif text-2xl font-bold text-slate-800">Circulars & Legal Compendium Inactive</h2>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          The gazettes and legal materials repository is currently deactivated via administrative configuration (<code className="font-mono">featureConfig.circulars = false</code>).
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">

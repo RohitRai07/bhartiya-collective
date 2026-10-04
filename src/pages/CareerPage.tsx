@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { careerService } from '../services/careerService';
+import { featureConfig } from '../config/featureConfig';
 import { CareerApplicationType, MAX_CV_SIZE_BYTES, CareerApplicationRecord } from '../types/career';
 import { BHARAT_CENTRES } from '../data/centresData';
 import { 
@@ -23,6 +24,14 @@ interface CareerPageProps {
 }
 
 export const CareerPage: React.FC<CareerPageProps> = ({ onNavigate }) => {
+  const [isCareersActive, setIsCareersActive] = useState(featureConfig.isEnabled('careers'));
+
+  useEffect(() => {
+    const handleUpdate = () => setIsCareersActive(featureConfig.isEnabled('careers'));
+    window.addEventListener('bhartiya:feature-change', handleUpdate);
+    return () => window.removeEventListener('bhartiya:feature-change', handleUpdate);
+  }, []);
+
   const [appType, setAppType] = useState<CareerApplicationType>('internship');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -145,6 +154,18 @@ export const CareerPage: React.FC<CareerPageProps> = ({ onNavigate }) => {
     setSubmitError(null);
     setSubmittedRecord(null);
   };
+
+  if (!isCareersActive) {
+    return (
+      <div className="py-24 px-4 max-w-xl mx-auto text-center space-y-4">
+        <Briefcase className="w-12 h-12 text-slate-300 mx-auto" />
+        <h2 className="font-serif text-2xl font-bold text-slate-800">Careers & Internships Portal Closed</h2>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Application intake is currently deactivated via administrative configuration (<code className="font-mono">featureConfig.careers = false</code>). The rest of the site remains fully operational.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-12">

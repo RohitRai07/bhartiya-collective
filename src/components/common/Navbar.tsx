@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { navigationConfig, NavItem } from '../../config/navigationConfig';
 import { siteConfig } from '../../config/siteConfig';
+import { featureConfig } from '../../config/featureConfig';
 import { Menu, X, Landmark, Heart, UserPlus, ChevronDown, Search } from 'lucide-react';
 import { UniversalSearchModal } from '../search/UniversalSearchModal';
 
@@ -12,6 +13,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [features, setFeatures] = useState(featureConfig.get());
   const [navItems, setNavItems] = useState<NavItem[]>([]);
   const [actionItems, setActionItems] = useState<NavItem[]>([]);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -21,6 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
 
   useEffect(() => {
     const refreshNav = () => {
+      setFeatures(featureConfig.get());
       setNavItems(navigationConfig.getActiveMainNav());
       setActionItems(navigationConfig.getActiveActionNav());
     };
@@ -51,23 +54,25 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-amber-900/10 shadow-sm transition-colors">
       
       {/* Top National Announcement Ticker */}
-      <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 text-white text-[11px] sm:text-xs py-1.5 px-4 text-center font-medium">
-        <div className="max-w-7xl mx-auto flex items-center justify-center space-x-2">
-          <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-            Flagship Dialogue
-          </span>
-          <span className="truncate">
-            #BharatDialogue on <strong>Uniform Civil Code</strong> at Constitution Club of India, New Delhi — Coming Soon!
-          </span>
-          <button
-            type="button"
-            onClick={() => handleLinkClick('/events')}
-            className="underline font-bold text-amber-200 hover:text-white ml-1 cursor-pointer"
-          >
-            Details
-          </button>
+      {features.flagshipBanner && (
+        <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 text-white text-[11px] sm:text-xs py-1.5 px-4 text-center font-medium">
+          <div className="max-w-7xl mx-auto flex items-center justify-center space-x-2">
+            <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+              Flagship Dialogue
+            </span>
+            <span className="truncate">
+              #BharatDialogue on <strong>Uniform Civil Code</strong> at Constitution Club of India, New Delhi — Coming Soon!
+            </span>
+            <button
+              type="button"
+              onClick={() => handleLinkClick('/events')}
+              className="underline font-bold text-amber-200 hover:text-white ml-1 cursor-pointer"
+            >
+              Details
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20 gap-2 lg:gap-4">

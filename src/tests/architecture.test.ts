@@ -517,8 +517,8 @@ async function runTests() {
   const afterDelState = await teamService.getStateChapters({ includeDrafts: true });
   assert(afterDelState.length === stateChapters.length, 'Test state chapter cleaned up');
 
-  // Section-level feature toggles for National Team & State Chapters
-  console.log('\n📌 Testing Section-Level Disabling for National & State Team:');
+  // Section-level feature toggles for all modules
+  console.log('\n📌 Testing Section-Level Disabling for All Modules:');
   assert(featureConfig.isEnabled('nationalTeam') === true, 'National Team section enabled by default');
   featureConfig.update({ nationalTeam: false });
   assert(featureConfig.isEnabled('nationalTeam') === false, 'National Team section disables cleanly');
@@ -530,6 +530,54 @@ async function runTests() {
   assert(featureConfig.isEnabled('stateTeam') === false, 'State Chapters section disables cleanly');
   featureConfig.update({ stateTeam: true });
   assert(featureConfig.isEnabled('stateTeam') === true, 'State Chapters section re-enabled cleanly');
+
+  assert(featureConfig.isEnabled('experts') === true, 'Governing Council & Experts section enabled by default');
+  featureConfig.update({ experts: false });
+  assert(featureConfig.isEnabled('experts') === false, 'Experts section disables cleanly');
+  featureConfig.update({ experts: true });
+  assert(featureConfig.isEnabled('experts') === true, 'Experts section re-enabled cleanly');
+
+  assert(featureConfig.isEnabled('news') === true, 'News / Insights section enabled by default');
+  featureConfig.update({ news: false });
+  assert(featureConfig.isEnabled('news') === false, 'News section disables cleanly');
+  featureConfig.update({ news: true });
+  assert(featureConfig.isEnabled('news') === true, 'News section re-enabled cleanly');
+
+  assert(featureConfig.isEnabled('flagshipBanner') === true, 'Flagship announcement banner enabled by default');
+  featureConfig.update({ flagshipBanner: false });
+  assert(featureConfig.isEnabled('flagshipBanner') === false, 'Flagship banner disables cleanly');
+  featureConfig.update({ flagshipBanner: true });
+  assert(featureConfig.isEnabled('flagshipBanner') === true, 'Flagship banner re-enabled cleanly');
+
+  assert(featureConfig.isEnabled('publications') === true, 'Publications section enabled by default');
+  featureConfig.update({ publications: false });
+  assert(featureConfig.isEnabled('publications') === false, 'Publications section disables cleanly');
+  featureConfig.update({ publications: true });
+  assert(featureConfig.isEnabled('publications') === true, 'Publications section re-enabled cleanly');
+
+  assert(featureConfig.isEnabled('events') === true, 'Events section enabled by default');
+  featureConfig.update({ events: false });
+  assert(featureConfig.isEnabled('events') === false, 'Events section disables cleanly');
+  featureConfig.update({ events: true });
+  assert(featureConfig.isEnabled('events') === true, 'Events section re-enabled cleanly');
+
+  assert(featureConfig.isEnabled('research') === true, 'Research section enabled by default');
+  featureConfig.update({ research: false });
+  assert(featureConfig.isEnabled('research') === false, 'Research section disables cleanly');
+  featureConfig.update({ research: true });
+  assert(featureConfig.isEnabled('research') === true, 'Research section re-enabled cleanly');
+
+  assert(featureConfig.isEnabled('donations') === true, 'Donations / Support Us section enabled by default');
+  featureConfig.update({ donations: false });
+  assert(featureConfig.isEnabled('donations') === false, 'Donations section disables cleanly');
+  featureConfig.update({ donations: true });
+  assert(featureConfig.isEnabled('donations') === true, 'Donations section re-enabled cleanly');
+
+  assert(featureConfig.isEnabled('userRegistration') === true, 'User Registration section enabled by default');
+  featureConfig.update({ userRegistration: false });
+  assert(featureConfig.isEnabled('userRegistration') === false, 'User Registration section disables cleanly');
+  featureConfig.update({ userRegistration: true });
+  assert(featureConfig.isEnabled('userRegistration') === true, 'User Registration section re-enabled cleanly');
 
   // 15. Universal Search Engine
   console.log('\n📌 Testing Universal Multi-Entity Search Engine:');
