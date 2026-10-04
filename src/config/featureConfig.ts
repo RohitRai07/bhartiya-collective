@@ -38,6 +38,10 @@ export interface FeatureFlags {
   magazine: boolean;
   /** Career section */
   careers: boolean;
+  /** National Team section on About page */
+  nationalTeam: boolean;
+  /** State Team & Regional Chapters section on About page */
+  stateTeam: boolean;
 }
 
 export const defaultFeatureConfig: FeatureFlags = {
@@ -57,6 +61,8 @@ export const defaultFeatureConfig: FeatureFlags = {
   podcasts: true,
   magazine: true,
   careers: true,
+  nationalTeam: true,
+  stateTeam: true,
 };
 
 const STORAGE_KEY = 'bharat_feature_flags';

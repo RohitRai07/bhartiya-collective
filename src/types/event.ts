@@ -8,6 +8,8 @@ export interface EventSpeaker {
   avatarUrl?: string;
 }
 
+export type ContentStatus = 'published' | 'draft';
+
 export interface EventItem {
   id: string;
   title: string;

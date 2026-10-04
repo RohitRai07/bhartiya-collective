@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { siteConfig } from '../config/siteConfig';
+import { featureConfig } from '../config/featureConfig';
 import { expertService } from '../services/expertService';
+import { teamService } from '../services/teamService';
 import { taxonomyService } from '../services/taxonomyService';
 import { ScholarExpert } from '../types/expert';
+import { NationalTeamMember, StateChapter } from '../types/team';
 import { Landmark, Scroll, Compass, Shield, Award, Users, MapPin, CheckCircle2 } from 'lucide-react';
 
 export const AboutPage: React.FC = () => {
   const [experts, setExperts] = useState<ScholarExpert[]>([]);
+  const [nationalTeam, setNationalTeam] = useState<NationalTeamMember[]>([]);
+  const [stateChapters, setStateChapters] = useState<StateChapter[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>('All');
   const [roles, setRoles] = useState<{ value: string; label: string }[]>(() => [
     { value: 'All', label: 'All Faculty & Council' },
@@ -16,6 +21,8 @@ export const AboutPage: React.FC = () => {
   useEffect(() => {
     const load = () => {
       expertService.getExperts().then(setExperts);
+      teamService.getNationalTeam().then(setNationalTeam);
+      teamService.getStateChapters().then(setStateChapters);
     };
     load();
 
@@ -28,9 +35,11 @@ export const AboutPage: React.FC = () => {
     };
     window.addEventListener('bharat:content-updated', handleUpdate);
     window.addEventListener('bharat:taxonomy-updated', handleUpdate);
+    window.addEventListener('bhartiya:feature-change', handleUpdate);
     return () => {
       window.removeEventListener('bharat:content-updated', handleUpdate);
       window.removeEventListener('bharat:taxonomy-updated', handleUpdate);
+      window.removeEventListener('bhartiya:feature-change', handleUpdate);
     };
   }, []);
 
@@ -186,90 +195,68 @@ export const AboutPage: React.FC = () => {
         </div>
       </section>
 
-      {/* SECTION 2: National Team */}
-      <section id="national-team" className="space-y-8 scroll-mt-28">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
-            Executive Leadership
-          </span>
-          <h2 className="font-serif text-3xl font-bold text-slate-900">
-            National Team
-          </h2>
-          <p className="text-xs text-slate-500">
-            Central leadership orchestrating research programs, legal aid advocacy, symposium conclaves, and policy formulation nationwide.
-          </p>
-        </div>
+      {/* SECTION 2: National Team (Toggleable via featureConfig) */}
+      {featureConfig.isEnabled('nationalTeam') && nationalTeam.length > 0 && (
+        <section id="national-team" className="space-y-8 scroll-mt-28">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
+              Executive Leadership
+            </span>
+            <h2 className="font-serif text-3xl font-bold text-slate-900">
+              National Team
+            </h2>
+            <p className="text-xs text-slate-500">
+              Central leadership orchestrating research programs, legal aid advocacy, symposium conclaves, and policy formulation nationwide.
+            </p>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              role: 'Director of Legal Affairs & Research',
-              name: 'Sr. Adv. J. Sai Deepak',
-              affiliation: 'Supreme Court of India',
-              desc: 'Oversees the Center for Human Rights & Legal Aid, directing constitutional litigations, civilizational jurisprudence analysis, and model legislative inputs.',
-            },
-            {
-              role: 'Dean of Academic Inquiry & Fellowships',
-              name: 'Prof. Ananya Someshwar',
-              affiliation: 'Department of Public Policy & Statecraft',
-              desc: 'Leads visiting fellowship admissions, peer-reviewed monograph editorial pipelines, and curricular synthesis for Indian university networks.',
-            },
-            {
-              role: 'Convener of National Dialogues',
-              name: 'Dr. Meenakshi Sundaram',
-              affiliation: 'Center for Public Policy / Studies',
-              desc: 'Directs the #BharatDialogue Conclaves, coordinating roundtables between senior advocates, high court jurists, and policy practitioners.',
-            },
-          ].map((item, idx) => (
-            <div key={idx} className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-3">
-              <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60 inline-block">
-                {item.role}
-              </span>
-              <h3 className="font-serif text-lg font-bold text-slate-900">{item.name}</h3>
-              <p className="text-xs font-semibold text-slate-500">{item.affiliation}</p>
-              <p className="text-xs text-slate-600 leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* SECTION 3: State Team */}
-      <section id="state-team" className="space-y-8 scroll-mt-28">
-        <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
-            State Chapters & Conveners
-          </span>
-          <h2 className="font-serif text-3xl font-bold text-slate-900">
-            State Team & Regional Chapters
-          </h2>
-          <p className="text-xs text-slate-500">
-            State chapter coordinators mobilizing law student networks, local legal aid clinics, and state-level policy roundtables.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { state: 'Uttar Pradesh Chapter', convener: 'Dr. Devendra Pandey', city: 'Lucknow / Varanasi', focus: 'Civil Courts Legal Aid & Traditional Knowledge' },
-            { state: 'Delhi-NCR Chapter', convener: 'Adv. Siddhartha Dave', city: 'New Delhi / Ghaziabad', focus: 'Supreme Court & High Court Advocacy' },
-            { state: 'Maharashtra Chapter', convener: 'Dr. Arvind Deshmukh', city: 'Mumbai / Pune', focus: 'Labour Rights & Industrial Policy' },
-            { state: 'Karnataka & South Chapter', convener: 'Dr. Ramalingam Iyer', city: 'Bengaluru', focus: 'IPR, Tech Policy & AI Governance' },
-            { state: 'Bihar & Jharkhand Chapter', convener: 'Prof. Alok Ranjan', city: 'Patna', focus: 'Panchayat Governance & Agrarian Law' },
-            { state: 'Gujarat Chapter', convener: 'Adv. Niharika Patel', city: 'Ahmedabad', focus: 'Artisanal Guilds & Micro-Enterprise' },
-            { state: 'Madhya Pradesh Chapter', convener: 'Dr. Vikramaditya Chouhan', city: 'Bhopal / Indore', focus: 'Forest Rights & Tribal Legal Defense' },
-            { state: 'Rajasthan Chapter', convener: 'Adv. Mahendra Singh Shekhawat', city: 'Jaipur / Jodhpur', focus: 'Ecological Heritage & Heritage Law' },
-          ].map((item, idx) => (
-            <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
-              <div className="flex items-center space-x-1.5 text-xs text-amber-800 font-bold">
-                <MapPin className="w-3.5 h-3.5 text-amber-600" />
-                <span>{item.state}</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {nationalTeam.map((item) => (
+              <div key={item.id} className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-3 flex flex-col justify-between">
+                <div className="space-y-3">
+                  <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60 inline-block">
+                    {item.role}
+                  </span>
+                  <h3 className="font-serif text-lg font-bold text-slate-900">{item.name}</h3>
+                  <p className="text-xs font-semibold text-slate-500">{item.affiliation}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed">{item.desc}</p>
+                </div>
               </div>
-              <h4 className="font-serif font-bold text-slate-900 text-sm">{item.convener}</h4>
-              <p className="text-[11px] text-slate-500 font-medium">Base: {item.city}</p>
-              <p className="text-[11px] text-slate-600 pt-1 border-t border-slate-100">{item.focus}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* SECTION 3: State Team (Toggleable via featureConfig) */}
+      {featureConfig.isEnabled('stateTeam') && stateChapters.length > 0 && (
+        <section id="state-team" className="space-y-8 scroll-mt-28">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
+              State Chapters & Conveners
+            </span>
+            <h2 className="font-serif text-3xl font-bold text-slate-900">
+              State Team & Regional Chapters
+            </h2>
+            <p className="text-xs text-slate-500">
+              State chapter coordinators mobilizing law student networks, local legal aid clinics, and state-level policy roundtables.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {stateChapters.map((item) => (
+              <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                <div className="flex items-center space-x-1.5 text-xs text-amber-800 font-bold">
+                  <MapPin className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{item.state}</span>
+                </div>
+                <h4 className="font-serif font-bold text-slate-900 text-sm">{item.convener}</h4>
+                <p className="text-[11px] text-slate-500 font-medium">Base: {item.city}</p>
+                <p className="text-[11px] text-slate-600 pt-1 border-t border-slate-100">{item.focus}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Research Integrity & Ethics */}
       <section id="ethics" className="bg-slate-900 text-white rounded-3xl p-8 sm:p-12 space-y-4">

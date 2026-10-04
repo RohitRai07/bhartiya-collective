@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { navigationConfig, NavItem } from '../../config/navigationConfig';
 import { siteConfig } from '../../config/siteConfig';
-import { Menu, X, Landmark, Heart, UserPlus, ChevronDown } from 'lucide-react';
+import { Menu, X, Landmark, Heart, UserPlus, ChevronDown, Search } from 'lucide-react';
+import { UniversalSearchModal } from '../search/UniversalSearchModal';
 
 interface NavbarProps {
   currentPath: string;
@@ -10,6 +11,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [navItems, setNavItems] = useState<NavItem[]>([]);
   const [actionItems, setActionItems] = useState<NavItem[]>([]);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -165,6 +167,18 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
 
           {/* Right Action Area */}
           <div className="flex items-center space-x-1.5 sm:space-x-2 xl:space-x-3 shrink-0">
+            {/* Universal Search Trigger */}
+            <button
+              type="button"
+              onClick={() => setSearchModalOpen(true)}
+              className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:text-amber-900 bg-slate-100/90 hover:bg-amber-50 border border-slate-200/80 hover:border-amber-300 transition-all cursor-pointer"
+              title="Universal Search (Ctrl+K)"
+            >
+              <Search className="w-4 h-4 text-amber-800" />
+              <span className="hidden md:inline text-xs text-slate-500 font-normal">Search...</span>
+              <kbd className="hidden xl:inline px-1.5 py-0.5 bg-white rounded border border-slate-200 text-[10px] text-slate-400 font-mono shadow-2xs">⌘K</kbd>
+            </button>
+
             {/* Action CTAs */}
             <div className="hidden sm:flex items-center space-x-1.5 sm:space-x-2 xl:space-x-3">
               {actionItems.map((action) => {
@@ -190,8 +204,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
               })}
             </div>
 
-            {/* Mobile / Tablet Menu Trigger */}
-            <div className="flex lg:hidden items-center">
+            {/* Mobile / Tablet Menu & Search Triggers */}
+            <div className="flex lg:hidden items-center space-x-1.5">
+              <button
+                type="button"
+                onClick={() => setSearchModalOpen(true)}
+                className="p-2 sm:p-2.5 rounded-xl text-slate-700 hover:text-amber-800 hover:bg-amber-50 border border-slate-200/80 cursor-pointer transition-colors"
+                aria-label="Universal Search"
+              >
+                <Search className="w-5 h-5 text-amber-800" />
+              </button>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -287,6 +309,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
           </div>
         </div>
       )}
+
+      {/* Universal Search Modal (Accessible via search icon or Ctrl+K) */}
+      <UniversalSearchModal
+        isOpen={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
+        onNavigate={handleLinkClick}
+      />
 
     </header>
   );

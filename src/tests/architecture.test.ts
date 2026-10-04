@@ -23,6 +23,8 @@ import { gazetteSyncService } from '../services/gazetteSyncService';
 import { careerService } from '../services/careerService';
 import { podcastService, extractYouTubeId } from '../services/podcastService';
 import { magazineService } from '../services/magazineService';
+import { teamService } from '../services/teamService';
+import { searchService } from '../services/searchService';
 import { MAX_CV_SIZE_BYTES } from '../types/career';
 import { UserRegistrationInput } from '../types/registration';
 
@@ -463,6 +465,94 @@ async function runTests() {
   assert(featureConfig.isEnabled('podcasts') === true, 'Podcasts module enabled');
   assert(featureConfig.isEnabled('magazine') === true, 'Magazine module enabled');
   assert(featureConfig.isEnabled('careers') === true, 'Careers module enabled');
+
+  // 14. National Team & State Chapters Management
+  console.log('\n📌 Testing National Executive Team Management:');
+  const nationalMembers = await teamService.getNationalTeam({ includeDrafts: true });
+  assert(nationalMembers.length >= 3, 'Seeded national team leaders loaded successfully');
+  const firstLeader = nationalMembers[0];
+  assert(firstLeader.name.length > 0 && firstLeader.role.length > 0, 'National leader contains name and designation');
+  
+  // Test publish/unpublish toggle
+  const toggledLeader = await teamService.toggleNationalMemberPublish(firstLeader.id);
+  assert(toggledLeader?.status === 'draft', 'National leader toggles from published to draft');
+  const restoredLeader = await teamService.toggleNationalMemberPublish(firstLeader.id);
+  assert(restoredLeader?.status === 'published', 'National leader toggles back to published');
+
+  // Test create national member
+  const createdLeader = await teamService.createNationalMember({
+    name: 'Adv. Test Sharma',
+    role: 'Deputy Coordinator — Policy Cell',
+    affiliation: 'Delhi High Court',
+    desc: 'Research in regulatory jurisprudence.',
+    status: 'published'
+  });
+  assert(createdLeader.id.startsWith('nat-'), 'New national member created with nat- prefix');
+  await teamService.deleteNationalMember(createdLeader.id);
+  const afterDelNational = await teamService.getNationalTeam({ includeDrafts: true });
+  assert(afterDelNational.length === nationalMembers.length, 'Test national member cleaned up');
+
+  console.log('\n📌 Testing State Team & Regional Chapters Management:');
+  const stateChapters = await teamService.getStateChapters({ includeDrafts: true });
+  assert(stateChapters.length >= 4, 'Seeded regional state chapters loaded successfully');
+  const firstChapter = stateChapters[0];
+  assert(firstChapter.state.length > 0 && firstChapter.convener.length > 0, 'State chapter contains state name and convener');
+
+  // Test publish/unpublish toggle
+  const toggledChapter = await teamService.toggleStateChapterPublish(firstChapter.id);
+  assert(toggledChapter?.status === 'draft', 'State chapter toggles from published to draft');
+  const restoredChapter = await teamService.toggleStateChapterPublish(firstChapter.id);
+  assert(restoredChapter?.status === 'published', 'State chapter toggles back to published');
+
+  // Test create state chapter
+  const createdChapter = await teamService.createStateChapter({
+    state: 'Goa',
+    convener: 'Adv. Test Prabhu',
+    city: 'Panaji',
+    focus: 'Coastal Environmental Jurisprudence',
+    status: 'published'
+  });
+  assert(createdChapter.id.startsWith('state-'), 'New state chapter created with state- prefix');
+  await teamService.deleteStateChapter(createdChapter.id);
+  const afterDelState = await teamService.getStateChapters({ includeDrafts: true });
+  assert(afterDelState.length === stateChapters.length, 'Test state chapter cleaned up');
+
+  // Section-level feature toggles for National Team & State Chapters
+  console.log('\n📌 Testing Section-Level Disabling for National & State Team:');
+  assert(featureConfig.isEnabled('nationalTeam') === true, 'National Team section enabled by default');
+  featureConfig.update({ nationalTeam: false });
+  assert(featureConfig.isEnabled('nationalTeam') === false, 'National Team section disables cleanly');
+  featureConfig.update({ nationalTeam: true });
+  assert(featureConfig.isEnabled('nationalTeam') === true, 'National Team section re-enabled cleanly');
+
+  assert(featureConfig.isEnabled('stateTeam') === true, 'State Chapters section enabled by default');
+  featureConfig.update({ stateTeam: false });
+  assert(featureConfig.isEnabled('stateTeam') === false, 'State Chapters section disables cleanly');
+  featureConfig.update({ stateTeam: true });
+  assert(featureConfig.isEnabled('stateTeam') === true, 'State Chapters section re-enabled cleanly');
+
+  // 15. Universal Search Engine
+  console.log('\n📌 Testing Universal Multi-Entity Search Engine:');
+  const emptyQueryResults = await searchService.search('');
+  assert(emptyQueryResults.length === 0, 'Empty search returns empty array');
+
+  const pageResults = await searchService.search('about');
+  assert(pageResults.some(r => r.category === 'page' && r.path === '/about'), 'Search finds About Page');
+
+  const centreResults = await searchService.search('human rights');
+  assert(centreResults.some(r => r.category === 'centre'), 'Search finds Center for Human Rights & Legal Aid');
+
+  const scholarResults = await searchService.search('someshwar');
+  assert(scholarResults.some(r => r.category === 'scholar'), 'Search finds Scholar by name (Prof. Ananya Someshwar)');
+
+  const nationalResults = await searchService.search('sai deepak');
+  assert(nationalResults.some(r => r.category === 'team'), 'Search finds National Team member (Sr. Adv. J. Sai Deepak)');
+
+  const stateResults = await searchService.search('lucknow');
+  assert(stateResults.some(r => r.category === 'chapter'), 'Search finds State Chapter by city (Lucknow / UP)');
+
+  const careerResults = await searchService.search('career');
+  assert(careerResults.some(r => r.category === 'career'), 'Search finds Career and Internship pathways');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

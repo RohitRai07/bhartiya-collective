@@ -33,6 +33,8 @@ import { featureConfig, FeatureFlags } from '../config/featureConfig';
 import { CareerApplicationRecord, CareerApplicationStatus } from '../types/career';
 import { PodcastEpisode, PodcastInput } from '../types/podcast';
 import { MagazineIssue, MagazineIssueInput } from '../types/magazine';
+import { teamService } from '../services/teamService';
+import { NationalTeamMember, StateChapter } from '../types/team';
 
 import { AdminLoginForm } from '../components/admin/AdminLoginForm';
 import { RegistrationDetailModal } from '../components/admin/RegistrationDetailModal';
@@ -43,6 +45,9 @@ import { TaxonomyManager } from '../components/admin/TaxonomyManager';
 import { CareerDetailModal } from '../components/admin/CareerDetailModal';
 import { PodcastEditorModal } from '../components/admin/PodcastEditorModal';
 import { MagazineEditorModal } from '../components/admin/MagazineEditorModal';
+import { AdminSearchModal, AdminSearchResultItem } from '../components/admin/AdminSearchModal';
+import { NationalMemberModal } from '../components/admin/NationalMemberModal';
+import { StateChapterModal } from '../components/admin/StateChapterModal';
 import { taxonomyService } from '../services/taxonomyService';
 import { gazetteSyncService } from '../services/gazetteSyncService';
 
@@ -88,7 +93,8 @@ import {
   Video,
   Sliders,
   CheckCircle2,
-  FileDown
+  FileDown,
+  MapPin
 } from 'lucide-react';
 
 interface AdminPreviewPageProps {
@@ -96,7 +102,7 @@ interface AdminPreviewPageProps {
 }
 
 type MainTab = 'registrations' | 'careers' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings';
-type ContentSubTab = 'publications' | 'circulars' | 'events' | 'research' | 'experts' | 'news' | 'podcasts' | 'magazine' | 'media' | 'taxonomy';
+type ContentSubTab = 'publications' | 'circulars' | 'events' | 'research' | 'experts' | 'nationalTeam' | 'stateTeam' | 'news' | 'podcasts' | 'magazine' | 'media' | 'taxonomy';
 
 export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPublicSite }) => {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -126,6 +132,17 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const [magazines, setMagazines] = useState<MagazineIssue[]>([]);
   const [magazineEditorOpen, setMagazineEditorOpen] = useState(false);
   const [editingMagazine, setEditingMagazine] = useState<MagazineIssue | null>(null);
+
+  // National Team & State Chapters state
+  const [nationalTeam, setNationalTeam] = useState<NationalTeamMember[]>([]);
+  const [stateChapters, setStateChapters] = useState<StateChapter[]>([]);
+  const [editingNationalMember, setEditingNationalMember] = useState<NationalTeamMember | null>(null);
+  const [nationalMemberModalOpen, setNationalMemberModalOpen] = useState(false);
+  const [editingStateChapter, setEditingStateChapter] = useState<StateChapter | null>(null);
+  const [stateChapterModalOpen, setStateChapterModalOpen] = useState(false);
+
+  // Admin Universal Search Modal
+  const [adminSearchModalOpen, setAdminSearchModalOpen] = useState(false);
 
   // Feature Flags state
   const [features, setFeatures] = useState<FeatureFlags>(featureConfig.get());
@@ -167,7 +184,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const [credNewPassword, setCredNewPassword] = useState('');
   const [credConfirmPassword, setCredConfirmPassword] = useState('');
   const [cred2faEnabled, setCred2faEnabled] = useState(adminCreds.twoFactorEnabled ?? true);
-  const [cred2faMethod, setCred2faMethod] = useState<'email_otp' | 'totp'>(adminCreds.twoFactorMethod || 'email_otp');
+  const [cred2faMethod, setCred2faMethod] = useState<'email_otp' | 'authenticator_app'>(adminCreds.twoFactorMethod || 'email_otp');
   const [credStatusMsg, setCredStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Email Gateway state
@@ -211,7 +228,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [regs, subs, pubs, circs, evts, doms, exps, nws, logs] = await Promise.all([
+      const [regs, subs, pubs, circs, evts, doms, exps, nws, logs, nTeam, sChapters] = await Promise.all([
         registrationService.getRegistrations(),
         submissionService.getSubmissions(),
         publicationService.getPublications({ includeDrafts: true }),
@@ -221,6 +238,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         expertService.getExperts({ includeArchived: true }),
         newsService.getNews(true),
         notificationService.getNotificationLogs(),
+        teamService.getNationalTeam({ includeDrafts: true }),
+        teamService.getStateChapters({ includeDrafts: true }),
       ]);
 
       setRegistrations(regs || []);
@@ -236,6 +255,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       setCareerApplications(careerService.getAll() || []);
       setPodcasts(podcastService.getAll() || []);
       setMagazines(magazineService.getAll() || []);
+      setNationalTeam(nTeam || []);
+      setStateChapters(sChapters || []);
       setFeatures(featureConfig.get());
     } catch (err) {
       console.error('Error loading admin data:', err);
@@ -482,7 +503,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     await loadAllData();
   };
 
-  const handleTogglePublish = async (type: ContentEntityType | 'podcast' | 'magazine', id: string) => {
+  const handleTogglePublish = async (type: ContentEntityType | 'podcast' | 'magazine' | 'nationalTeam' | 'stateTeam', id: string) => {
     if (type === 'circular') await circularService.togglePublish(id);
     if (type === 'publication') await publicationService.togglePublish(id);
     if (type === 'event') await eventService.togglePublish(id);
@@ -491,7 +512,58 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     if (type === 'expert') await expertService.toggleArchive(id);
     if (type === 'podcast') podcastService.togglePublish(id);
     if (type === 'magazine') magazineService.togglePublish(id);
+    if (type === 'nationalTeam') await teamService.toggleNationalMemberPublish(id);
+    if (type === 'stateTeam') await teamService.toggleStateChapterPublish(id);
     await loadAllData();
+  };
+
+  const handleDeleteNationalMember = async (id: string) => {
+    if (!window.confirm('Are you sure you wish to delete this national team member?')) return;
+    await teamService.deleteNationalMember(id);
+    await loadAllData();
+  };
+
+  const handleSaveNationalMember = async (data: Omit<NationalTeamMember, 'id'>) => {
+    if (editingNationalMember) {
+      await teamService.updateNationalMember(editingNationalMember.id, data);
+    } else {
+      await teamService.createNationalMember(data);
+    }
+    setNationalMemberModalOpen(false);
+    setEditingNationalMember(null);
+    await loadAllData();
+  };
+
+  const handleDeleteStateChapter = async (id: string) => {
+    if (!window.confirm('Are you sure you wish to delete this state chapter?')) return;
+    await teamService.deleteStateChapter(id);
+    await loadAllData();
+  };
+
+  const handleSaveStateChapter = async (data: Omit<StateChapter, 'id'>) => {
+    if (editingStateChapter) {
+      await teamService.updateStateChapter(editingStateChapter.id, data);
+    } else {
+      await teamService.createStateChapter(data);
+    }
+    setStateChapterModalOpen(false);
+    setEditingStateChapter(null);
+    await loadAllData();
+  };
+
+  const handleAdminSearchResult = (item: AdminSearchResultItem) => {
+    setActiveTab(item.tab);
+    if (item.subTab) {
+      setContentSubTab(item.subTab);
+    }
+    if (item.recordType === 'registration' && item.recordId) {
+      const reg = registrations.find(r => r.id === item.recordId);
+      if (reg) setViewingRecord(reg);
+    }
+    if (item.recordType === 'career' && item.recordId) {
+      const car = careerApplications.find(c => c.id === item.recordId);
+      if (car) setViewingCareerRecord(car);
+    }
   };
 
   const handleAdminGazetteSync = async () => {
@@ -787,6 +859,30 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
             </span>
           </div>
         </div>
+
+        {/* Universal Search in Admin Header */}
+        <div className="flex-1 max-w-sm mx-2 hidden md:block">
+          <button
+            type="button"
+            onClick={() => setAdminSearchModalOpen(true)}
+            className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700/80 text-slate-400 hover:text-slate-200 border border-slate-700 text-xs transition-colors cursor-pointer"
+          >
+            <div className="flex items-center space-x-2">
+              <Search className="w-3.5 h-3.5 text-amber-400" />
+              <span>Search records, content, team...</span>
+            </div>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] text-slate-400 font-mono">⌘K</kbd>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setAdminSearchModalOpen(true)}
+          className="md:hidden p-1.5 rounded-lg bg-slate-800 text-amber-400 hover:text-white border border-slate-700 cursor-pointer"
+          aria-label="Universal Search"
+        >
+          <Search className="w-4 h-4" />
+        </button>
 
         <div className="flex items-center space-x-2 sm:space-x-4 text-xs shrink-0">
           <div className="hidden lg:flex items-center space-x-2 text-slate-300">
@@ -1215,6 +1311,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   { id: 'events', label: `Symposia & Events (${events.length})`, icon: Calendar },
                   { id: 'research', label: `Research Domains (${domains.length})`, icon: Compass },
                   { id: 'experts', label: `Council & Fellows (${experts.length})`, icon: Users },
+                  { id: 'nationalTeam', label: `National Team (${nationalTeam.length})`, icon: Users },
+                  { id: 'stateTeam', label: `State Chapters (${stateChapters.length})`, icon: MapPin },
                   { id: 'news', label: `News & Insights (${newsList.length})`, icon: Newspaper },
                   { id: 'podcasts', label: `Podcasts (${podcasts.length})`, icon: Video },
                   { id: 'magazine', label: `Magazine (${magazines.length})`, icon: BookOpen },
@@ -1254,6 +1352,16 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         setMagazineEditorOpen(true);
                         return;
                       }
+                      if (contentSubTab === 'nationalTeam') {
+                        setEditingNationalMember(null);
+                        setNationalMemberModalOpen(true);
+                        return;
+                      }
+                      if (contentSubTab === 'stateTeam') {
+                        setEditingStateChapter(null);
+                        setStateChapterModalOpen(true);
+                        return;
+                      }
                       const typeMap: Record<string, ContentEntityType> = {
                         publications: 'publication',
                         circulars: 'circular',
@@ -1276,6 +1384,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         contentSubTab === 'events' ? 'Event' :
                         contentSubTab === 'research' ? 'Domain' :
                         contentSubTab === 'experts' ? 'Scholar' :
+                        contentSubTab === 'nationalTeam' ? 'National Leader' :
+                        contentSubTab === 'stateTeam' ? 'State Chapter' :
                         contentSubTab === 'podcasts' ? 'Podcast Episode' :
                         contentSubTab === 'magazine' ? 'Magazine Edition' : 'Article'
                       }
@@ -1758,6 +1868,212 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* SUB-TAB: NATIONAL TEAM MANAGEMENT */}
+            {contentSubTab === 'nationalTeam' && (
+              <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        National Executive Team Section Visibility (About Page)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.nationalTeam 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.nationalTeam ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether the executive leadership / national team section appears on <code>/about#national-team</code>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('nationalTeam')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.nationalTeam ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.nationalTeam ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.nationalTeam ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {nationalTeam.map(member => (
+                    <div key={member.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+                      <div className="space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60 inline-block">
+                            {member.role}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            member.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {member.status}
+                          </span>
+                        </div>
+                        <h4 className="font-serif font-bold text-slate-900 text-base">{member.name}</h4>
+                        <p className="text-xs font-semibold text-slate-500">{member.affiliation}</p>
+                        <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">{member.desc}</p>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-[11px] text-slate-400">Order: #{member.order || 1}</span>
+                        <div className="flex items-center space-x-1.5">
+                          <button
+                            onClick={() => handleTogglePublish('nationalTeam', member.id)}
+                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium transition-colors cursor-pointer"
+                          >
+                            {member.status === 'published' ? 'Unpublish' : 'Publish'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingNationalMember(member);
+                              setNationalMemberModalOpen(true);
+                            }}
+                            className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded cursor-pointer"
+                            title="Edit Leader"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteNationalMember(member.id)}
+                            className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded cursor-pointer"
+                            title="Delete Leader"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {nationalTeam.length === 0 && (
+                  <div className="text-center py-12 text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">
+                    No national team members found. Click &quot;Add New National Leader&quot; to add one.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* SUB-TAB: STATE CHAPTERS MANAGEMENT */}
+            {contentSubTab === 'stateTeam' && (
+              <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        State Chapters Section Visibility (About Page)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.stateTeam 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.stateTeam ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether the regional state chapters section appears on <code>/about#state-team</code>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('stateTeam')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.stateTeam ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.stateTeam ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.stateTeam ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Cards Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {stateChapters.map(chap => (
+                    <div key={chap.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between space-y-3">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-1.5 text-xs text-amber-800 font-bold truncate">
+                            <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                            <span className="truncate">{chap.state}</span>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            chap.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {chap.status}
+                          </span>
+                        </div>
+                        <h4 className="font-serif font-bold text-slate-900 text-sm">{chap.convener}</h4>
+                        <p className="text-[11px] text-slate-500 font-medium">Base: {chap.city}</p>
+                        <p className="text-[11px] text-slate-600 pt-1 border-t border-slate-100 line-clamp-2">{chap.focus}</p>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-end space-x-1.5">
+                        <button
+                          onClick={() => handleTogglePublish('stateTeam', chap.id)}
+                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium transition-colors cursor-pointer"
+                        >
+                          {chap.status === 'published' ? 'Unpublish' : 'Publish'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingStateChapter(chap);
+                            setStateChapterModalOpen(true);
+                          }}
+                          className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded cursor-pointer"
+                          title="Edit Chapter"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteStateChapter(chap.id)}
+                          className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded cursor-pointer"
+                          title="Delete Chapter"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {stateChapters.length === 0 && (
+                  <div className="text-center py-12 text-xs text-slate-400 bg-white rounded-2xl border border-slate-200">
+                    No state chapters found. Click &quot;Add New State Chapter&quot; to add one.
+                  </div>
+                )}
               </div>
             )}
 
@@ -2808,6 +3124,78 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     />
                   </button>
                 </div>
+
+                {/* National Team Toggle */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        National Executive Team Section
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.nationalTeam 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.nationalTeam ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Controls visibility of Section 2 &ldquo;National Team&rdquo; on the public About page at <code>/about#national-team</code>.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('nationalTeam')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.nationalTeam ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        features.nationalTeam ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* State Chapters Toggle */}
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-bold text-xs text-slate-900">
+                        State Team & Regional Chapters Section
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        features.stateTeam 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.stateTeam ? 'Live on Site' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Controls visibility of Section 3 &ldquo;State Team & Regional Chapters&rdquo; on the public About page at <code>/about#state-team</code>.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeature('stateTeam')}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      features.stateTeam ? 'bg-amber-800' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        features.stateTeam ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2973,7 +3361,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     <select
                       value={cred2faMethod}
                       onChange={(e) => {
-                        const method = e.target.value as 'email_otp' | 'totp';
+                        const method = e.target.value as 'email_otp' | 'authenticator_app';
                         setCred2faMethod(method);
                         authService.updateAdminCredentials({ twoFactorMethod: method });
                         setAdminCreds(authService.getAdminCredentials());
@@ -2981,7 +3369,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-1 focus:ring-amber-600 focus:border-amber-600 bg-white"
                     >
                       <option value="email_otp">Email One-Time Passcode (OTP to Admin Email)</option>
-                      <option value="totp">Authenticator App (Google Authenticator / Authy / TOTP)</option>
+                      <option value="authenticator_app">Authenticator App (Google Authenticator / Authy / TOTP)</option>
                     </select>
                   </div>
 
@@ -3246,6 +3634,48 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
           setEditingMagazine(null);
         }}
         onSave={handleSaveMagazine}
+      />
+
+      {/* Admin Universal Search Modal */}
+      <AdminSearchModal
+        isOpen={adminSearchModalOpen}
+        onClose={() => setAdminSearchModalOpen(false)}
+        registrations={registrations}
+        careerApplications={careerApplications}
+        publications={publications}
+        circulars={circulars}
+        events={events}
+        domains={domains}
+        experts={experts}
+        nationalTeam={nationalTeam}
+        stateChapters={stateChapters}
+        podcasts={podcasts}
+        magazines={magazines}
+        subscribers={subscribers}
+        submissions={submissions}
+        onSelectResult={handleAdminSearchResult}
+      />
+
+      {/* National Member Editor Modal */}
+      <NationalMemberModal
+        isOpen={nationalMemberModalOpen}
+        initialData={editingNationalMember}
+        onClose={() => {
+          setNationalMemberModalOpen(false);
+          setEditingNationalMember(null);
+        }}
+        onSave={handleSaveNationalMember}
+      />
+
+      {/* State Chapter Editor Modal */}
+      <StateChapterModal
+        isOpen={stateChapterModalOpen}
+        initialData={editingStateChapter}
+        onClose={() => {
+          setStateChapterModalOpen(false);
+          setEditingStateChapter(null);
+        }}
+        onSave={handleSaveStateChapter}
       />
 
     </div>
