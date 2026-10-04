@@ -43,13 +43,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             </div>
 
             <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.15] tracking-tight">
-              Civilizational Wisdom. <br />
-              <span className="text-amber-800">Indigenous Thought.</span> <br />
-              Future-Focused Policy.
+              Empowering Citizens. <br />
+              <span className="text-amber-800">Advancing Policy.</span> <br />
+              Transforming Bharat.
             </h1>
 
             <p className="text-sm sm:text-base lg:text-lg text-slate-700 leading-relaxed font-normal">
-              <strong>{siteConfig.name}</strong> is an independent, non-partisan foundation convening scholars, jurists, scientists, and policy practitioners. We foster national dialogues and research rooted in Indian civilizational values to address contemporary constitutional, economic, and institutional questions.
+              <strong>{siteConfig.name}</strong> is an independent, non-partisan institution bridging legal aid, grassroots empowerment, and policy reform. We unite jurists, scholars, and policy practitioners to protect fundamental rights and shape future-ready governance rooted in Indian values.
             </p>
 
             <div className="pt-2 flex flex-wrap gap-3">
@@ -200,7 +200,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 Support Bharat Collective Foundation
               </h3>
               <p className="text-amber-100/90 text-xs sm:text-sm leading-relaxed">
-                We operate as an independent foundation. Every rupee pledged directly supports Independent research, Legal, Events, and workshops.
+                Empower justice, drive policy reform, and support communities in need. Your contribution directly funds pro bono legal assistance, policy research, and public dialogues across India
               </p>
             </div>
 

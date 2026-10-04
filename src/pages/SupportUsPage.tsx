@@ -1,8 +1,7 @@
 import React from 'react';
 import { DonationSection } from '../components/donation/DonationSection';
-import { siteConfig } from '../config/siteConfig';
 import { featureConfig } from '../config/featureConfig';
-import { Heart, ShieldCheck, FileCheck, CheckCircle2, Lock, Landmark } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 export const SupportUsPage: React.FC = () => {
   const isDonationActive = featureConfig.isEnabled('donations');
@@ -33,48 +32,13 @@ export const SupportUsPage: React.FC = () => {
             Support Bharat Collective Foundation
           </h1>
           <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            We operate as an independent foundation. Every rupee pledged directly supports Independent research, Legal, Events, and workshops.
+            Empower justice, drive policy reform, and support communities in need. Your contribution directly funds pro bono legal assistance, policy research, and public dialogues across India
           </p>
         </div>
       </section>
 
       {/* Main Donation Section */}
       <DonationSection />
-
-      {/* Trust & Transparency Pillars */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center mb-3">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <h4 className="font-serif font-bold text-slate-900 text-sm">80G & 12A Compliance</h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Donations qualify for Indian income tax exemption under Section 80G. Valid PAN numbers are logged for tax receipt generation.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center mb-3">
-              <FileCheck className="w-5 h-5" />
-            </div>
-            <h4 className="font-serif font-bold text-slate-900 text-sm">Audited Disclosures</h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Annual financial statements and fund allocations to fellowships, monographs, and research grants are published transparently.
-            </p>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center mb-3">
-              <Landmark className="w-5 h-5" />
-            </div>
-            <h4 className="font-serif font-bold text-slate-900 text-sm">Institutional Autonomy</h4>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Funding sources have zero editorial control or veto power over peer-reviewed monographs or faculty findings.
-            </p>
-          </div>
-        </div>
-      </section>
 
     </div>
   );

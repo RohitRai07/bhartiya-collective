@@ -1,7 +1,7 @@
 import React from 'react';
 import { RegistrationForm } from '../components/registration/RegistrationForm';
 import { featureConfig } from '../config/featureConfig';
-import { ShieldCheck, Award, BookOpen, Users, Compass, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Users } from 'lucide-react';
 
 export const RegistrationPage: React.FC = () => {
   const isRegistrationActive = featureConfig.isEnabled('userRegistration');
@@ -35,41 +35,8 @@ export const RegistrationPage: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Left Column: Why Join / Guidelines */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-              <h3 className="font-serif text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">
-                Scholar Membership Benefits
-              </h3>
-
-              <div className="space-y-3 text-xs text-slate-600">
-                <div className="flex items-start space-x-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <span>Access to non-public archival monographs and translation databases.</span>
-                </div>
-                <div className="flex items-start space-x-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <span>Priority invitation to national roundtables and symposia.</span>
-                </div>
-                <div className="flex items-start space-x-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <span>Eligibility for research travel stipends and visiting fellowships.</span>
-                </div>
-                <div className="flex items-start space-x-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                  <span>Peer-review support for young scholars publishing in indexed journals.</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Form */}
-          <div className="lg:col-span-8">
-            <RegistrationForm />
-          </div>
-
+        <div className="max-w-4xl mx-auto">
+          <RegistrationForm />
         </div>
       )}
 
