@@ -4,11 +4,10 @@
  */
 
 import { featureConfig } from '../config/featureConfig';
-import { apiConfig } from '../config/apiConfig';
 import { pincodeService } from '../services/pincodeService';
 import { registrationService } from '../services/registrationService';
 import { newsletterService } from '../services/newsletterService';
-import { donationService, createDonation } from '../services/donationService';
+import { createDonation } from '../services/donationService';
 import { publicationService } from '../services/publicationService';
 import { eventService } from '../services/eventService';
 import { researchService } from '../services/researchService';
@@ -25,6 +24,7 @@ import { podcastService, extractYouTubeId } from '../services/podcastService';
 import { magazineService } from '../services/magazineService';
 import { teamService } from '../services/teamService';
 import { searchService } from '../services/searchService';
+import { centreService } from '../services/centreService';
 import { MAX_CV_SIZE_BYTES } from '../types/career';
 import { UserRegistrationInput } from '../types/registration';
 
@@ -239,6 +239,7 @@ async function runTests() {
     readTime: '24 min',
     tags: ['Epistemology', 'Jurisprudence', 'Statecraft'],
     pdfUrl: '#',
+    pages: 32,
     status: 'published' as const
   };
 
@@ -332,6 +333,22 @@ async function runTests() {
   assert(!taxonomyService.getTags().includes('Jan Vishwas Act'), 'Tag deleted successfully from pool');
   assert(taxonomyService.getTags().length === initialTagsCount, 'Tags count restores accurately after deletion');
 
+  // Sub-tabs taxonomy coverage
+  const centreThemes = taxonomyService.getOptions('centre_theme');
+  assert(centreThemes.length >= 6, 'Thematic Centres options loaded in taxonomy');
+  const researchDomains = taxonomyService.getOptions('research_domain');
+  assert(researchDomains.length >= 6, 'Research Domains options loaded in taxonomy');
+  const podcastTopics = taxonomyService.getOptions('podcast_topic');
+  assert(podcastTopics.length >= 6, 'Podcast Topics loaded in taxonomy');
+  const magazineThemes = taxonomyService.getOptions('magazine_theme');
+  assert(magazineThemes.length >= 5, 'Magazine Themes loaded in taxonomy');
+  const nationalRoles = taxonomyService.getOptions('national_team_role');
+  assert(nationalRoles.length >= 6, 'National Team roles loaded in taxonomy');
+  const stateRegions = taxonomyService.getOptions('state_chapter_region');
+  assert(stateRegions.length >= 6, 'State Chapter regions loaded in taxonomy');
+  const careerTypes = taxonomyService.getOptions('career_type');
+  assert(careerTypes.length >= 5, 'Career Opportunity types loaded in taxonomy');
+
   // 13. e-Gazette Auto-Sync & Official Government Source Double-Validation Suite
   console.log('\n📌 Testing e-Gazette Auto-Sync & Official Government Source Double-Validation:');
   const feeds = gazetteSyncService.getOfficialFeeds();
@@ -344,7 +361,7 @@ async function runTests() {
   const seededList = await circularService.getCirculars();
   const coi = seededList.find(c => c.id === 'circ-const-india-01');
   assert(Boolean(coi?.sourceUrl), 'Constitution of India has official government source URL');
-  assert(coi?.sourceUrl?.includes('legislative.gov.in'), 'Constitution source points to authentic legislative.gov.in repository');
+  assert(Boolean(coi?.sourceUrl?.includes('legislative.gov.in')), 'Constitution source points to authentic legislative.gov.in repository');
   assert(Boolean(coi?.sourceName), 'Constitution has verified official issuing authority source name');
 
   // Pending gazettes detection
@@ -445,6 +462,9 @@ async function runTests() {
     publicationDate: '2026-10-01',
     price: 100,
     pageCount: 50,
+    coverImageUrl: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c',
+    editorialLead: 'Editorial Secretariat',
+    tableOfContents: ['Introduction', 'Dharma and Law'],
     description: 'Comprehensive research edition.',
   });
   assert(newMag.id.startsWith('mag-'), 'New magazine edition generated with valid ID');
@@ -578,6 +598,42 @@ async function runTests() {
   assert(featureConfig.isEnabled('userRegistration') === false, 'User Registration section disables cleanly');
   featureConfig.update({ userRegistration: true });
   assert(featureConfig.isEnabled('userRegistration') === true, 'User Registration section re-enabled cleanly');
+
+  // Thematic Research Centres Domain Service
+  console.log('\n📌 Testing Thematic Research Centres (Centres of Excellence) Service:');
+  const allCentres = centreService.getAll();
+  assert(Array.isArray(allCentres) && allCentres.length >= 6, 'Seeded research centres loaded successfully');
+  assert(allCentres.some(c => c.slug === 'human-rights-legal-aid'), 'Contains Center for Human Rights & Legal Aid');
+  assert(allCentres.some(c => c.slug === 'engineering-ai'), 'Contains Center for Engineering & AI');
+  
+  // Test create
+  const testCentre = centreService.create({
+    name: 'Test Center for Cultural Heritage',
+    shortName: 'Cultural Heritage',
+    sanskritName: 'संस्कृति एवं धरोहर अध्ययन केंद्र',
+    slug: 'cultural-heritage-test',
+    leadFellow: 'Dr. Test Scholar',
+    description: 'Investigating civilizational continuity and heritage preservation frameworks.',
+    icon: 'Compass',
+    keyThemes: ['Heritage Law', 'Civilizational Studies'],
+    focusAreas: ['Manuscript Conservation', 'Traditional Knowledge Systems'],
+    status: 'published',
+  });
+  assert(testCentre.id.startsWith('centre-'), 'New centre created with valid ID prefix');
+  
+  // Test update
+  const updatedCentre = centreService.update(testCentre.id, { leadFellow: 'Dr. Lead Fellow Updated' });
+  assert(updatedCentre?.leadFellow === 'Dr. Lead Fellow Updated', 'Centre updated reactively');
+  
+  // Test togglePublish
+  const toggledCentre = centreService.togglePublish(testCentre.id);
+  assert(toggledCentre?.status === 'draft', 'Centre status toggles to draft');
+  const toggledBackCentre = centreService.togglePublish(testCentre.id);
+  assert(toggledBackCentre?.status === 'published', 'Centre status toggles back to published');
+  
+  // Test delete
+  const deleted = centreService.delete(testCentre.id);
+  assert(deleted === true, 'Test centre cleaned up successfully');
 
   // 15. Universal Search Engine
   console.log('\n📌 Testing Universal Multi-Entity Search Engine:');

@@ -9,6 +9,7 @@ export interface BharatCentre {
   keyThemes: string[];
   focusAreas: string[];
   icon: string;
+  status?: 'published' | 'draft';
 }
 
 export const BHARAT_CENTRES: BharatCentre[] = [

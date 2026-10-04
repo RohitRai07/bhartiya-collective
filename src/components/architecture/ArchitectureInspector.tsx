@@ -5,17 +5,11 @@ import { registrationService } from '../../services/registrationService';
 import { registrationCsvExporter } from '../../export/registrationCsvExporter';
 import { UserRegistrationRecord } from '../../types/registration';
 import { 
-  Sliders, 
   X, 
   Layers, 
   Download, 
   Database, 
-  CreditCard, 
-  Check, 
   ExternalLink,
-  Shield,
-  Activity,
-  Server,
   FileSpreadsheet
 } from 'lucide-react';
 
@@ -31,7 +25,7 @@ export const ArchitectureInspector: React.FC<ArchitectureInspectorProps> = ({
   onNavigateToAdmin 
 }) => {
   const [flags, setFlags] = useState<FeatureFlags>(featureConfig.get());
-  const [useMock, setUseMock] = useState<boolean>(apiConfig.useMockData);
+  const [useMock] = useState<boolean>(apiConfig.useMockData);
   const [registrations, setRegistrations] = useState<UserRegistrationRecord[]>([]);
   const [activeTab, setActiveTab] = useState<'flags' | 'boundaries' | 'phases' | 'export'>('flags');
 

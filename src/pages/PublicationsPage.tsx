@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PublicationList } from '../components/publications/PublicationList';
 import { featureConfig } from '../config/featureConfig';
-import { BookOpen, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 
 export const PublicationsPage: React.FC = () => {
   const [isPublicationsActive, setIsPublicationsActive] = useState(featureConfig.isEnabled('publications'));

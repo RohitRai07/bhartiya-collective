@@ -7,10 +7,10 @@ export interface MagazineIssue {
   price: number;              // strictly ₹100 per specification
   pageCount: number;
   coverImageUrl: string;
-  fileUrl: string;
-  originalFileName: string;
-  originalFileType: 'pdf' | 'docx' | 'doc';
-  fileSizeBytes: number;      // size in bytes
+  fileUrl?: string;
+  originalFileName?: string;
+  originalFileType?: 'pdf' | 'docx' | 'doc';
+  fileSizeBytes?: number;
   description: string;
   editorialLead: string;
   tableOfContents: string[];
@@ -26,10 +26,10 @@ export interface MagazineIssueInput {
   price?: number;             // Default 100
   pageCount: number;
   coverImageUrl: string;
-  fileUrl: string;
-  originalFileName: string;
-  originalFileType: 'pdf' | 'docx' | 'doc';
-  fileSizeBytes: number;
+  fileUrl?: string;
+  originalFileName?: string;
+  originalFileType?: 'pdf' | 'docx' | 'doc';
+  fileSizeBytes?: number;
   description: string;
   editorialLead: string;
   tableOfContents: string[];

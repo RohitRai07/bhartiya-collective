@@ -12,7 +12,6 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-  UserCheck,
   AlertCircle
 } from 'lucide-react';
 import { CareerApplicationRecord, CareerApplicationStatus } from '../../types/career';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Video, Sparkles, Check } from 'lucide-react';
+import { X, Save, Video, Check } from 'lucide-react';
 import { PodcastEpisode, PodcastInput } from '../../types/podcast';
 import { extractYouTubeId } from '../../services/podcastService';
 

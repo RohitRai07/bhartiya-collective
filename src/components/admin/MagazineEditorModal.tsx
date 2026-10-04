@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, BookOpen, IndianRupee, Image as ImageIcon, FileText } from 'lucide-react';
+import { X, Save, BookOpen, IndianRupee, Image as ImageIcon } from 'lucide-react';
 import { MagazineIssue, MagazineIssueInput } from '../../types/magazine';
 
 interface MagazineEditorModalProps {

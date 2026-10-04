@@ -16,8 +16,8 @@ import {
   Settings, 
   ArrowRight, 
   CornerDownLeft, 
-  Loader2,
-  Sparkles
+  Sparkles,
+  Landmark
 } from 'lucide-react';
 import { UserRegistrationRecord } from '../../types/registration';
 import { CareerApplicationRecord } from '../../types/career';
@@ -29,6 +29,7 @@ import { ScholarExpert } from '../../types/expert';
 import { NationalTeamMember, StateChapter } from '../../types/team';
 import { PodcastEpisode } from '../../types/podcast';
 import { MagazineIssue } from '../../types/magazine';
+import { BharatCentre } from '../../data/centresData';
 
 export interface AdminSearchResultItem {
   id: string;
@@ -36,7 +37,7 @@ export interface AdminSearchResultItem {
   subtitle: string;
   category: string;
   tab: 'registrations' | 'careers' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings';
-  subTab?: 'publications' | 'circulars' | 'events' | 'research' | 'experts' | 'nationalTeam' | 'stateTeam' | 'news' | 'podcasts' | 'magazine' | 'media' | 'taxonomy';
+  subTab?: 'publications' | 'circulars' | 'events' | 'research' | 'centres' | 'experts' | 'nationalTeam' | 'stateTeam' | 'news' | 'podcasts' | 'magazine' | 'media' | 'taxonomy';
   recordId?: string;
   recordType?: 'registration' | 'career';
   badgeColor?: string;
@@ -51,6 +52,7 @@ interface AdminSearchModalProps {
   circulars: Circular[];
   events: EventItem[];
   domains: ResearchDomain[];
+  centres?: BharatCentre[];
   experts: ScholarExpert[];
   nationalTeam: NationalTeamMember[];
   stateChapters: StateChapter[];
@@ -70,6 +72,7 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
   circulars = [],
   events = [],
   domains = [],
+  centres = [],
   experts = [],
   nationalTeam = [],
   stateChapters = [],
@@ -125,8 +128,8 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
           const regNo = (r.registrationNumber || '').toLowerCase();
           const email = (r.email || '').toLowerCase();
           const phone = (r.phoneNumber?.nationalNumber || '');
-          const city = (r.address?.city || '').toLowerCase();
-          const state = (r.address?.state || '').toLowerCase();
+          const city = (r.city || '').toLowerCase();
+          const state = (r.state || '').toLowerCase();
           const prof = (r.profession || '').toLowerCase();
           if (
             fullName.includes(q) ||
@@ -140,7 +143,7 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
             allResults.push({
               id: `reg-${r.id}`,
               title: `${r.firstName} ${r.lastName} (${r.registrationNumber})`,
-              subtitle: `${r.profession || 'Applicant'} • ${r.email} • ${r.address?.city || ''}, ${r.address?.state || ''}`,
+              subtitle: `${r.profession || 'Applicant'} • ${r.email} • ${r.city || ''}, ${r.state || ''}`,
               category: 'Registration',
               tab: 'registrations',
               recordId: r.id,
@@ -226,13 +229,13 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
       if (Array.isArray(events)) {
         for (const e of events) {
           const title = (e.title || '').toLowerCase();
-          const venue = (e.venue || '').toLowerCase();
-          const speakers = (e.speakers || []).join(' ').toLowerCase();
+          const venue = (e.location || '').toLowerCase();
+          const speakers = Array.isArray(e.speakers) ? e.speakers.map(s => typeof s === 'string' ? s : s.name).join(' ').toLowerCase() : '';
           if (title.includes(q) || venue.includes(q) || speakers.includes(q)) {
             allResults.push({
               id: `evt-${e.id}`,
               title: e.title,
-              subtitle: `${e.date} • ${e.venue}`,
+              subtitle: `${e.date} • ${e.location}`,
               category: 'Event',
               tab: 'content',
               subTab: 'events',
@@ -255,6 +258,27 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
               category: 'Research',
               tab: 'content',
               subTab: 'research',
+            });
+          }
+        }
+      }
+
+      // 6.5 Thematic Research Centres
+      if (Array.isArray(centres)) {
+        for (const cnt of centres) {
+          const name = (cnt.name || '').toLowerCase();
+          const short = (cnt.shortName || '').toLowerCase();
+          const sanskrit = (cnt.sanskritName || '').toLowerCase();
+          const desc = (cnt.description || '').toLowerCase();
+          const lead = (cnt.leadFellow || '').toLowerCase();
+          if (name.includes(q) || short.includes(q) || sanskrit.includes(q) || desc.includes(q) || lead.includes(q)) {
+            allResults.push({
+              id: `cnt-${cnt.id}`,
+              title: cnt.name,
+              subtitle: `${cnt.sanskritName ? cnt.sanskritName + ' • ' : ''}Lead: ${cnt.leadFellow} • Status: ${cnt.status || 'published'}`,
+              category: 'Centre',
+              tab: 'content',
+              subTab: 'centres',
             });
           }
         }
@@ -444,6 +468,7 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
       case 'Circular': return <Scale className="w-4 h-4 text-slate-700" />;
       case 'Event': return <Calendar className="w-4 h-4 text-purple-600" />;
       case 'Research': return <Compass className="w-4 h-4 text-indigo-600" />;
+      case 'Centre': return <Landmark className="w-4 h-4 text-amber-600" />;
       case 'Council & Fellows': return <Users className="w-4 h-4 text-amber-800" />;
       case 'National Team': return <Users className="w-4 h-4 text-orange-600" />;
       case 'State Chapter': return <MapPin className="w-4 h-4 text-red-600" />;

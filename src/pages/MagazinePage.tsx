@@ -5,15 +5,11 @@ import { MagazineIssue } from '../types/magazine';
 import { 
   BookOpen, 
   Download, 
-  IndianRupee, 
   CheckCircle2, 
-  FileText, 
   ShieldCheck, 
   X, 
   Loader2, 
-  Sparkles, 
-  ArrowRight,
-  Layers
+  ArrowRight
 } from 'lucide-react';
 
 export const MagazinePage: React.FC = () => {

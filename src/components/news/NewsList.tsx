@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { newsService } from '../../services/newsService';
 import { taxonomyService } from '../../services/taxonomyService';
 import { NewsArticle } from '../../types/news';
-import { Calendar, Clock, User, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, User } from 'lucide-react';
 
 export const NewsList: React.FC = () => {
   const [articles, setArticles] = useState<NewsArticle[]>([]);

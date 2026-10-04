@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Circular } from '../../types/circular';
 import { pdfService } from '../../services/pdfService';
 import { 
-  FileText, 
   Download, 
   ExternalLink, 
   Eye, 
@@ -11,11 +10,9 @@ import {
   Scale, 
   Calendar, 
   Building2, 
-  BookOpen, 
   CheckCircle2, 
   Loader2, 
   Sparkles,
-  Layers,
   ShieldCheck
 } from 'lucide-react';
 

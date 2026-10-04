@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { BHARAT_CENTRES, BharatCentre } from '../data/centresData';
+import { centreService } from '../services/centreService';
+import { BharatCentre } from '../data/centresData';
 import { featureConfig } from '../config/featureConfig';
-import { Scale, Users, Landmark, Heart, Shield, Compass, ArrowRight, CheckCircle2, BookOpen, ExternalLink } from 'lucide-react';
+import { Scale, Users, Landmark, Heart, Shield, Compass, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 interface CentresPageProps {
   onNavigate?: (path: string) => void;
@@ -20,11 +21,21 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 export const CentresPage: React.FC<CentresPageProps> = ({ onNavigate, selectedCentreId }) => {
   const [activeCentre, setActiveCentre] = useState<string>(selectedCentreId || 'all');
   const [isCentresActive, setIsCentresActive] = useState(featureConfig.isEnabled('research'));
+  const [centresList, setCentresList] = useState<BharatCentre[]>(() => 
+    centreService.getAll().filter(c => c.status !== 'draft')
+  );
 
   useEffect(() => {
     const handleUpdate = () => setIsCentresActive(featureConfig.isEnabled('research'));
+    const handleContentUpdate = () => {
+      setCentresList(centreService.getAll().filter(c => c.status !== 'draft'));
+    };
     window.addEventListener('bhartiya:feature-change', handleUpdate);
-    return () => window.removeEventListener('bhartiya:feature-change', handleUpdate);
+    window.addEventListener('bharat:content-updated', handleContentUpdate);
+    return () => {
+      window.removeEventListener('bhartiya:feature-change', handleUpdate);
+      window.removeEventListener('bharat:content-updated', handleContentUpdate);
+    };
   }, []);
 
   useEffect(() => {
@@ -46,8 +57,8 @@ export const CentresPage: React.FC<CentresPageProps> = ({ onNavigate, selectedCe
   }
 
   const displayedCentres = activeCentre === 'all' 
-    ? BHARAT_CENTRES 
-    : BHARAT_CENTRES.filter(c => c.id === activeCentre || c.slug === activeCentre);
+    ? centresList 
+    : centresList.filter(c => c.id === activeCentre || c.slug === activeCentre);
 
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-12">
@@ -74,9 +85,9 @@ export const CentresPage: React.FC<CentresPageProps> = ({ onNavigate, selectedCe
               : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
           }`}
         >
-          All 6 Centres
+          All ({centresList.length}) Centres
         </button>
-        {BHARAT_CENTRES.map(c => (
+        {centresList.map(c => (
           <button
             key={c.id}
             onClick={() => setActiveCentre(c.id)}

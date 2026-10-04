@@ -3,9 +3,7 @@ import { registrationService } from '../../services/registrationService';
 import { pincodeService } from '../../services/pincodeService';
 import { UserRegistrationInput, UserRegistrationRecord } from '../../types/registration';
 import { 
-  User, 
   Mail, 
-  Phone, 
   School, 
   MapPin, 
   CheckCircle, 

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { siteConfig } from '../config/siteConfig';
 import { submissionService } from '../services/submissionService';
-import { fileService } from '../services/fileService';
 import { featureConfig } from '../config/featureConfig';
-import { Mail, MapPin, Phone, Send, CheckCircle2, UploadCloud, Loader2, FileText } from 'lucide-react';
+import { Mail, MapPin, Phone, Send, CheckCircle2, Loader2, FileText } from 'lucide-react';
 
 export const ContactPage: React.FC = () => {
   const [isCfpActive, setIsCfpActive] = useState(featureConfig.isEnabled('callForPapers'));

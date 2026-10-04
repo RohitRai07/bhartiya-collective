@@ -7,20 +7,13 @@ import {
   Compass, 
   UserCheck, 
   Newspaper,
-  Upload,
-  Sparkles,
   BellRing,
-  Image as ImageIcon,
-  Scale,
-  FileText,
+  Image as Scale,
   ShieldCheck
 } from 'lucide-react';
-import { Publication, PublicationCategory, ContentStatus } from '../../types/publication';
-import { Circular, CircularCategory, CircularStatus } from '../../types/circular';
-import { EventItem, EventCategory } from '../../types/event';
-import { ResearchDomain } from '../../types/research';
-import { ScholarExpert, ExpertRole } from '../../types/expert';
-import { NewsArticle } from '../../types/news';
+import { PublicationCategory, ContentStatus } from '../../types/publication';
+import { CircularCategory, CircularStatus } from '../../types/circular';
+import { ExpertRole } from '../../types/expert';
 import { ImageUploadWithUrl } from './ImageUploadWithUrl';
 import { PdfUploadWithUrl } from './PdfUploadWithUrl';
 import { CustomizableSelect } from './CustomizableSelect';
@@ -115,8 +108,7 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
       } else if (type === 'event') {
         setFormData({
           title: '',
-          category: 'Symposium' as EventCategory,
-          date: '2026-10-15',
+          category: 'Symposium' as any, date: '2026-10-15',
           time: '10:00 AM – 4:30 PM IST',
           location: 'New Delhi & Hybrid Live-Stream',
           venue: 'Vigyan Bhawan / India International Centre',

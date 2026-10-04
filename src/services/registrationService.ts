@@ -13,7 +13,6 @@ import {
   UserRegistrationRecord, 
   FormattedPhoneNumber 
 } from '../types/registration';
-import { ApiResponse } from '../types/api';
 
 const STORAGE_KEY = 'bharat_collective_registrations';
 

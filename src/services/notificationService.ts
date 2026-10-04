@@ -16,7 +16,6 @@ import { apiConfig } from '../config/apiConfig';
 import { apiClient } from './apiClient';
 import { 
   NotificationChannel, 
-  NotificationRecipient, 
   SendNotificationPayload, 
   NotificationLog 
 } from '../types/notification';

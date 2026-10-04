@@ -23,6 +23,7 @@ export interface PodcastInput {
   duration?: string;
   date?: string;
   description: string;
+  thumbnailUrl?: string;
   customThumbnailUrl?: string;
   featured?: boolean;
   status?: 'published' | 'draft';

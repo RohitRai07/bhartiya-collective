@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, MapPin, ArrowRight, ShieldCheck, Sparkles, Download } from 'lucide-react';
+import { Calendar, MapPin, ArrowRight, Sparkles, Download } from 'lucide-react';
 import { siteConfig } from '../../config/siteConfig';
 
 interface FlagshipBannerProps {

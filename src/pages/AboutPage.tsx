@@ -6,7 +6,7 @@ import { teamService } from '../services/teamService';
 import { taxonomyService } from '../services/taxonomyService';
 import { ScholarExpert } from '../types/expert';
 import { NationalTeamMember, StateChapter } from '../types/team';
-import { Landmark, Scroll, Compass, Shield, Award, Users, MapPin, CheckCircle2 } from 'lucide-react';
+import { Shield, MapPin } from 'lucide-react';
 
 export const AboutPage: React.FC = () => {
   const [experts, setExperts] = useState<ScholarExpert[]>([]);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { eventService } from '../../services/eventService';
 import { taxonomyService } from '../../services/taxonomyService';
 import { EventItem } from '../../types/event';
-import { Calendar, Clock, MapPin, Users, Video, ArrowRight, CheckCircle2, Sparkles, Filter } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Video, ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
 
 interface EventListProps {
   onRegisterInterest?: (event: EventItem) => void;

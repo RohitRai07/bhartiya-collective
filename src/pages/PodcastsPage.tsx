@@ -8,9 +8,7 @@ import {
   User, 
   ExternalLink, 
   X, 
-  Tv, 
-  Sparkles,
-  Share2
+  Tv
 } from 'lucide-react';
 
 export const PodcastsPage: React.FC = () => {

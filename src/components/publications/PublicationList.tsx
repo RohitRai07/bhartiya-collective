@@ -3,7 +3,7 @@ import { publicationService } from '../../services/publicationService';
 import { pdfService } from '../../services/pdfService';
 import { taxonomyService } from '../../services/taxonomyService';
 import { Publication, PublicationCategory } from '../../types/publication';
-import { BookOpen, Search, Download, FileText, Tag, Calendar, User, Loader2, Check } from 'lucide-react';
+import { Search, Download, FileText, Tag, Calendar, User, Loader2, Check } from 'lucide-react';
 
 export const PublicationList: React.FC = () => {
   const [publications, setPublications] = useState<Publication[]>([]);

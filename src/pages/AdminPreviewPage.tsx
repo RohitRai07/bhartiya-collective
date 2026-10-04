@@ -39,7 +39,9 @@ import { NationalTeamMember, StateChapter } from '../types/team';
 
 import { AdminLoginForm } from '../components/admin/AdminLoginForm';
 import { RegistrationDetailModal } from '../components/admin/RegistrationDetailModal';
-import { SendNotificationModal } from '../components/admin/SendNotificationModal';
+import { SendNotificationModal, TemplateOption } from '../components/admin/SendNotificationModal';
+import { ShareContentModal } from '../components/admin/ShareContentModal';
+import { Share2 } from 'lucide-react';
 import { ContentEditorModal, ContentEntityType } from '../components/admin/ContentEditorModal';
 import { ImageUploadWithUrl } from '../components/admin/ImageUploadWithUrl';
 import { TaxonomyManager } from '../components/admin/TaxonomyManager';
@@ -49,6 +51,9 @@ import { MagazineEditorModal } from '../components/admin/MagazineEditorModal';
 import { AdminSearchModal, AdminSearchResultItem } from '../components/admin/AdminSearchModal';
 import { NationalMemberModal } from '../components/admin/NationalMemberModal';
 import { StateChapterModal } from '../components/admin/StateChapterModal';
+import { CentreEditorModal } from '../components/admin/CentreEditorModal';
+import { centreService } from '../services/centreService';
+import { BharatCentre } from '../data/centresData';
 import { taxonomyService } from '../services/taxonomyService';
 import { gazetteSyncService } from '../services/gazetteSyncService';
 
@@ -97,7 +102,8 @@ import {
   FileDown,
   MapPin,
   Heart,
-  Megaphone
+  Megaphone,
+  Landmark
 } from 'lucide-react';
 
 interface AdminPreviewPageProps {
@@ -105,7 +111,7 @@ interface AdminPreviewPageProps {
 }
 
 type MainTab = 'registrations' | 'careers' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings';
-type ContentSubTab = 'publications' | 'circulars' | 'events' | 'research' | 'experts' | 'nationalTeam' | 'stateTeam' | 'news' | 'podcasts' | 'magazine' | 'media' | 'taxonomy';
+type ContentSubTab = 'publications' | 'circulars' | 'events' | 'research' | 'centres' | 'experts' | 'nationalTeam' | 'stateTeam' | 'news' | 'podcasts' | 'magazine' | 'media' | 'taxonomy';
 
 export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPublicSite }) => {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -124,6 +130,25 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const [careerApplications, setCareerApplications] = useState<CareerApplicationRecord[]>([]);
   const [careerFilter, setCareerFilter] = useState<'all' | 'internship' | 'job' | 'pending' | 'reviewing' | 'shortlisted' | 'rejected'>('all');
   const [careerSearch, setCareerSearch] = useState('');
+
+  // Recovered Selection & Career Notification States
+  const [selectedCareerIds, setSelectedCareerIds] = useState<string[]>([]);
+  const [autoNotifyCareer, setAutoNotifyCareer] = useState<boolean>(false);
+  const [selectedPubIds, setSelectedPubIds] = useState<string[]>([]);
+  const [selectedCircIds, setSelectedCircIds] = useState<string[]>([]);
+  const [selectedNewsIds, setSelectedNewsIds] = useState<string[]>([]);
+  const [selectedPodIds, setSelectedPodIds] = useState<string[]>([]);
+  const [selectedMagIds, setSelectedMagIds] = useState<string[]>([]);
+  const [selectedCfpIds, setSelectedCfpIds] = useState<string[]>([]);
+  const [selectedSubIds, setSelectedSubIds] = useState<string[]>([]);
+  const [selectedCentreIds, setSelectedCentreIds] = useState<string[]>([]);
+  
+  // Notification Modal Dynamic Configuration States
+  const [notifyTemplateOptions, setNotifyTemplateOptions] = useState<TemplateOption[]>([]);
+  const [notifyDefaultTemplateId, setNotifyDefaultTemplateId] = useState<string>('CUSTOM');
+  const [notifyContextText, setNotifyContextText] = useState<string>('');
+  const [notifyDynamicData, setNotifyDynamicData] = useState<Record<string, string>>({});
+
   const [viewingCareerRecord, setViewingCareerRecord] = useState<CareerApplicationRecord | null>(null);
 
   // Podcasts state
@@ -133,6 +158,10 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
   // Magazine state
   const [magazines, setMagazines] = useState<MagazineIssue[]>([]);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareTitle, setShareTitle] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
+
   const [magazineEditorOpen, setMagazineEditorOpen] = useState(false);
   const [editingMagazine, setEditingMagazine] = useState<MagazineIssue | null>(null);
 
@@ -155,6 +184,9 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const [circulars, setCirculars] = useState<Circular[]>([]);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [domains, setDomains] = useState<ResearchDomain[]>([]);
+  const [centres, setCentres] = useState<BharatCentre[]>([]);
+  const [centreEditorOpen, setCentreEditorOpen] = useState(false);
+  const [editingCentre, setEditingCentre] = useState<BharatCentre | null>(null);
   const [experts, setExperts] = useState<ScholarExpert[]>([]);
   const [newsList, setNewsList] = useState<NewsArticle[]>([]);
 
@@ -260,6 +292,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       setMagazines(magazineService.getAll() || []);
       setNationalTeam(nTeam || []);
       setStateChapters(sChapters || []);
+      setCentres(centreService.getAll() || []);
       setFeatures(featureConfig.get());
     } catch (err) {
       console.error('Error loading admin data:', err);
@@ -554,6 +587,28 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     await loadAllData();
   };
 
+  const handleDeleteCentre = async (id: string) => {
+    if (!window.confirm('Are you sure you wish to delete this research centre?')) return;
+    centreService.delete(id);
+    setCentres(centreService.getAll());
+  };
+
+  const handleSaveCentre = async (data: Omit<BharatCentre, 'id'>) => {
+    if (editingCentre) {
+      centreService.update(editingCentre.id, data);
+    } else {
+      centreService.create(data);
+    }
+    setCentres(centreService.getAll());
+    setCentreEditorOpen(false);
+    setEditingCentre(null);
+  };
+
+  const handleTogglePublishCentre = (id: string) => {
+    centreService.togglePublish(id);
+    setCentres(centreService.getAll());
+  };
+
   const handleAdminSearchResult = (item: AdminSearchResultItem) => {
     setActiveTab(item.tab);
     if (item.subTab) {
@@ -717,6 +772,83 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     }
   };
 
+  
+  const openNotifyCareer = (app: CareerApplicationRecord) => {
+    const templateMap: Record<string, string> = {
+      'shortlisted': 'CAREER_SHORTLISTED',
+      'rejected': 'CAREER_REJECTED',
+      'selected': 'CAREER_SELECTED',
+      'reviewing': 'CAREER_UNDER_REVIEW',
+      'pending': 'CAREER_UNDER_REVIEW',
+    };
+    const templateOptions: TemplateOption[] = [
+      { id: 'CAREER_SHORTLISTED', label: 'Career Shortlisted' },
+      { id: 'CAREER_REJECTED', label: 'Career Rejected' },
+      { id: 'CAREER_SELECTED', label: 'Career Selected' },
+      { id: 'CAREER_UNDER_REVIEW', label: 'Career Under Review' },
+      { id: 'CAREER_INTERVIEW_SCHEDULED', label: 'Career Interview Scheduled' },
+      { id: 'CUSTOM', label: 'Custom Message' },
+    ];
+    const currentTemplate = templateMap[app.status] || 'CAREER_UNDER_REVIEW';
+    
+    setNotifyRecipients([{
+      id: app.id,
+      name: app.fullName,
+      email: app.email,
+      phone: app.phone || '',
+      category: 'candidate'
+    }]);
+    setNotifyTemplateOptions(templateOptions);
+    setNotifyDefaultTemplateId(currentTemplate);
+    setNotifyContextText(`Applicant: ${app.fullName} (${app.applicationCode}) • Status: ${app.status.toUpperCase()}`);
+    setNotifyDynamicData({
+      name: app.fullName,
+      job_title: (app as any).position || app.areaOfInterest,
+      application_id: app.applicationCode,
+      status: app.status,
+      contact_person: 'HR Department',
+      contact_email: 'careers@bharatcollective.org',
+      contact_phone: '+91 80768 02450'
+    });
+    setNotifyDefaultSubject(`Update on Your Application (${app.applicationCode}) - Bharat Collective Foundation`);
+    setNotifyDefaultMessage(`Namaste ${app.fullName},\n\nWe have an update regarding your application with the Bharat Collective Foundation.\n\nWarm regards,\nCareers Secretariat`);
+    setNotifyModalOpen(true);
+  };
+
+  const openNotifySelectedCareers = () => {
+    const selectedApps = careerApplications.filter(a => selectedCareerIds.includes(a.id));
+    if (selectedApps.length === 0) return;
+
+    const templateOptions: TemplateOption[] = [
+      { id: 'CAREER_SHORTLISTED', label: 'Career Shortlisted' },
+      { id: 'CAREER_REJECTED', label: 'Career Rejected' },
+      { id: 'CAREER_SELECTED', label: 'Career Selected' },
+      { id: 'CAREER_UNDER_REVIEW', label: 'Career Under Review' },
+      { id: 'CAREER_INTERVIEW_SCHEDULED', label: 'Career Interview Scheduled' },
+      { id: 'CUSTOM', label: 'Custom Message' },
+    ];
+
+    setNotifyRecipients(selectedApps.map(app => ({
+      id: app.id,
+      name: app.fullName,
+      email: app.email,
+      phone: app.phone || '',
+      category: 'candidate'
+    })));
+    setNotifyTemplateOptions(templateOptions);
+    setNotifyDefaultTemplateId('CAREER_UNDER_REVIEW');
+    setNotifyContextText(`Bulk Notification: ${selectedApps.length} Applicant(s) Selected`);
+    setNotifyDynamicData({
+      job_title: 'Bharat Collective Fellowship & Positions',
+      contact_person: 'HR Department',
+      contact_email: 'careers@bharatcollective.org',
+      contact_phone: '+91 80768 02450'
+    });
+    setNotifyDefaultSubject(`Official Communication from Careers Desk - Bharat Collective Foundation`);
+    setNotifyDefaultMessage(`Namaste,\n\nWe are communicating with you regarding your application with the Bharat Collective Foundation.\n\nWarm regards,\nCareers Secretariat`);
+    setNotifyModalOpen(true);
+  };
+
   const handleDownloadCv = (rec: CareerApplicationRecord) => {
     if (!rec.cvDataUrl) {
       alert('CV data not available for this candidate.');
@@ -872,7 +1004,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
             onClick={() => setAdminSearchModalOpen(true)}
             className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700/80 text-slate-400 hover:text-slate-200 border border-slate-700 text-xs transition-colors cursor-pointer"
           >
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Search className="w-3.5 h-3.5 text-amber-400" />
               <span>Search records, content, team...</span>
             </div>
@@ -946,7 +1078,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
             {/* Section Level Toggle Banner */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <UserPlus className="w-4 h-4 text-amber-800 shrink-0" />
                   <span className="font-serif font-bold text-slate-900 text-sm">
                     Scholar & Member Registration Portal Visibility
@@ -1200,7 +1332,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
             {/* Section Level Toggle Banner */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Briefcase className="w-4 h-4 text-amber-800 shrink-0" />
                   <span className="font-serif font-bold text-slate-900 text-sm">
                     Career & Internship Applications Visibility
@@ -1265,6 +1397,26 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               </div>
 
               <div className="flex items-center gap-2.5">
+                <div className="flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                    <span className="text-xs font-semibold text-slate-600">Auto-Notify on Status:</span>
+                    <button
+                      type="button"
+                      onClick={() => setAutoNotifyCareer(!autoNotifyCareer)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        autoNotifyCareer ? 'bg-amber-700' : 'bg-slate-300'
+                      }`}
+                      title="When enabled, changing status automatically notifies candidate via SMS/Email/WhatsApp"
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          autoNotifyCareer ? 'translate-x-4' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className={`text-[11px] font-bold ${autoNotifyCareer ? 'text-amber-800' : 'text-slate-400'}`}>
+                      {autoNotifyCareer ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
                 <div className="relative flex-grow sm:flex-grow-0">
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                   <input
@@ -1280,10 +1432,54 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
             {/* Candidates Table */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              {selectedCareerIds.length > 0 && (
+                <div className="bg-amber-900 text-white p-3 px-4 flex flex-wrap items-center justify-between gap-3 border-b border-amber-800">
+                  <div className="flex items-center space-x-2 text-xs font-semibold">
+                    <span className="bg-amber-700 px-2.5 py-0.5 rounded-md font-mono font-bold text-amber-200">
+                      {selectedCareerIds.length}
+                    </span>
+                    <span>applicant(s) selected</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-xs">
+                    <button
+                      onClick={openNotifySelectedCareers}
+                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-semibold transition-colors flex items-center space-x-1 cursor-pointer"
+                    >
+                      <Send className="w-3 h-3" />
+                      <span>Send Notification</span>
+                    </button>
+                    <button
+                      onClick={() => setSelectedCareerIds([])}
+                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold transition-colors cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
                     <tr>
+                      <th className="p-3.5 w-10 text-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedCareerIds.length === filteredCareerApplications.length && filteredCareerApplications.length > 0) {
+                              setSelectedCareerIds([]);
+                            } else {
+                              setSelectedCareerIds(filteredCareerApplications.map(x => x.id));
+                            }
+                          }}
+                          className="text-slate-500 hover:text-slate-800 cursor-pointer"
+                        >
+                          {filteredCareerApplications.length > 0 && selectedCareerIds.length === filteredCareerApplications.length ? (
+                            <CheckSquare className="w-4 h-4 text-amber-700" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                        </button>
+                      </th>
                       <th className="p-3.5">Candidate & Code</th>
                       <th className="p-3.5">Type</th>
                       <th className="p-3.5">Institution & Degree</th>
@@ -1297,6 +1493,19 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   <tbody className="divide-y divide-slate-100">
                     {filteredCareerApplications.map(app => (
                       <tr key={app.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3.5 text-center">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCareerIds(prev => prev.includes(app.id) ? prev.filter(id => id !== app.id) : [...prev, app.id])}
+                            className="text-slate-500 hover:text-slate-800 cursor-pointer"
+                          >
+                            {selectedCareerIds.includes(app.id) ? (
+                              <CheckSquare className="w-4 h-4 text-amber-700" />
+                            ) : (
+                              <Square className="w-4 h-4 text-slate-400" />
+                            )}
+                          </button>
+                        </td>
                         <td className="p-3.5">
                           <div className="font-semibold text-slate-900">{app.fullName}</div>
                           <div className="text-[10px] text-slate-400 font-mono">{app.applicationCode}</div>
@@ -1359,6 +1568,13 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                             <span>Dossier</span>
                           </button>
                           <button
+                            onClick={() => openNotifyCareer(app)}
+                            className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg transition-colors inline-flex cursor-pointer"
+                            title="Send Notification (SMS, Email, WhatsApp)"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                             onClick={() => handleDeleteCareer(app.id)}
                             className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors inline-flex cursor-pointer"
                             title="Delete Application"
@@ -1395,6 +1611,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   { id: 'circulars', label: `Circulars & Legal (${circulars.length})`, icon: Scale },
                   { id: 'events', label: `Symposia & Events (${events.length})`, icon: Calendar },
                   { id: 'research', label: `Research Domains (${domains.length})`, icon: Compass },
+                  { id: 'centres', label: `Centres (${centres.length})`, icon: Landmark },
                   { id: 'experts', label: `Council & Fellows (${experts.length})`, icon: Users },
                   { id: 'nationalTeam', label: `National Team (${nationalTeam.length})`, icon: Users },
                   { id: 'stateTeam', label: `State Chapters (${stateChapters.length})`, icon: MapPin },
@@ -1427,6 +1644,11 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {contentSubTab !== 'media' && contentSubTab !== 'taxonomy' && (
                   <button
                     onClick={() => {
+                      if (contentSubTab === 'centres') {
+                        setEditingCentre(null);
+                        setCentreEditorOpen(true);
+                        return;
+                      }
                       if (contentSubTab === 'podcasts') {
                         setEditingPodcast(null);
                         setPodcastEditorOpen(true);
@@ -1468,6 +1690,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         contentSubTab === 'circulars' ? 'Legal Circular' :
                         contentSubTab === 'events' ? 'Event' :
                         contentSubTab === 'research' ? 'Domain' :
+                        contentSubTab === 'centres' ? 'Centre' :
                         contentSubTab === 'experts' ? 'Scholar' :
                         contentSubTab === 'nationalTeam' ? 'National Leader' :
                         contentSubTab === 'stateTeam' ? 'State Chapter' :
@@ -1486,7 +1709,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* Section Level Toggle Banner */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <FileText className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-serif font-bold text-slate-900 text-sm">
                         Research Publications & Monographs Visibility
@@ -1525,10 +1748,52 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 </div>
 
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
+                { selectedPubIds.length > 0 && (
+  <div className="bg-amber-100 px-4 py-2 flex items-center justify-between border-b border-amber-200">
+    <span className="text-xs font-bold text-amber-900">
+      { selectedPubIds.length } items selected
+    </span>
+    <div className="flex space-x-2">
+      <button
+        onClick={() => {
+           setNotifyRecipients(subscribers.map((s, idx) => ({ id: s.id || `sub-${idx}`, name: s.email.split('@')[0], email: s.email, phone: '', category: 'subscriber' })));
+           setNotifyDefaultSubject(`Update from Bharat Collective`);
+           setNotifyDefaultMessage(`Namaste,\n\nWe have published new content on our portal.\n\nPlease visit our website to explore the latest updates.\n\nWarm regards,\nBharat Collective`);
+           setNotifyModalOpen(true);
+        }}
+        className="px-3 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded text-xs font-semibold cursor-pointer"
+      >
+        Notify Selected
+      </button>
+      <button onClick={() => setSelectedPubIds([])} className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold cursor-pointer">
+        Clear
+      </button>
+    </div>
+  </div>
+)}
+<div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
                       <tr>
+                        <th className="p-3.5 w-10 text-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (selectedPubIds.length === publications.length && publications.length > 0) {
+                                setSelectedPubIds([]);
+                              } else {
+                                setSelectedPubIds(publications.map(x => x.id));
+                              }
+                            }}
+                            className="text-slate-500 hover:text-slate-800 cursor-pointer"
+                          >
+                            {publications.length > 0 && selectedPubIds.length === publications.length ? (
+                              <CheckSquare className="w-4 h-4 text-amber-700" />
+                            ) : (
+                              <Square className="w-4 h-4 text-slate-400" />
+                            )}
+                          </button>
+                        </th>
                         <th className="p-3.5">Title & Category</th>
                         <th className="p-3.5">Authors</th>
                         <th className="p-3.5">Date</th>
@@ -1540,7 +1805,20 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     <tbody className="divide-y divide-slate-100">
                       {publications.map(p => (
                         <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3.5 max-w-sm">
+                          <td className="p-3.5 text-center">
+  <button
+    type="button"
+    onClick={() => setSelectedPubIds(prev => prev.includes(p.id) ? prev.filter(id => id !== p.id) : [...prev, p.id])}
+    className="text-slate-500 hover:text-slate-800 cursor-pointer"
+  >
+    {selectedPubIds.includes(p.id) ? (
+      <CheckSquare className="w-4 h-4 text-amber-700" />
+    ) : (
+      <Square className="w-4 h-4 text-slate-400" />
+    )}
+  </button>
+</td>
+<td className="p-3.5 max-w-sm">
                             <div className="font-serif font-bold text-slate-900 text-xs">{p.title}</div>
                             <span className="text-[10px] uppercase font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded mt-0.5 inline-block">
                               {(p.category || 'Monograph').replace(/_/g, ' ')}
@@ -1594,6 +1872,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
                             <button
+                            type="button"
+                            onClick={() => {
+                              setShareTitle(p.title);
+                              setShareUrl('/publications');
+                              setShareModalOpen(true);
+                            }}
+                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                            title="Share"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                               onClick={() => handleDeleteContent('publication', p.id)}
                               className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
                               title="Delete Publication"
@@ -1616,7 +1906,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* Section Level Toggle Banner */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Scale className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-serif font-bold text-slate-900 text-sm">
                         Circulars & Legal Materials Section Visibility
@@ -1686,7 +1976,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* Admin Sync Notification Alert */}
                 {adminGazetteSyncMsg && (
                   <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs flex items-center justify-between animate-in fade-in duration-150">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
                       <span className="font-medium">{adminGazetteSyncMsg}</span>
                     </div>
@@ -1700,9 +1990,32 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 )}
 
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                  <div className="overflow-x-auto">
+                  { selectedCircIds.length > 0 && (
+  <div className="bg-amber-100 px-4 py-2 flex items-center justify-between border-b border-amber-200">
+    <span className="text-xs font-bold text-amber-900">
+      { selectedCircIds.length } items selected
+    </span>
+    <div className="flex space-x-2">
+      <button
+        onClick={() => {
+           setNotifyRecipients(subscribers.map((s, idx) => ({ id: s.id || `sub-${idx}`, name: s.email.split('@')[0], email: s.email, phone: '', category: 'subscriber' })));
+           setNotifyDefaultSubject(`Update from Bharat Collective`);
+           setNotifyDefaultMessage(`Namaste,\n\nWe have published new content on our portal.\n\nPlease visit our website to explore the latest updates.\n\nWarm regards,\nBharat Collective`);
+           setNotifyModalOpen(true);
+        }}
+        className="px-3 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded text-xs font-semibold cursor-pointer"
+      >
+        Notify Selected
+      </button>
+      <button onClick={() => setSelectedCircIds([])} className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold cursor-pointer">
+        Clear
+      </button>
+    </div>
+  </div>
+)}
+<div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                    <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
                         <tr>
                           <th className="p-3.5">Title & Reference</th>
                           <th className="p-3.5">Category</th>
@@ -1717,7 +2030,20 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                       <tbody className="divide-y divide-slate-100">
                         {circulars.map(c => (
                           <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                            <td className="p-3.5 max-w-sm">
+                            <td className="p-3.5 text-center">
+  <button
+    type="button"
+    onClick={() => setSelectedCircIds(prev => prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id])}
+    className="text-slate-500 hover:text-slate-800 cursor-pointer"
+  >
+    {selectedCircIds.includes(c.id) ? (
+      <CheckSquare className="w-4 h-4 text-amber-700" />
+    ) : (
+      <Square className="w-4 h-4 text-slate-400" />
+    )}
+  </button>
+</td>
+<td className="p-3.5 max-w-sm">
                               <div className="flex flex-wrap items-center gap-1.5">
                                 {c.important && (
                                   <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-amber-500 text-white shrink-0">
@@ -1819,6 +2145,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
                               <button
+                            type="button"
+                            onClick={() => {
+                              setShareTitle(c.title);
+                              setShareUrl('/circulars');
+                              setShareModalOpen(true);
+                            }}
+                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                            title="Share"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                                 onClick={() => handleDeleteContent('circular', c.id)}
                                 className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
                                 title="Delete Circular"
@@ -1841,7 +2179,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* Section Level Toggle Banner */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Calendar className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-serif font-bold text-slate-900 text-sm">
                         Conferences & Dialogues Section Visibility
@@ -1933,6 +2271,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
                             <button
+                            type="button"
+                            onClick={() => {
+                              setShareTitle(e.title);
+                              setShareUrl('/events');
+                              setShareModalOpen(true);
+                            }}
+                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                            title="Share"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                               onClick={() => handleDeleteContent('event', e.id)}
                               className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
                               title="Delete Event"
@@ -1955,7 +2305,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* Section Level Toggle Banner */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Compass className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-serif font-bold text-slate-900 text-sm">
                         Research Centres & Domains Visibility
@@ -2003,7 +2353,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     <div key={d.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="text-[10px] font-mono text-amber-800 bg-amber-50 px-2 py-0.5 rounded uppercase font-semibold">
                               /{d.slug}
                             </span>
@@ -2029,6 +2379,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                             title="Edit Domain"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShareTitle(d.name);
+                              setShareUrl('/research');
+                              setShareModalOpen(true);
+                            }}
+                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                            title="Share"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDeleteContent('research', d.id)}
@@ -2064,13 +2426,225 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
             </div>
           )}
 
+            {/* 3.5 THEMATIC RESEARCH CENTRES (CENTRES OF EXCELLENCE) */}
+            {contentSubTab === 'centres' && (
+              <div className="space-y-4">
+                {/* Section Level Toggle Banner */}
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Landmark className="w-4 h-4 text-amber-800 shrink-0" />
+                      <span className="font-serif font-bold text-slate-900 text-sm">
+                        Thematic Research Centres Visibility
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        features.research 
+                          ? 'bg-emerald-100 text-emerald-800' 
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {features.research ? 'Section Active (Visible)' : 'Section Disabled (Hidden)'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
+                      Controls whether the specialized research centres appear on the homepage, navbar dropdown, and at <code>/centres</code>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleFeature('research')}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        features.research ? 'bg-amber-800' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          features.research ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-xs font-semibold text-slate-700">
+                      {features.research ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+                  {selectedCentreIds.length > 0 && (
+                    <div className="bg-amber-100 px-4 py-2 flex items-center justify-between border-b border-amber-200">
+                      <span className="text-xs font-bold text-amber-900">
+                        {selectedCentreIds.length} centres selected
+                      </span>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            setNotifyRecipients(subscribers.map((s, idx) => ({ id: s.id || `sub-${idx}`, name: s.email.split('@')[0], email: s.email, phone: '', category: 'subscriber' })));
+                            setNotifyDefaultSubject(`Research Centre Update • Bharat Collective Foundation`);
+                            setNotifyDefaultMessage(`Namaste,\n\nWe are pleased to share updates from our specialized Thematic Research Centres.\n\nExplore our latest research initiatives and policy papers at /centres.\n\nWarm regards,\nBharat Collective Foundation`);
+                            setNotifyModalOpen(true);
+                          }}
+                          className="px-3 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded text-xs font-semibold cursor-pointer"
+                        >
+                          Notify Selected
+                        </button>
+                        <button onClick={() => setSelectedCentreIds([])} className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold cursor-pointer">
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                        <tr>
+                          <th className="p-3.5 w-10 text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (selectedCentreIds.length === centres.length && centres.length > 0) {
+                                  setSelectedCentreIds([]);
+                                } else {
+                                  setSelectedCentreIds(centres.map(x => x.id));
+                                }
+                              }}
+                              className="text-slate-500 hover:text-slate-800 cursor-pointer"
+                            >
+                              {centres.length > 0 && selectedCentreIds.length === centres.length ? (
+                                <CheckSquare className="w-4 h-4 text-amber-700" />
+                              ) : (
+                                <Square className="w-4 h-4 text-slate-400" />
+                              )}
+                            </button>
+                          </th>
+                          <th className="p-3.5">Centre & Sanskrit Name</th>
+                          <th className="p-3.5">URL Slug</th>
+                          <th className="p-3.5">Lead Scholar / Convener</th>
+                          <th className="p-3.5">Themes & Focus Areas</th>
+                          <th className="p-3.5">Status</th>
+                          <th className="p-3.5 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {centres.map(c => (
+                          <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="p-3.5 text-center">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedCentreIds(prev => prev.includes(c.id) ? prev.filter(id => id !== c.id) : [...prev, c.id])}
+                                className="text-slate-500 hover:text-slate-800 cursor-pointer"
+                              >
+                                {selectedCentreIds.includes(c.id) ? (
+                                  <CheckSquare className="w-4 h-4 text-amber-700" />
+                                ) : (
+                                  <Square className="w-4 h-4 text-slate-400" />
+                                )}
+                              </button>
+                            </td>
+                            <td className="p-3.5 max-w-xs">
+                              <div className="flex items-center space-x-2">
+                                <div className="font-serif font-bold text-slate-900 text-xs">{c.name}</div>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                {c.sanskritName && (
+                                  <span className="text-[11px] font-serif text-amber-900">
+                                    {c.sanskritName}
+                                  </span>
+                                )}
+                                <span className="text-[10px] uppercase font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                                  {c.shortName}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-3.5 text-slate-700 font-mono text-[11px]">
+                              <span className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded font-semibold">
+                                /{c.slug}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-slate-700 font-medium">
+                              {c.leadFellow}
+                            </td>
+                            <td className="p-3.5 max-w-xs">
+                              <div className="flex flex-wrap gap-1">
+                                {(c.keyThemes || []).slice(0, 3).map((theme, i) => (
+                                  <span key={i} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px]">
+                                    {theme}
+                                  </span>
+                                ))}
+                                {(c.keyThemes || []).length > 3 && (
+                                  <span className="text-[10px] text-slate-400 font-medium">
+                                    +{(c.keyThemes || []).length - 3} more
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-3.5">
+                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                c.status === 'draft' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-800'
+                              }`}>
+                                {c.status || 'published'}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                              <button
+                                onClick={() => handleTogglePublishCentre(c.id)}
+                                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
+                              >
+                                {c.status === 'draft' ? 'Publish' : 'Unpublish'}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingCentre(c);
+                                  setCentreEditorOpen(true);
+                                }}
+                                className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded transition-colors inline-flex cursor-pointer"
+                                title="Edit Centre"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShareTitle(c.name);
+                                  setShareUrl(`/centres`);
+                                  setShareModalOpen(true);
+                                }}
+                                className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                                title="Share"
+                              >
+                                <Share2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCentre(c.id)}
+                                className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
+                                title="Delete Centre"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {centres.length === 0 && (
+                    <div className="text-center py-12 text-xs text-slate-400 bg-white">
+                      No research centres found. Click &quot;Add New Centre&quot; to create one.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* 4. ADVISORY COUNCIL & FELLOWS */}
             {contentSubTab === 'experts' && (
               <div className="space-y-4">
                 {/* Section Level Toggle Banner */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Users className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-serif font-bold text-slate-900 text-sm">
                         Governing Council & Fellows Section Visibility (About Page)
@@ -2155,6 +2729,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
+                            type="button"
+                            onClick={() => {
+                              setShareTitle(exp.name);
+                              setShareUrl('/about');
+                              setShareModalOpen(true);
+                            }}
+                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                            title="Share"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                           onClick={() => handleDeleteContent('expert', exp.id)}
                           className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded cursor-pointer"
                           title="Delete Scholar"
@@ -2175,7 +2761,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* Section Level Toggle Banner */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Users className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-serif font-bold text-slate-900 text-sm">
                         National Executive Team Section Visibility (About Page)
@@ -2253,6 +2839,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
                           <button
+                            type="button"
+                            onClick={() => {
+                              setShareTitle(member.name);
+                              setShareUrl('/about');
+                              setShareModalOpen(true);
+                            }}
+                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                            title="Share"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                             onClick={() => handleDeleteNationalMember(member.id)}
                             className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded cursor-pointer"
                             title="Delete Leader"
@@ -2279,7 +2877,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* Section Level Toggle Banner */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <MapPin className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-serif font-bold text-slate-900 text-sm">
                         State Chapters Section Visibility (About Page)
@@ -2356,6 +2954,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
+                            type="button"
+                            onClick={() => {
+                              setShareTitle(chap.state);
+                              setShareUrl('/centres');
+                              setShareModalOpen(true);
+                            }}
+                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                            title="Share"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                           onClick={() => handleDeleteStateChapter(chap.id)}
                           className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded cursor-pointer"
                           title="Delete Chapter"
@@ -2381,7 +2991,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* Section Level Toggle Banner */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Newspaper className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-serif font-bold text-slate-900 text-sm">
                         Insights & Perspectives Section Visibility
@@ -2424,6 +3034,25 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
                       <tr>
+                        <th className="p-3.5 w-10 text-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (selectedPubIds.length === publications.length && publications.length > 0) {
+                                setSelectedPubIds([]);
+                              } else {
+                                setSelectedPubIds(publications.map(x => x.id));
+                              }
+                            }}
+                            className="text-slate-500 hover:text-slate-800 cursor-pointer"
+                          >
+                            {publications.length > 0 && selectedPubIds.length === publications.length ? (
+                              <CheckSquare className="w-4 h-4 text-amber-700" />
+                            ) : (
+                              <Square className="w-4 h-4 text-slate-400" />
+                            )}
+                          </button>
+                        </th>
                         <th className="p-3.5">Title & Category</th>
                         <th className="p-3.5">Author</th>
                         <th className="p-3.5">Date</th>
@@ -2434,6 +3063,19 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     <tbody className="divide-y divide-slate-100">
                       {newsList.map(n => (
                         <tr key={n.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3.5 text-center">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedNewsIds(prev => prev.includes(n.id) ? prev.filter(id => id !== n.id) : [...prev, n.id])}
+                              className="text-slate-500 hover:text-slate-800 cursor-pointer"
+                            >
+                              {selectedNewsIds.includes(n.id) ? (
+                                <CheckSquare className="w-4 h-4 text-amber-700" />
+                              ) : (
+                                <Square className="w-4 h-4 text-slate-400" />
+                              )}
+                            </button>
+                          </td>
                           <td className="p-3.5 max-w-md">
                             <div className="font-serif font-bold text-slate-900 text-xs">{n.title}</div>
                             <span className="text-[10px] uppercase font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded mt-0.5 inline-block">
@@ -2464,6 +3106,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
                             <button
+                            type="button"
+                            onClick={() => {
+                              setShareTitle(n.title);
+                              setShareUrl('/news');
+                              setShareModalOpen(true);
+                            }}
+                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                            title="Share"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                               onClick={() => handleDeleteContent('news', n.id)}
                               className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
                               title="Delete Article"
@@ -2486,7 +3140,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* Section Level Toggle Banner */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Video className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-serif font-bold text-slate-900 text-sm">
                         Podcasts & Video Dispatches Section Visibility
@@ -2525,7 +3179,30 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 </div>
 
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
+                { selectedPodIds.length > 0 && (
+  <div className="bg-amber-100 px-4 py-2 flex items-center justify-between border-b border-amber-200">
+    <span className="text-xs font-bold text-amber-900">
+      { selectedPodIds.length } items selected
+    </span>
+    <div className="flex space-x-2">
+      <button
+        onClick={() => {
+           setNotifyRecipients(subscribers.map((s, idx) => ({ id: s.id || `sub-${idx}`, name: s.email.split('@')[0], email: s.email, phone: '', category: 'subscriber' })));
+           setNotifyDefaultSubject(`Update from Bharat Collective`);
+           setNotifyDefaultMessage(`Namaste,\n\nWe have published new content on our portal.\n\nPlease visit our website to explore the latest updates.\n\nWarm regards,\nBharat Collective`);
+           setNotifyModalOpen(true);
+        }}
+        className="px-3 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded text-xs font-semibold cursor-pointer"
+      >
+        Notify Selected
+      </button>
+      <button onClick={() => setSelectedPodIds([])} className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold cursor-pointer">
+        Clear
+      </button>
+    </div>
+  </div>
+)}
+<div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
                       <tr>
@@ -2542,7 +3219,20 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     <tbody className="divide-y divide-slate-100">
                       {podcasts.map(pod => (
                         <tr key={pod.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3.5 max-w-sm">
+                          <td className="p-3.5 text-center">
+  <button
+    type="button"
+    onClick={() => setSelectedPodIds(prev => prev.includes(pod.id) ? prev.filter(id => id !== pod.id) : [...prev, pod.id])}
+    className="text-slate-500 hover:text-slate-800 cursor-pointer"
+  >
+    {selectedPodIds.includes(pod.id) ? (
+      <CheckSquare className="w-4 h-4 text-amber-700" />
+    ) : (
+      <Square className="w-4 h-4 text-slate-400" />
+    )}
+  </button>
+</td>
+<td className="p-3.5 max-w-sm">
                             <div className="font-serif font-bold text-slate-900 text-xs">{pod.title}</div>
                             <span className="text-[10px] uppercase font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded mt-0.5 inline-block">
                               {pod.topic}
@@ -2555,7 +3245,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                             )}
                           </td>
                           <td className="p-3.5">
-                            <div className="flex items-center space-x-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               {pod.thumbnailUrl && (
                                 <img
                                   src={pod.thumbnailUrl}
@@ -2612,6 +3302,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
                             <button
+                            type="button"
+                            onClick={() => {
+                              setShareTitle(pod.title);
+                              setShareUrl('/podcasts');
+                              setShareModalOpen(true);
+                            }}
+                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                            title="Share"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                               onClick={() => handleDeletePodcast(pod.id)}
                               className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
                               title="Delete Episode"
@@ -2640,7 +3342,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* Section Level Toggle Banner */}
                 <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <BookOpen className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-serif font-bold text-slate-900 text-sm">
                         Bharat Review Magazine Section Visibility
@@ -2679,7 +3381,30 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 </div>
 
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
+                { selectedMagIds.length > 0 && (
+  <div className="bg-amber-100 px-4 py-2 flex items-center justify-between border-b border-amber-200">
+    <span className="text-xs font-bold text-amber-900">
+      { selectedMagIds.length } items selected
+    </span>
+    <div className="flex space-x-2">
+      <button
+        onClick={() => {
+           setNotifyRecipients(subscribers.map((s, idx) => ({ id: s.id || `sub-${idx}`, name: s.email.split('@')[0], email: s.email, phone: '', category: 'subscriber' })));
+           setNotifyDefaultSubject(`Update from Bharat Collective`);
+           setNotifyDefaultMessage(`Namaste,\n\nWe have published new content on our portal.\n\nPlease visit our website to explore the latest updates.\n\nWarm regards,\nBharat Collective`);
+           setNotifyModalOpen(true);
+        }}
+        className="px-3 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded text-xs font-semibold cursor-pointer"
+      >
+        Notify Selected
+      </button>
+      <button onClick={() => setSelectedMagIds([])} className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold cursor-pointer">
+        Clear
+      </button>
+    </div>
+  </div>
+)}
+<div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
                       <tr>
@@ -2696,7 +3421,20 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                     <tbody className="divide-y divide-slate-100">
                       {magazines.map(mag => (
                         <tr key={mag.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3.5 max-w-sm">
+                          <td className="p-3.5 text-center">
+  <button
+    type="button"
+    onClick={() => setSelectedMagIds(prev => prev.includes(mag.id) ? prev.filter(id => id !== mag.id) : [...prev, mag.id])}
+    className="text-slate-500 hover:text-slate-800 cursor-pointer"
+  >
+    {selectedMagIds.includes(mag.id) ? (
+      <CheckSquare className="w-4 h-4 text-amber-700" />
+    ) : (
+      <Square className="w-4 h-4 text-slate-400" />
+    )}
+  </button>
+</td>
+<td className="p-3.5 max-w-sm">
                             <div className="font-serif font-bold text-slate-900 text-xs">{mag.title}</div>
                             <span className="text-[10px] text-amber-800 font-semibold block mt-0.5">
                               {mag.issueNumber}
@@ -2750,6 +3488,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
                             <button
+                            type="button"
+                            onClick={() => {
+                              setShareTitle(mag.title);
+                              setShareUrl('/magazine');
+                              setShareModalOpen(true);
+                            }}
+                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                            title="Share"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
                               onClick={() => handleDeleteMagazine(mag.id)}
                               className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
                               title="Delete Magazine Edition"
@@ -3097,7 +3847,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
             {/* Section Level Toggle Banner */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Send className="w-4 h-4 text-amber-800 shrink-0" />
                   <span className="font-serif font-bold text-slate-900 text-sm">
                     Call for Papers & Submissions Intake Visibility
@@ -3146,17 +3896,73 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 </p>
               </div>
 
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  placeholder="Search code, title, author..."
-                  value={cfpSearch}
-                  onChange={e => setCfpSearch(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white w-full sm:w-64"
-                />
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedCfpIds.length === filteredSubmissions.length && filteredSubmissions.length > 0) {
+                      setSelectedCfpIds([]);
+                    } else {
+                      setSelectedCfpIds(filteredSubmissions.map(x => x.id));
+                    }
+                  }}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 cursor-pointer"
+                >
+                  {filteredSubmissions.length > 0 && selectedCfpIds.length === filteredSubmissions.length ? (
+                    <CheckSquare className="w-3.5 h-3.5 text-amber-700" />
+                  ) : (
+                    <Square className="w-3.5 h-3.5 text-slate-400" />
+                  )}
+                  <span>Select All ({selectedCfpIds.length})</span>
+                </button>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="Search code, title, author..."
+                    value={cfpSearch}
+                    onChange={e => setCfpSearch(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white w-full sm:w-64"
+                  />
+                </div>
               </div>
             </div>
+
+            {/* Submissions Batch Action Banner */}
+            {selectedCfpIds.length > 0 && (
+              <div className="bg-amber-100 px-4 py-2 flex items-center justify-between border border-amber-200 rounded-xl">
+                <span className="text-xs font-bold text-amber-900">
+                  {selectedCfpIds.length} submission(s) selected
+                </span>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => {
+                      const selectedSubs = submissions.filter(s => selectedCfpIds.includes(s.id));
+                      setNotifyRecipients(selectedSubs.map(s => ({
+                        id: s.id,
+                        name: s.authorName,
+                        email: s.authorEmail,
+                        phone: '',
+                        category: 'custom'
+                      })));
+                      setNotifyDefaultSubject('Communication regarding Call for Papers Submission - Bharat Collective');
+                      setNotifyDefaultMessage(`Namaste,\\n\\nWe are communicating with you regarding your manuscript submission to Bharat Collective Foundation.\\n\\nWarm regards,\\nEditorial Secretariat`);
+                      setNotifyModalOpen(true);
+                    }}
+                    className="px-3 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded text-xs font-semibold cursor-pointer"
+                  >
+                    Notify Selected Authors
+                  </button>
+                  <button
+                    onClick={() => setSelectedCfpIds([])}
+                    className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Submissions List */}
             {filteredSubmissions.length === 0 ? (
@@ -3168,7 +3974,18 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {filteredSubmissions.map(sub => (
                   <div key={sub.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCfpIds(prev => prev.includes(sub.id) ? prev.filter(id => id !== sub.id) : [...prev, sub.id])}
+                          className="text-slate-500 hover:text-slate-800 cursor-pointer"
+                        >
+                          {selectedCfpIds.includes(sub.id) ? (
+                            <CheckSquare className="w-4 h-4 text-amber-700" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                        </button>
                         <span className="font-mono text-xs font-bold text-amber-900 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
                           {sub.submissionCode}
                         </span>
@@ -3177,7 +3994,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         </span>
                       </div>
 
-                      <div className="flex items-center space-x-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xs text-slate-500 font-semibold">Status:</span>
                         <select
                           value={sub.status}
@@ -3229,7 +4046,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
             {/* Section Level Toggle Banner */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Mail className="w-4 h-4 text-amber-800 shrink-0" />
                   <span className="font-serif font-bold text-slate-900 text-sm">
                     Research Digest Newsletter Visibility
@@ -3355,10 +4172,62 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
             {/* Subscribers Table */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+              {selectedSubIds.length > 0 && (
+                <div className="bg-amber-100 px-4 py-2 flex items-center justify-between border-b border-amber-200">
+                  <span className="text-xs font-bold text-amber-900">
+                    {selectedSubIds.length} subscriber(s) selected
+                  </span>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        const selectedSubs = subscribers.filter((s, idx) => selectedSubIds.includes(s.id || `sub-${idx}`));
+                        setNotifyRecipients(selectedSubs.map((s, idx) => ({
+                          id: s.id || `sub-${idx}`,
+                          name: s.email.split('@')[0],
+                          email: s.email,
+                          phone: '',
+                          category: 'subscriber',
+                        })));
+                        setNotifyDefaultSubject('Official Update from Bharat Collective Foundation');
+                        setNotifyDefaultMessage(`Namaste,\n\nWe are pleased to communicate with you as an active subscriber of the Bharat Collective Foundation.\n\nWarm regards,\nBharat Collective Secretariat`);
+                        setNotifyModalOpen(true);
+                      }}
+                      className="px-3 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded text-xs font-semibold cursor-pointer"
+                    >
+                      Notify Selected
+                    </button>
+                    <button
+                      onClick={() => setSelectedSubIds([])}
+                      className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-xs font-semibold cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase tracking-wider text-[10px]">
                     <tr>
+                      <th className="p-3.5 w-10 text-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedSubIds.length === filteredSubscribers.length && filteredSubscribers.length > 0) {
+                              setSelectedSubIds([]);
+                            } else {
+                              setSelectedSubIds(filteredSubscribers.map((s, idx) => s.id || `sub-${idx}`));
+                            }
+                          }}
+                          className="text-slate-500 hover:text-slate-800 cursor-pointer"
+                        >
+                          {filteredSubscribers.length > 0 && selectedSubIds.length === filteredSubscribers.length ? (
+                            <CheckSquare className="w-4 h-4 text-amber-700" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                        </button>
+                      </th>
                       <th className="p-3.5">Subscriber Email</th>
                       <th className="p-3.5">Subscribed At</th>
                       <th className="p-3.5">Acquisition Source</th>
@@ -3491,7 +4360,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 1. Governing Council & Advisory Board */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Users className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Governing Council & Advisory Board
@@ -3522,7 +4391,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 2. National Executive Team */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Users className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         National Executive Team Section
@@ -3553,7 +4422,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 3. State Chapters */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <MapPin className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         State Team & Regional Chapters Section
@@ -3584,7 +4453,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 4. Publications */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <FileText className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Publications & Research Monographs
@@ -3615,7 +4484,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 5. Circulars & Legal Materials */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Scale className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Circulars & Legal Materials
@@ -3646,7 +4515,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 6. Events */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Calendar className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Conferences & Dialogues (Events)
@@ -3677,7 +4546,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 7. Research Centres */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Compass className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Research Centres & Working Domains
@@ -3708,7 +4577,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 8. News / Insights */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Newspaper className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Insights & Perspectives (Articles)
@@ -3739,7 +4608,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 9. Podcasts */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Video className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Podcasts & Video Dispatches
@@ -3770,7 +4639,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 10. Magazine */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <BookOpen className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Magazine (Bharat Review)
@@ -3801,7 +4670,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 11. Careers */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Briefcase className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Career & Internship Applications
@@ -3832,7 +4701,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 12. Call for Papers */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Send className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Call for Papers & Submissions Intake
@@ -3863,7 +4732,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 13. Donations & Support */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Heart className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Donations & Patronage Gateway
@@ -3894,7 +4763,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 14. Member Registration */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <UserPlus className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Scholar & Member Registration
@@ -3925,7 +4794,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 15. Newsletter */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Mail className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Research Digest Newsletter
@@ -3956,7 +4825,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                 {/* 16. Flagship Announcement Ticker */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-all flex items-start justify-between gap-4">
                   <div className="space-y-1.5">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Megaphone className="w-4 h-4 text-amber-800 shrink-0" />
                       <span className="font-bold text-xs text-slate-900">
                         Flagship Dialogue Announcement Ticker
@@ -3992,7 +4861,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               {/* CARD 1: UPDATE CREDENTIALS */}
               <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-5">
                 <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <KeyRound className="w-5 h-5 text-amber-700" />
                     <h3 className="font-serif font-bold text-base text-slate-900">Administrator Credentials</h3>
                   </div>
@@ -4102,7 +4971,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               {/* CARD 2: TWO-FACTOR AUTHENTICATION (2FA) */}
               <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-5">
                 <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Lock className="w-5 h-5 text-amber-700" />
                     <h3 className="font-serif font-bold text-base text-slate-900">Two-Factor Authentication (2FA)</h3>
                   </div>
@@ -4207,7 +5076,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               {/* CARD 3: EMAIL DELIVERY GATEWAY & WEBHOOK CONFIGURATION */}
               <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-5 lg:col-span-2">
                 <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Mail className="w-5 h-5 text-amber-700" />
                     <div>
                       <h3 className="font-serif font-bold text-base text-slate-900">
@@ -4376,14 +5245,26 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       />
 
       {/* Send Notification Modal */}
-      <SendNotificationModal
-        isOpen={notifyModalOpen}
-        onClose={() => setNotifyModalOpen(false)}
-        recipients={notifyRecipients}
-        defaultSubject={notifyDefaultSubject}
-        defaultMessage={notifyDefaultMessage}
-        onSuccess={loadAllData}
-      />
+      
+        <ShareContentModal
+          isOpen={shareModalOpen}
+          onClose={() => setShareModalOpen(false)}
+          contentTitle={shareTitle}
+          contentUrl={shareUrl}
+        />
+
+        <SendNotificationModal
+          isOpen={notifyModalOpen}
+          onClose={() => setNotifyModalOpen(false)}
+          recipients={notifyRecipients}
+          defaultSubject={notifyDefaultSubject}
+          defaultMessage={notifyDefaultMessage}
+          templateOptions={notifyTemplateOptions}
+          defaultTemplateId={notifyDefaultTemplateId}
+          contextText={notifyContextText}
+          dynamicData={notifyDynamicData}
+          onSuccess={loadAllData}
+        />
 
       {/* Content Editor Modal (CRUD) */}
       <ContentEditorModal
@@ -4433,6 +5314,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         circulars={circulars}
         events={events}
         domains={domains}
+        centres={centres}
         experts={experts}
         nationalTeam={nationalTeam}
         stateChapters={stateChapters}
@@ -4463,6 +5345,17 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
           setEditingStateChapter(null);
         }}
         onSave={handleSaveStateChapter}
+      />
+
+      {/* Centre Editor Modal */}
+      <CentreEditorModal
+        isOpen={centreEditorOpen}
+        initialData={editingCentre}
+        onClose={() => {
+          setCentreEditorOpen(false);
+          setEditingCentre(null);
+        }}
+        onSave={handleSaveCentre}
       />
 
     </div>

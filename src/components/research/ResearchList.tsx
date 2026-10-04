@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { researchService } from '../../services/researchService';
 import { ResearchDomain } from '../../types/research';
-import { Landmark, BookOpen, Leaf, Compass, ArrowRight, UserCheck } from 'lucide-react';
+import { Landmark, BookOpen, Leaf, Compass, UserCheck } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   Landmark: <Landmark className="w-6 h-6 text-amber-600" />,

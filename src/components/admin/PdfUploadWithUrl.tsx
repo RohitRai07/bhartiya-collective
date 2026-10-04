@@ -4,7 +4,6 @@ import {
   UploadCloud, 
   Link as LinkIcon, 
   FileText, 
-  X, 
   Check, 
   Copy, 
   ExternalLink, 
@@ -12,8 +11,7 @@ import {
   Loader2, 
   Trash2,
   FolderOpen,
-  FileCheck,
-  Download
+  FileCheck
 } from 'lucide-react';
 
 interface PdfUploadWithUrlProps {

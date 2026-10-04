@@ -4,7 +4,6 @@ import { siteConfig } from '../../config/siteConfig';
 import { featureConfig } from '../../config/featureConfig';
 import { NewsletterForm } from '../newsletter/NewsletterForm';
 import { 
-  Landmark, 
   Mail, 
   MapPin, 
   Phone, 

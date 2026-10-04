@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Circular, CircularCategory } from '../types/circular';
 import { circularService } from '../services/circularService';
 import { taxonomyService } from '../services/taxonomyService';
-import { gazetteSyncService, OfficialGazetteFeed } from '../services/gazetteSyncService';
+import { gazetteSyncService } from '../services/gazetteSyncService';
 import { featureConfig } from '../config/featureConfig';
 import { CircularCard } from '../components/circulars/CircularCard';
 import { CircularPreviewModal } from '../components/circulars/CircularPreviewModal';
@@ -20,10 +20,8 @@ import {
   CheckCircle2,
   FileCheck2,
   Tag,
-  ShieldCheck,
   RefreshCw,
-  Radio,
-  ExternalLink
+  Radio
 } from 'lucide-react';
 
 interface CircularsPageProps {

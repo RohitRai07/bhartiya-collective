@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { createDonation } from '../../services/donationService';
-import { featureConfig } from '../../config/featureConfig';
 import { 
   DonationData, 
   DonationFrequency, 
@@ -8,17 +7,11 @@ import {
   DonationIntentResponse 
 } from '../../types/donation';
 import { 
-  Heart, 
   ShieldCheck, 
-  IndianRupee, 
   CheckCircle2, 
   Lock, 
-  Info, 
   Loader2, 
-  ArrowRight,
-  BookOpen,
-  Award,
-  Users
+  ArrowRight
 } from 'lucide-react';
 
 const SUGGESTED_AMOUNTS = [1000, 2500, 5000, 10000, 25000];
@@ -35,14 +28,14 @@ export const DonationSection: React.FC = () => {
   const [frequency, setFrequency] = useState<DonationFrequency>('one_time');
   const [selectedAmount, setSelectedAmount] = useState<number>(2500);
   const [customAmount, setCustomAmount] = useState<string>('');
-  const [selectedCause, setSelectedCause] = useState<DonationCause>('general_research');
+  const [selectedCause] = useState<DonationCause>('general_research');
   
   // Donor details
   const [donorName, setDonorName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [panNumber, setPanNumber] = useState('');
-  const [isIndianTaxResident, setIsIndianTaxResident] = useState(true);
+  const [isIndianTaxResident] = useState(true);
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -1,17 +1,12 @@
-import React, { useState } from 'react';
-import { 
-  X, 
-  Send, 
-  Mail, 
-  MessageSquare, 
-  CheckCircle2, 
-  AlertCircle, 
-  Users, 
-  Sparkles,
-  Smartphone
-} from 'lucide-react';
-import { NotificationChannel, NotificationRecipient } from '../../types/notification';
-import { notificationService } from '../../services/notificationService';
+import React, { useState, useEffect } from 'react';
+import { X, Users, Mail, Smartphone, AlertCircle, CheckCircle2, Send, MessageSquare, ChevronDown } from 'lucide-react';
+import { NotificationRecipient } from '../../types/notification';
+import { backendNotificationService } from '../../services/backendNotificationService';
+
+export interface TemplateOption {
+  id: string;
+  label: string;
+}
 
 interface SendNotificationModalProps {
   isOpen: boolean;
@@ -20,6 +15,10 @@ interface SendNotificationModalProps {
   defaultSubject?: string;
   defaultMessage?: string;
   onSuccess?: () => void;
+  templateOptions?: TemplateOption[];
+  defaultTemplateId?: string;
+  contextText?: string;
+  dynamicData?: Record<string, string>;
 }
 
 export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
@@ -29,19 +28,41 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
   defaultSubject = 'Official Update from Bharat Collective Foundation',
   defaultMessage = '',
   onSuccess,
+  templateOptions = [],
+  defaultTemplateId = 'CUSTOM',
+  contextText,
+  dynamicData = {}
 }) => {
-  const [channel, setChannel] = useState<NotificationChannel>('both');
+  const [channels, setChannels] = useState({ sms: false, email: true, whatsapp: true });
   const [subject, setSubject] = useState(defaultSubject);
   const [message, setMessage] = useState(defaultMessage);
+  const [selectedTemplate, setSelectedTemplate] = useState(defaultTemplateId);
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSubject(defaultSubject);
+      setMessage(defaultMessage);
+      setSelectedTemplate(defaultTemplateId || (templateOptions.length > 0 ? templateOptions[0].id : 'CUSTOM'));
+      setFeedback(null);
+    }
+  }, [isOpen, defaultSubject, defaultMessage, defaultTemplateId, templateOptions]);
 
   if (!isOpen) return null;
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) {
+    if (!channels.sms && !channels.email && !channels.whatsapp) {
+      setFeedback({ type: 'error', text: 'Please select at least one communication channel.' });
+      return;
+    }
+    if (selectedTemplate === 'CUSTOM' && !message.trim()) {
       setFeedback({ type: 'error', text: 'Message content cannot be blank.' });
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to dispatch this notification to ${recipients.length} recipient(s)? This action cannot be undone.`)) {
       return;
     }
 
@@ -49,28 +70,29 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
     setFeedback(null);
 
     try {
-      const res = await notificationService.sendNotification({
-        recipients,
-        channel,
-        subject: channel !== 'whatsapp' ? subject : undefined,
-        message,
-      });
+      const typeToUse = selectedTemplate === 'CUSTOM' ? 'ADMIN_NOTIFICATION' : selectedTemplate;
+      const dataToUse = selectedTemplate === 'CUSTOM' 
+        ? { title: subject, url: '', message, ...dynamicData }
+        : { ...dynamicData };
 
-      setFeedback({
-        type: 'success',
-        text: res.message || 'Notification dispatched successfully!',
-      });
+      await backendNotificationService.broadcast(
+        recipients.map(r => ({ ...r, id: r.id || Date.now().toString() })),
+        typeToUse,
+        dataToUse,
+        channels
+      );
 
+      setFeedback({ type: 'success', text: `Message successfully dispatched to ${recipients.length} recipients.` });
+      
+      if (onSuccess) onSuccess();
+      
       setTimeout(() => {
-        if (onSuccess) onSuccess();
         onClose();
         setFeedback(null);
-      }, 1500);
-    } catch (err: any) {
-      setFeedback({
-        type: 'error',
-        text: err.message || 'Failed to dispatch notification. Please check network.',
-      });
+      }, 2000);
+    } catch (err) {
+      console.error(err);
+      setFeedback({ type: 'error', text: 'Failed to dispatch message via backend.' });
     } finally {
       setSending(false);
     }
@@ -81,23 +103,19 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
     : `${recipients.length} selected recipients`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
-      <div 
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden max-h-[90vh] flex flex-col"
-        onClick={e => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden border border-slate-200/60 flex flex-col max-h-[90vh]">
+        
         {/* Header */}
-        <div className="bg-slate-900 text-white p-5 flex items-center justify-between border-b border-slate-800">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
-              <Send className="w-5 h-5" />
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-900 text-white shrink-0">
+          <div className="flex items-center space-x-3">
+            <div className="bg-white/10 p-2 rounded-xl">
+              <Send className="w-5 h-5 text-amber-400" />
             </div>
             <div>
-              <h3 className="font-serif text-base font-bold text-white">
-                Dispatch Notification
-              </h3>
+              <h2 className="text-sm font-bold tracking-wide">Dispatch Notification</h2>
               <p className="text-xs text-slate-400">
-                Email & WhatsApp communication gateway
+                Email, SMS & WhatsApp communication gateway
               </p>
             </div>
           </div>
@@ -120,6 +138,9 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
               <div>
                 <span className="text-[10px] text-amber-800 uppercase font-bold tracking-wider block">Target Recipients</span>
                 <span className="font-semibold text-amber-950 text-xs">{recipientSummary}</span>
+                {contextText && (
+                  <span className="font-bold text-amber-700 block mt-0.5">{contextText}</span>
+                )}
               </div>
             </div>
             <span className="px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 font-mono text-[11px] font-bold">
@@ -127,84 +148,103 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
             </span>
           </div>
 
-          {/* Delivery Channel Radio Cards */}
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-900 text-xs">Communication Channel</label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setChannel('both')}
-                className={`p-3 rounded-xl border text-center font-semibold transition-all flex flex-col items-center justify-center space-y-1 ${
-                  channel === 'both'
-                    ? 'border-amber-600 bg-amber-50/60 text-amber-900 ring-2 ring-amber-600/20'
-                    : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                }`}
-              >
-                <div className="flex items-center space-x-1">
-                  <Mail className="w-3.5 h-3.5 text-amber-700" />
-                  <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
-                </div>
-                <span className="text-[11px]">Email & WhatsApp</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setChannel('email')}
-                className={`p-3 rounded-xl border text-center font-semibold transition-all flex flex-col items-center justify-center space-y-1 ${
-                  channel === 'email'
-                    ? 'border-amber-600 bg-amber-50/60 text-amber-900 ring-2 ring-amber-600/20'
-                    : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                }`}
-              >
-                <Mail className="w-4 h-4 text-amber-700" />
-                <span className="text-[11px]">Email Only</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setChannel('whatsapp')}
-                className={`p-3 rounded-xl border text-center font-semibold transition-all flex flex-col items-center justify-center space-y-1 ${
-                  channel === 'whatsapp'
-                    ? 'border-emerald-600 bg-emerald-50/60 text-emerald-900 ring-2 ring-emerald-600/20'
-                    : 'border-slate-200 hover:bg-slate-50 text-slate-600'
-                }`}
-              >
-                <Smartphone className="w-4 h-4 text-emerald-600" />
-                <span className="text-[11px]">WhatsApp Only</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Subject (for Email or Both) */}
-          {channel !== 'whatsapp' && (
-            <div className="space-y-1">
-              <label className="font-bold text-slate-900 text-xs">Email Subject Line</label>
-              <input
-                type="text"
-                value={subject}
-                onChange={e => setSubject(e.target.value)}
-                placeholder="e.g. Invitation to National Colloquium on Civilizational Ethics"
-                className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 text-xs"
-                required
-              />
+          {/* Template Selection */}
+          {templateOptions.length > 0 && (
+            <div className="space-y-1.5">
+              <label className="font-bold text-slate-900 text-xs block">Notification Template</label>
+              <div className="relative">
+                <select
+                  value={selectedTemplate}
+                  onChange={(e) => setSelectedTemplate(e.target.value)}
+                  className="w-full pl-3.5 pr-8 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 text-xs font-semibold appearance-none cursor-pointer"
+                >
+                  {templateOptions.map(t => (
+                    <option key={t.id} value={t.id}>{t.label}</option>
+                  ))}
+                  <option value="CUSTOM">Custom Message (Manual)</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
           )}
 
-          {/* Message Content */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="font-bold text-slate-900 text-xs">Message Content</label>
-              <span className="text-[10px] text-slate-400">{message.length} characters</span>
+          {/* Delivery Channel Checkboxes */}
+          <div className="space-y-1.5">
+            <label className="font-bold text-slate-900 text-xs block mb-2">Send Notification</label>
+            <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-6">
+              <label className="flex items-center space-x-2 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors border border-transparent hover:border-slate-200">
+                <input
+                  type="checkbox"
+                  checked={channels.sms}
+                  onChange={e => setChannels({ ...channels, sms: e.target.checked })}
+                  className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500 cursor-pointer"
+                />
+                <span className="font-semibold text-slate-700 flex items-center"><MessageSquare className="w-4 h-4 mr-1.5 text-slate-400" /> SMS</span>
+              </label>
+
+              <label className="flex items-center space-x-2 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors border border-transparent hover:border-slate-200">
+                <input
+                  type="checkbox"
+                  checked={channels.email}
+                  onChange={e => setChannels({ ...channels, email: e.target.checked })}
+                  className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500 cursor-pointer"
+                />
+                <span className="font-semibold text-slate-700 flex items-center"><Mail className="w-4 h-4 mr-1.5 text-slate-400" /> Email</span>
+              </label>
+
+              <label className="flex items-center space-x-2 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors border border-transparent hover:border-slate-200">
+                <input
+                  type="checkbox"
+                  checked={channels.whatsapp}
+                  onChange={e => setChannels({ ...channels, whatsapp: e.target.checked })}
+                  className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500 cursor-pointer"
+                />
+                <span className="font-semibold text-slate-700 flex items-center"><Smartphone className="w-4 h-4 mr-1.5 text-slate-400" /> WhatsApp</span>
+              </label>
             </div>
-            <textarea
-              rows={5}
-              value={message}
-              onChange={e => setMessage(e.target.value)}
-              placeholder="Type your message here. For personalized single delivery, address the scholar directly..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 text-xs font-sans leading-relaxed"
-              required
-            />
           </div>
+
+          {/* Custom Message Fields */}
+          {selectedTemplate === 'CUSTOM' ? (
+            <>
+              {channels.email && (
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-900 text-xs">Email Subject Line</label>
+                  <input
+                    type="text"
+                    value={subject}
+                    onChange={e => setSubject(e.target.value)}
+                    placeholder="e.g. Invitation to National Colloquium on Civilizational Ethics"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 text-xs"
+                    required
+                  />
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-900 text-xs">Message Content</label>
+                  <span className="text-[10px] text-slate-400">{message.length} characters</span>
+                </div>
+                <textarea
+                  rows={4}
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  placeholder="Type your custom message here..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 text-xs font-sans leading-relaxed"
+                  required
+                />
+              </div>
+            </>
+          ) : (
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+              <Mail className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <p className="font-bold text-slate-700">Pre-configured Template Selected</p>
+              <p className="text-slate-500 mt-1 max-w-xs mx-auto">
+                The message content and subject will be dynamically generated by the backend based on the candidate's details.
+              </p>
+            </div>
+          )}
 
           {/* Feedback Alert */}
           {feedback && (
@@ -222,26 +262,6 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
             </div>
           )}
 
-          {/* Quick Previews */}
-          <div className="border border-slate-200 rounded-xl p-3 bg-slate-50 space-y-2">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-              Gateway Delivery Preview
-            </span>
-            {channel === 'whatsapp' || channel === 'both' ? (
-              <div className="bg-[#DCF8C6] text-slate-900 p-2.5 rounded-lg text-[11px] border border-[#C2E8AA] max-w-sm shadow-2xs">
-                <span className="text-[9px] font-bold text-emerald-800 block">Bharat Collective Foundation (Official)</span>
-                <p className="whitespace-pre-line mt-1">{message || 'Your message preview will appear here...'}</p>
-              </div>
-            ) : (
-              <div className="bg-white text-slate-800 p-3 rounded-lg border border-slate-200 text-[11px] shadow-2xs">
-                <strong className="block text-slate-900 border-b border-slate-100 pb-1 mb-1 font-serif">
-                  {subject || 'Subject'}
-                </strong>
-                <p className="whitespace-pre-line text-slate-600">{message || 'Message preview...'}</p>
-              </div>
-            )}
-          </div>
-
           {/* Footer Submit */}
           <div className="pt-2 flex items-center justify-end space-x-2">
             <button
@@ -253,7 +273,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={sending || !message.trim()}
+              disabled={sending || (selectedTemplate === 'CUSTOM' && !message.trim())}
               className="inline-flex items-center space-x-1.5 px-5 py-2 rounded-xl text-xs font-semibold bg-amber-700 hover:bg-amber-800 disabled:opacity-50 text-white transition-colors shadow-sm"
             >
               <Send className="w-3.5 h-3.5" />

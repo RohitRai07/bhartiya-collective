@@ -10,13 +10,7 @@ import {
   UserPlus, 
   ChevronDown, 
   ChevronRight, 
-  Search,
-  BookOpen,
-  Video,
-  Briefcase,
-  Scale,
-  Mail,
-  Sparkles
+  Search
 } from 'lucide-react';
 import { UniversalSearchModal } from '../search/UniversalSearchModal';
 

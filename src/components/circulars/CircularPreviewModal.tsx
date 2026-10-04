@@ -14,8 +14,6 @@ import {
   Sparkles, 
   Loader2,
   CheckCircle2,
-  ZoomIn,
-  ZoomOut,
   FileText,
   ShieldCheck
 } from 'lucide-react';

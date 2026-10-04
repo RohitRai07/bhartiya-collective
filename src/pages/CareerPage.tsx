@@ -12,10 +12,8 @@ import {
   FileText, 
   Loader2, 
   Mail, 
-  Phone, 
   User, 
   School,
-  Building,
   ArrowRight
 } from 'lucide-react';
 
@@ -23,7 +21,7 @@ interface CareerPageProps {
   onNavigate?: (path: string) => void;
 }
 
-export const CareerPage: React.FC<CareerPageProps> = ({ onNavigate }) => {
+export const CareerPage: React.FC<CareerPageProps> = ({}) => {
   const [isCareersActive, setIsCareersActive] = useState(featureConfig.isEnabled('careers'));
 
   useEffect(() => {
