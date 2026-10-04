@@ -132,8 +132,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           {/* Brand & Contact Info */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center space-x-3 cursor-pointer" onClick={() => onNavigate('/')}>
-              <div className="w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-600/30 flex-shrink-0">
-                <Landmark className="w-5 h-5" />
+              <div className="w-11 h-11 rounded-xl bg-white p-0.5 shadow-md shadow-amber-600/20 flex-shrink-0 overflow-hidden flex items-center justify-center border border-slate-700">
+                <img 
+                  src={siteConfig.emblemUrl} 
+                  alt={siteConfig.name} 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <span className="font-serif text-xl font-bold text-white tracking-tight block">

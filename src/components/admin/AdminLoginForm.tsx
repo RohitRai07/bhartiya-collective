@@ -120,8 +120,8 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
           onClick={onBackToPublicSite}
           className="flex items-center space-x-2.5 cursor-pointer group"
         >
-          <div className="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform">
-            <ShieldCheck className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-lg bg-white p-0.5 border border-slate-700 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
+            <img src={siteConfig.emblemUrl} alt="Emblem" className="w-full h-full object-contain" />
           </div>
           <div>
             <span className="block font-serif text-sm sm:text-base font-bold text-white leading-tight">
@@ -144,8 +144,8 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
       </header>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
-        <div className="w-14 h-14 bg-amber-600 rounded-2xl mx-auto flex items-center justify-center text-white shadow-xl shadow-amber-600/30">
-          {step === '2fa' ? <ShieldCheck className="w-7 h-7 text-amber-200" /> : <Lock className="w-7 h-7" />}
+        <div className="w-20 h-20 bg-white rounded-2xl mx-auto flex items-center justify-center p-1.5 shadow-xl shadow-amber-600/20 border border-slate-700 overflow-hidden">
+          <img src={siteConfig.emblemUrl} alt={siteConfig.name} className="w-full h-full object-contain" />
         </div>
 
         <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">

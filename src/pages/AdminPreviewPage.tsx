@@ -855,7 +855,9 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
           </button>
           <span className="text-slate-600 hidden sm:inline">|</span>
           <div className="flex items-center space-x-2 min-w-0">
-            <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0" />
+            <div className="w-6 h-6 rounded-md overflow-hidden bg-white p-0.5 shrink-0 flex items-center justify-center border border-slate-700">
+              <img src={siteConfig.emblemUrl} alt="Emblem" className="w-full h-full object-contain" />
+            </div>
             <span className="font-serif font-bold text-xs sm:text-sm tracking-wide text-white truncate">
               Bharat Collective • Admin Portal
             </span>

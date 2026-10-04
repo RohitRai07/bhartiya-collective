@@ -7,6 +7,8 @@ export const siteConfig = {
   shortName: 'Bharat Collective',
   tagline: 'Connecting Bharat, Bringing Minds Together',
   secondaryMotto: 'Empowering Citizens. Advancing Policy. Transforming Bharat.',
+  logoUrl: '/images/bharat-collective-logo.jpg',
+  emblemUrl: '/images/bharat-collective-emblem.png',
   description: 'An independent, non-partisan institution bridging legal aid, grassroots empowerment, and policy reform rooted in Indian values.',
   establishedYear: 2024,
   organizationType: 'Non-Profit Research & Policy Foundation',

@@ -142,8 +142,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
               role="button"
               aria-label="Go to homepage"
             >
-              <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800 flex items-center justify-center text-white shadow-md shadow-amber-700/20 group-hover:scale-105 transition-transform shrink-0">
-                <Landmark className="w-5 h-5 lg:w-6 lg:h-6" />
+              <div className="w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-white p-0.5 border border-amber-900/10 shadow-md shadow-amber-900/10 group-hover:scale-105 transition-transform shrink-0 overflow-hidden flex items-center justify-center">
+                <img 
+                  src={siteConfig.emblemUrl} 
+                  alt={siteConfig.name} 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div className="shrink-0 flex flex-col justify-center">
                 <span className="font-serif text-sm sm:text-base lg:text-lg xl:text-xl font-bold tracking-tight text-slate-900 leading-tight whitespace-nowrap">
