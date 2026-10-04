@@ -2,13 +2,18 @@
  * Centralized Site Configuration for Bharat Collective Foundation
  * Connecting Bharat, Bringing Minds Together
  */
+const rawBase = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL
+  ? import.meta.env.BASE_URL
+  : '/';
+const baseUrl = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+
 export const siteConfig = {
   name: 'Bharat Collective Foundation',
   shortName: 'Bharat Collective',
   tagline: 'Connecting Bharat, Bringing Minds Together',
   secondaryMotto: 'Empowering Citizens. Advancing Policy. Transforming Bharat.',
-  logoUrl: '/images/bharat-collective-logo.jpg',
-  emblemUrl: '/images/bharat-collective-emblem.png',
+  logoUrl: `${baseUrl}images/bharat-collective-logo.jpg`,
+  emblemUrl: `${baseUrl}images/bharat-collective-emblem.png`,
   description: 'An independent, non-partisan institution bridging legal aid, grassroots empowerment, and policy reform rooted in Indian values.',
   establishedYear: 2024,
   organizationType: 'Non-Profit Research & Policy Foundation',
@@ -34,7 +39,7 @@ export const siteConfig = {
     subtitle: 'A Dialogue on Law, Equality & Constitutional Values',
     status: 'COMING SOON',
     venue: 'Constitution Club of India, Rafi Marg, Sansad Marg Area, New Delhi, Delhi 110001',
-    bannerImage: '/images/bharat-dialogue-ucc-banner.jpg',
+    bannerImage: `${baseUrl}images/bharat-dialogue-ucc-banner.jpg`,
   },
   legal: {
     registeredSociety: 'Registered under Societies Registration Act XXI of 1860',

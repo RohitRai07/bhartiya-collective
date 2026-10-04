@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -18,6 +19,22 @@ import { SupportUsPage } from './pages/SupportUsPage';
 import { ContactPage } from './pages/ContactPage';
 import { AdminPreviewPage } from './pages/AdminPreviewPage';
 
+function getInitialPath(): string {
+  if (typeof window === 'undefined') return '/';
+  if (window.location.hash) {
+    const clean = window.location.hash.replace(/^#\/?/, '/');
+    return clean || '/';
+  }
+  const pathname = window.location.pathname;
+  const base = (typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/';
+  const cleanBase = base.endsWith('/') && base !== '/' ? base.slice(0, -1) : base;
+  if (cleanBase && cleanBase !== '/' && pathname.startsWith(cleanBase)) {
+    const sub = pathname.slice(cleanBase.length);
+    return (sub.startsWith('/') ? sub : `/${sub}`) || '/';
+  }
+  return pathname || '/';
+}
+
 function getPathFromHash(): string {
   if (typeof window === 'undefined') return '/';
   const rawHash = window.location.hash || '';
@@ -26,7 +43,7 @@ function getPathFromHash(): string {
 }
 
 export function App() {
-  const [currentPath, setCurrentPath] = useState<string>(() => getPathFromHash());
+  const [currentPath, setCurrentPath] = useState<string>(() => getInitialPath());
 
   // Listen to hash changes safely without causing reload loops
   useEffect(() => {
@@ -75,7 +92,9 @@ export function App() {
   // Isolated Admin Portal Route (Protected by Admin Credentials)
   if (currentPath === '/admin' || currentPath === '/admin/login') {
     return (
-      <AdminPreviewPage onBackToPublicSite={() => navigateTo('/')} />
+      <ErrorBoundary>
+        <AdminPreviewPage onBackToPublicSite={() => navigateTo('/')} />
+      </ErrorBoundary>
     );
   }
 
@@ -128,7 +147,9 @@ export function App() {
 
       {/* Main Content Area */}
       <main className="flex-grow">
-        {renderPage()}
+        <ErrorBoundary>
+          {renderPage()}
+        </ErrorBoundary>
       </main>
 
       {/* Footer with Embedded Newsletter and Official Social Links */}
