@@ -11,9 +11,9 @@ export interface CareerApplicationInput {
   qualification: string;      // Highest qualification / Year of study
   areaOfInterest: string;     // Legal Research, Public Policy, etc.
   coverLetter?: string;
-  cvFileName: string;
-  cvFileSize: number;         // bytes (must be <= 1 MB)
-  cvDataUrl: string;          // base64 data URL
+  cvFileName?: string;
+  cvFileSize?: number;        // bytes (optional)
+  cvDataUrl?: string;         // base64 data URL (optional)
 }
 
 export interface CareerApplicationRecord extends CareerApplicationInput {

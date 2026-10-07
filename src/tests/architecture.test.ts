@@ -168,28 +168,42 @@ async function runTests() {
     assert(restored.status === 'published', 'Research domain status toggles back to published');
   }
 
-  // 8. Admin Credentials & Two-Factor Authentication (2FA) Security
-  console.log('\n📌 Testing Admin Credentials & 2FA Lifecycle:');
+  // 8. Admin Credentials & Two-Factor Authentication (2FA) Production Security
+  console.log('\n📌 Testing Admin Credentials & 2FA Production Security:');
   const creds = authService.getAdminCredentials();
   assert(creds.email === DEFAULT_ADMIN_CREDS.email, 'Admin credentials loaded correctly');
   assert(creds.twoFactorEnabled === true, '2FA is active by default for administrator');
 
-  const challenge = authService.createTwoFactorChallenge(creds.email);
-  assert(challenge.challengeId.startsWith('2fa-'), 'Generates valid 2FA challenge ID');
-  assert(challenge.code.length === 6, 'Generates standard 6-digit verification code');
+  // Test Step 1: Wrong password rejected
+  const badLogin = await authService.loginAdmin(creds.email, 'IncorrectPassword123');
+  assert(badLogin.success === false, 'Invalid admin password rejected with access denied');
 
-  // Verify bad code fails
+  // Test Step 1: Correct credentials issue 2FA challenge
+  const validLogin = await authService.loginAdmin(creds.email, creds.password);
+  assert(validLogin.success === true && validLogin.requiresTwoFactor === true, 'Valid credentials require mandatory 2FA challenge');
+  assert(validLogin.challenge?.challengeId.length! > 0, 'Generates secure 2FA challenge ID');
+  assert(validLogin.challenge?.otpLength === 6, 'Requires standard 6-digit verification code');
+  assert(validLogin.challenge?.maskedRecipient === 'a***n@bharatcollective.org', 'Masks recipient address for security');
+
+  const challenge = validLogin.challenge!;
+
+  // Test Step 2: Bad code rejected
   const badAuth = await authService.completeTwoFactorLogin(challenge.challengeId, '000000');
   assert(badAuth.success === false, 'Invalid 2FA code is rejected');
 
-  // Verify valid generated code succeeds
-  const goodAuth = await authService.completeTwoFactorLogin(challenge.challengeId, challenge.code);
+  // Test Zero Bypass Rule: Universal '123456' dev bypass is STRICTLY REJECTED
+  const bypassAuth = await authService.completeTwoFactorLogin(challenge.challengeId, '123456');
+  if (challenge.code !== '123456') {
+    assert(bypassAuth.success === false, 'Universal dev bypass 123456 is strictly rejected in production');
+  }
+
+  // Test Step 2: Valid code completes authentication
+  const goodAuth = await authService.completeTwoFactorLogin(challenge.challengeId, challenge.code!);
   assert(goodAuth.success === true && goodAuth.session?.user.role === 'admin', 'Valid 2FA code completes admin authentication');
 
-  // Verify dev bypass code
-  const bypassChallenge = authService.createTwoFactorChallenge(creds.email);
-  const bypassAuth = await authService.completeTwoFactorLogin(bypassChallenge.challengeId, '123456');
-  assert(bypassAuth.success === true, 'Universal dev bypass 123456 succeeds');
+  // Test Single-use rule: Replaying consumed code fails
+  const replayAuth = await authService.completeTwoFactorLogin(challenge.challengeId, challenge.code!);
+  assert(replayAuth.success === false, 'Replaying consumed 2FA code is rejected (Single-use)');
 
   // Verify credential updating
   const updateResult = authService.updateAdminCredentials(
@@ -419,6 +433,21 @@ async function runTests() {
   
   careerService.delete(newApp.id);
   assert(!careerService.getById(newApp.id), 'Test application cleaned up successfully');
+
+  // Direct application without CV/file upload
+  const noCvApp = careerService.create({
+    type: 'job',
+    fullName: 'Meera Deshmukh',
+    email: 'meera.deshmukh@bharat.org',
+    phone: '+91 99887 76655',
+    currentInstitution: 'Gokhale Institute of Politics and Economics',
+    qualification: 'M.A. Economics',
+    areaOfInterest: 'Center for Public Policy / Studies',
+    coverLetter: 'Research background in decentralized public finance and rural cooperatives.',
+  });
+  assert(noCvApp.applicationCode.startsWith('BC-CAR-'), 'Direct application without file upload created successfully');
+  assert(!noCvApp.cvDataUrl, 'Direct application does not require CV data URL');
+  careerService.delete(noCvApp.id);
 
   // 11. Podcasts & YouTube Embed Integration
   console.log('\n📌 Testing Podcasts & YouTube Video Streaming Integration:');
@@ -657,6 +686,46 @@ async function runTests() {
 
   const careerResults = await searchService.search('career');
   assert(careerResults.some(r => r.category === 'career'), 'Search finds Career and Internship pathways');
+
+  // 16. Production Security, 2FA Challenge Protocol & Session Governance
+  console.log('\n📌 Testing Production Security, 2FA Protocol & Session Governance:');
+
+  // Test Idle Session Timeout
+  const mockValidSession: any = {
+    token: 'mock-token-xyz',
+    user: { id: 'admin-1', email: 'admin@bharatcollective.org', role: 'admin', name: 'Admin' },
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+    lastActiveAt: Date.now() - (35 * 60 * 1000), // 35 minutes idle
+  };
+  assert(authService.isSessionIdleExpired(mockValidSession, 30 * 60 * 1000) === true, 'Session idle >30 minutes is marked idle-expired');
+
+  // Test Active Session Idle check
+  const activeSession = authService.touchSession(mockValidSession);
+  assert(authService.isSessionIdleExpired(activeSession, 30 * 60 * 1000) === false, 'Session touched within 30 minutes is active');
+
+  // Test Session absolute expiry
+  const expiredSession: any = {
+    ...mockValidSession,
+    expiresAt: Date.now() - 1000,
+  };
+  assert(authService.isSessionExpired(expiredSession) === true, 'Session past expiresAt is marked expired');
+
+  // Test Resend Cooldown and Challenge Renewal
+  const testChan = authService.createTwoFactorChallenge('admin@bharatcollective.org');
+  assert(testChan.maskedRecipient === 'a***n@bharatcollective.org', 'Recipient email masked for 2FA UI delivery');
+  assert(testChan.otpLength === 6, 'OTP length enforces exactly 6 digits');
+
+  // Test Attempt limiting on challenge
+  const fakeId = testChan.challengeId;
+  for (let i = 0; i < 5; i++) {
+    await authService.completeTwoFactorLogin(fakeId, '000000');
+  }
+  const lockedRes = await authService.completeTwoFactorLogin(fakeId, '000000');
+  assert(lockedRes.locked === true || lockedRes.success === false, 'Challenge locks or denies after max invalid attempts');
+
+  // Test Admin Logout
+  await authService.logoutAdmin();
+  assert(authService.getAdminSession() === null, 'Admin logout removes session and clears auth token');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "tsx src/tests/architecture.test.ts"
+    "test": "tsx src/tests/architecture.test.ts && tsx server/src/tests/security.test.ts",
+    "test:security": "tsx server/src/tests/security.test.ts"
   },
   "keywords": [],
   "author": "",

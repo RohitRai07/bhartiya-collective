@@ -103,7 +103,8 @@ import {
   MapPin,
   Heart,
   Megaphone,
-  Landmark
+  Landmark,
+  ShieldAlert
 } from 'lucide-react';
 
 interface AdminPreviewPageProps {
@@ -239,17 +240,48 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     setMediaList(fileService.getMediaLibrary());
   };
 
-  // Initial Auth Check
+  // Initial Auth Check & Backend Session Validation
   useEffect(() => {
-    const existing = authService.getAdminSession();
-    if (existing) {
-      setSession(existing);
-      loadAllData();
-      loadMediaList();
-    } else {
-      setLoading(false);
-    }
+    let isMounted = true;
+    const verifyInitialSession = async () => {
+      const verified = await authService.verifySessionWithBackend();
+      if (!isMounted) return;
+      if (verified) {
+        setSession(verified);
+        loadAllData();
+        loadMediaList();
+      } else {
+        setSession(null);
+        setLoading(false);
+      }
+    };
+    verifyInitialSession();
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  // Production Idle Session Timeout (30 minutes of inactivity)
+  useEffect(() => {
+    if (!session) return;
+    let idleTimer: any;
+    const resetIdleTimer = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        authService.logoutAdmin();
+        setSession(null);
+      }, 30 * 60 * 1000); // 30 minutes
+    };
+
+    const userEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    userEvents.forEach(evt => window.addEventListener(evt, resetIdleTimer));
+    resetIdleTimer();
+
+    return () => {
+      clearTimeout(idleTimer);
+      userEvents.forEach(evt => window.removeEventListener(evt, resetIdleTimer));
+    };
+  }, [session]);
 
   // Listen to cross-system content updates
   useEffect(() => {
@@ -925,6 +957,37 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     );
   }
 
+  // If authenticated but unauthorized (non-admin role), return 403 Forbidden screen
+  if (session.user.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 text-center">
+        <div className="bg-slate-800 rounded-3xl p-8 max-w-md border border-slate-700 space-y-4">
+          <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-serif font-bold text-white">403 - Access Forbidden</h2>
+          <p className="text-xs text-slate-400">
+            Your account ({session.user.email}) does not possess administrative privileges to manage the Bharat Collective Admin Portal.
+          </p>
+          <div className="pt-2 flex justify-center space-x-3">
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-semibold rounded-xl text-white cursor-pointer"
+            >
+              Sign Out
+            </button>
+            <button
+              onClick={onBackToPublicSite}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-xs font-semibold rounded-xl text-white cursor-pointer"
+            >
+              Public Website
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Filtered registrations
   const filteredRegistrations = (registrations || []).filter(r => {
     const matchesFilter = regFilter === 'all' || r.status === regFilter;
@@ -1484,7 +1547,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                       <th className="p-3.5">Type</th>
                       <th className="p-3.5">Institution & Degree</th>
                       <th className="p-3.5">Area of Interest</th>
-                      <th className="p-3.5">CV File (PDF)</th>
+                      <th className="p-3.5">CV / Attachment</th>
                       <th className="p-3.5">Date</th>
                       <th className="p-3.5">Status</th>
                       <th className="p-3.5 text-right">Actions</th>
@@ -1532,15 +1595,19 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                           {app.areaOfInterest}
                         </td>
                         <td className="p-3.5">
-                          <button
-                            type="button"
-                            onClick={() => handleDownloadCv(app)}
-                            className="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-slate-200"
-                            title="Download PDF CV (Strictly ≤ 1 MB)"
-                          >
-                            <FileDown className="w-3.5 h-3.5 text-rose-600" />
-                            <span className="truncate max-w-[100px]">{app.cvFileName || 'Resume.pdf'}</span>
-                          </button>
+                          {app.cvDataUrl ? (
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadCv(app)}
+                              className="inline-flex items-center space-x-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer border border-slate-200"
+                              title="Download Attachment"
+                            >
+                              <FileDown className="w-3.5 h-3.5 text-rose-600" />
+                              <span className="truncate max-w-[100px]">{app.cvFileName || 'Resume.pdf'}</span>
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 italic">No Upload</span>
+                          )}
                         </td>
                         <td className="p-3.5 font-mono text-[11px] text-slate-500 whitespace-nowrap">
                           {new Date(app.submittedAt).toLocaleDateString('en-IN')}

@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { careerService } from '../services/careerService';
 import { featureConfig } from '../config/featureConfig';
-import { CareerApplicationType, MAX_CV_SIZE_BYTES, CareerApplicationRecord } from '../types/career';
+import { CareerApplicationType, CareerApplicationRecord } from '../types/career';
 import { BHARAT_CENTRES } from '../data/centresData';
 import { 
   Briefcase, 
   GraduationCap, 
-  UploadCloud, 
   CheckCircle2, 
   AlertCircle, 
-  FileText, 
   Loader2, 
   Mail, 
   User, 
@@ -39,52 +37,10 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
   const [areaOfInterest, setAreaOfInterest] = useState('Center for Human Rights & Legal Aid');
   const [coverLetter, setCoverLetter] = useState('');
 
-  // CV File State
-  const [cvFile, setCvFile] = useState<{
-    name: string;
-    size: number;
-    dataUrl: string;
-  } | null>(null);
-  const [fileError, setFileError] = useState<string | null>(null);
-
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedRecord, setSubmittedRecord] = useState<CareerApplicationRecord | null>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFileError(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Strict PDF Check
-    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
-    if (!isPdf) {
-      setFileError('Invalid file format. Only PDF files (.pdf) are permitted.');
-      setCvFile(null);
-      e.target.value = '';
-      return;
-    }
-
-    // Strict 1 MB check
-    if (file.size > MAX_CV_SIZE_BYTES) {
-      const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-      setFileError(`File size (${sizeMb} MB) exceeds the strict 1 MB maximum limit.`);
-      setCvFile(null);
-      e.target.value = '';
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setCvFile({
-        name: file.name,
-        size: file.size,
-        dataUrl: reader.result as string,
-      });
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,11 +67,6 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
       setSubmitError('Please specify your current degree / highest qualification.');
       return;
     }
-    if (!cvFile) {
-      setSubmitError('Please upload your CV in PDF format (maximum 1 MB).');
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const record = await careerService.submitApplication({
@@ -127,9 +78,6 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
         qualification: qualification.trim(),
         areaOfInterest,
         coverLetter: coverLetter.trim() || undefined,
-        cvFileName: cvFile.name,
-        cvFileSize: cvFile.size,
-        cvDataUrl: cvFile.dataUrl,
       });
 
       setSubmittedRecord(record);
@@ -147,8 +95,6 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
     setInstitution('');
     setQualification('');
     setCoverLetter('');
-    setCvFile(null);
-    setFileError(null);
     setSubmitError(null);
     setSubmittedRecord(null);
   };
@@ -212,10 +158,14 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
               <span className="text-slate-500">Centre of Interest:</span>
               <span className="font-medium text-slate-900">{submittedRecord.areaOfInterest}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">Attached CV:</span>
-              <span className="font-mono font-medium text-slate-800">{submittedRecord.cvFileName} ({(submittedRecord.cvFileSize / 1024).toFixed(0)} KB)</span>
-            </div>
+            {submittedRecord.cvFileName && (
+              <div className="flex justify-between">
+                <span className="text-slate-500">Attached CV:</span>
+                <span className="font-mono font-medium text-slate-800">
+                  {submittedRecord.cvFileName} {submittedRecord.cvFileSize ? `(${Math.round(submittedRecord.cvFileSize / 1024)} KB)` : ''}
+                </span>
+              </div>
+            )}
           </div>
 
           <p className="text-xs text-slate-500 leading-relaxed">
@@ -388,58 +338,15 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
             {/* Statement of Interest / Cover Letter */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
-                Statement of Purpose / Brief Introduction (Optional)
+                Statement of Purpose / Academic & Professional Background (Optional)
               </label>
               <textarea
-                rows={3}
-                placeholder="Briefly state your academic interests, past research, or why you wish to join Bharat Collective Foundation..."
+                rows={4}
+                placeholder="Briefly state your academic interests, past research, relevant experience, or links to profiles/publications..."
                 value={coverLetter}
                 onChange={e => setCoverLetter(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 bg-slate-50/50 focus:border-amber-600 focus:bg-white"
               />
-            </div>
-
-            {/* CV Upload (Strictly PDF only, Max 1 MB) */}
-            <div className="border-t border-slate-100 pt-6">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-2">
-                Curriculum Vitae (CV) / Resume <span className="text-amber-600">*</span>
-              </label>
-              <p className="text-[11px] text-slate-500 mb-3">
-                Strict requirement: <strong>PDF format only (.pdf)</strong>, maximum allowed size <strong>1 MB</strong>.
-              </p>
-
-              <div className="border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl p-6 text-center transition-colors bg-slate-50/60">
-                <UploadCloud className="w-8 h-8 text-amber-700 mx-auto mb-2" />
-                <label className="cursor-pointer">
-                  <span className="text-xs font-bold text-amber-700 hover:text-amber-800 underline">
-                    Click to select PDF from your device
-                  </span>
-                  <input
-                    type="file"
-                    accept=".pdf,application/pdf"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Supported format: .pdf (Strict limit: 1 MB)
-                </p>
-
-                {cvFile && (
-                  <div className="mt-4 inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
-                    <FileText className="w-4 h-4 text-emerald-600" />
-                    <span>{cvFile.name} ({(cvFile.size / 1024).toFixed(0)} KB)</span>
-                    <span className="text-emerald-600 font-bold">✓ Validated</span>
-                  </div>
-                )}
-
-                {fileError && (
-                  <div className="mt-3 text-xs text-red-600 font-semibold flex items-center justify-center space-x-1.5">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>{fileError}</span>
-                  </div>
-                )}
-              </div>
             </div>
 
             {/* Submit Action */}

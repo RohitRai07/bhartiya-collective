@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { authService } from '../../services/authService';
 import { AuthSession, TwoFactorChallenge, AdminCredentials } from '../../types/auth';
 import { siteConfig } from '../../config/siteConfig';
@@ -10,10 +10,11 @@ import {
   Loader2, 
   ArrowLeft, 
   ShieldCheck, 
-  Check, 
   Smartphone, 
-  ShieldAlert, 
-  RefreshCw 
+  RefreshCw, 
+  Clock, 
+  ShieldAlert,
+  CheckCircle2
 } from 'lucide-react';
 
 interface AdminLoginFormProps {
@@ -25,7 +26,6 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
   onLoginSuccess, 
   onBackToPublicSite 
 }) => {
-  const [currentCreds, setCurrentCreds] = useState<AdminCredentials>(authService.getAdminCredentials());
   const [step, setStep] = useState<'credentials' | '2fa'>('credentials');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,26 +33,43 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
   const [challenge, setChallenge] = useState<TwoFactorChallenge | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
+
+  // Resend Countdown Timer
+  const [countdown, setCountdown] = useState<number>(0);
+  const timerRef = useRef<any>(null);
 
   useEffect(() => {
-    const creds = authService.getAdminCredentials();
-    setCurrentCreds(creds);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, []);
 
-  const handleFillCredentials = () => {
-    setEmail(currentCreds.email);
-    setPassword(currentCreds.password);
-    setErrorMessage(null);
+  const startCountdown = (seconds: number = 60) => {
+    setCountdown(seconds);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    setInfoMessage(null);
+    setRemainingAttempts(null);
+    setIsLocked(false);
+    setIsExpired(false);
 
     if (!email.trim() || !password.trim()) {
-      setErrorMessage('Please enter both administrator email and password.');
+      setErrorMessage('Please provide both administrator email and password.');
       return;
     }
 
@@ -64,14 +81,17 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
       if (result.requiresTwoFactor && result.challenge) {
         setChallenge(result.challenge);
         setStep('2fa');
-        setInfoMessage(`A 6-digit verification code has been dispatched to ${result.challenge.email}.`);
+        setTwoFactorCode('');
+        // Start 60-second cooldown timer
+        const secondsLeft = Math.max(0, Math.ceil(((result.challenge.resendAvailableAt || Date.now()) - Date.now()) / 1000));
+        startCountdown(secondsLeft > 0 ? secondsLeft : 60);
       } else if (result.success && result.session) {
         onLoginSuccess(result.session);
       } else {
-        setErrorMessage(result.error || 'Authentication failed. Please verify credentials.');
+        setErrorMessage(result.error || 'Invalid administrator email or password.');
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'An error occurred during authentication.');
+      setErrorMessage(err.message || 'Authentication error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -81,8 +101,9 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
     e.preventDefault();
     if (!challenge) return;
 
-    if (!twoFactorCode.trim()) {
-      setErrorMessage('Please enter the 6-digit verification code.');
+    const cleanCode = twoFactorCode.trim().replace(/\D/g, '');
+    if (cleanCode.length !== 6) {
+      setErrorMessage('Please enter the complete 6-digit verification code.');
       return;
     }
 
@@ -90,25 +111,65 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
     setErrorMessage(null);
 
     try {
-      const result = await authService.completeTwoFactorLogin(challenge.challengeId, twoFactorCode);
+      const result = await authService.completeTwoFactorLogin(challenge.challengeId, cleanCode);
+
       if (result.success && result.session) {
         onLoginSuccess(result.session);
       } else {
-        setErrorMessage(result.error || 'Invalid 2FA verification code.');
+        setErrorMessage(result.error || 'Verification failed. Please check the code.');
+        if (result.remainingAttempts !== undefined) {
+          setRemainingAttempts(result.remainingAttempts);
+        }
+        if (result.locked) {
+          setIsLocked(true);
+        }
+        if (result.expired) {
+          setIsExpired(true);
+        }
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Verification failed.');
+      setErrorMessage(err.message || 'Verification service error. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResendCode = () => {
-    if (!email) return;
-    const newChallenge = authService.createTwoFactorChallenge(email);
-    setChallenge(newChallenge);
+  const handleResendCode = async () => {
+    if (countdown > 0 || !challenge) return;
+
+    setLoading(true);
+    setErrorMessage(null);
+    setIsLocked(false);
+    setIsExpired(false);
+    setRemainingAttempts(null);
+
+    try {
+      const result = await authService.resendTwoFactorOtp(challenge.challengeId);
+      if (result.success && result.challenge) {
+        setChallenge(result.challenge);
+        setTwoFactorCode('');
+        startCountdown(60);
+      } else {
+        setErrorMessage(result.error || 'Failed to dispatch a new verification code.');
+        if (result.secondsLeft) {
+          startCountdown(result.secondsLeft);
+        }
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Service error during code resend.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBackToCredentials = () => {
+    setStep('credentials');
     setTwoFactorCode('');
-    setInfoMessage(`New verification code dispatched to ${email}.`);
+    setErrorMessage(null);
+    setRemainingAttempts(null);
+    setIsLocked(false);
+    setIsExpired(false);
+    if (timerRef.current) clearInterval(timerRef.current);
   };
 
   return (
@@ -152,7 +213,7 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
           {step === '2fa' ? 'Two-Factor Authentication' : 'Admin Portal Access'}
         </h2>
         <p className="text-xs sm:text-sm text-slate-400">
-          {siteConfig.name} • {step === '2fa' ? 'Security Verification' : 'Internal Management'}
+          {step === '2fa' ? 'Production Security Verification' : 'Secured Administrative Gateway'}
         </p>
       </div>
 
@@ -162,34 +223,9 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
           {/* STEP 1: CREDENTIALS FORM */}
           {step === 'credentials' && (
             <>
-              {/* Authorized Credentials Callout */}
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold flex items-center space-x-1.5">
-                    <ShieldCheck className="w-4 h-4 text-amber-400" />
-                    <span>Active Administrator Credentials:</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleFillCredentials}
-                    className="text-[11px] underline text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
-                  >
-                    Auto-fill
-                  </button>
-                </div>
-                <div className="font-mono text-[11px] space-y-1 bg-slate-900/60 p-2.5 rounded-lg border border-slate-700">
-                  <div>Email: <strong className="text-white">{currentCreds.email}</strong></div>
-                  <div>Password: <strong className="text-white">{currentCreds.password}</strong></div>
-                  <div className="flex items-center space-x-1 pt-1 text-[10px] text-emerald-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                    <span>2FA Protection: <strong>{currentCreds.twoFactorEnabled ? 'ENABLED' : 'DISABLED'}</strong></span>
-                  </div>
-                </div>
-              </div>
-
               {errorMessage && (
-                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300 flex items-start space-x-2.5">
-                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300 flex items-start space-x-2.5 animate-in fade-in duration-150">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
                   <span>{errorMessage}</span>
                 </div>
               )}
@@ -197,13 +233,14 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
               <form onSubmit={handleCredentialsSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5">
-                    Admin Email
+                    Administrator Email
                   </label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                     <input
                       type="email"
                       required
+                      autoComplete="username"
                       placeholder="admin@bharatcollective.org"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
@@ -221,12 +258,18 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
                     <input
                       type="password"
                       required
+                      autoComplete="current-password"
                       placeholder="••••••••••••"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-600 bg-slate-900/80 text-sm text-white placeholder-slate-500 focus:border-amber-500 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
                     />
                   </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/60 text-[11px] text-slate-400 flex items-center space-x-2">
+                  <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Mandatory 2FA code will be required upon credential validation.</span>
                 </div>
 
                 <button
@@ -237,7 +280,7 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Verifying Credentials...</span>
+                      <span>Validating Credentials...</span>
                     </>
                   ) : (
                     <span>Continue with Sign In</span>
@@ -247,92 +290,113 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
             </>
           )}
 
-          {/* STEP 2: TWO-FACTOR AUTHENTICATION FORM */}
+          {/* STEP 2: TWO-FACTOR AUTHENTICATION VERIFICATION FORM */}
           {step === '2fa' && challenge && (
             <div className="space-y-5 animate-in fade-in duration-200">
               
-              {/* 2FA Dispatch Notification Box */}
-              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 space-y-2">
-                <div className="flex items-center space-x-2 text-amber-400 font-bold">
+              {/* Notification Banner with Masked Recipient */}
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 space-y-1.5 text-center">
+                <div className="inline-flex items-center space-x-1.5 text-amber-400 font-bold mb-0.5">
                   <Smartphone className="w-4 h-4" />
-                  <span>2FA Security Challenge Active</span>
+                  <span>Verification Code Dispatched</span>
                 </div>
-                <p className="text-[11px] text-slate-300 leading-relaxed">
-                  Enter the 6-digit verification OTP dispatched to <strong>{challenge.email}</strong>.
+                <p className="text-[12px] text-slate-300">
+                  A verification code has been sent to:
                 </p>
-
-                {/* Generated Code Display for effortless testing */}
-                <div className="mt-2 bg-slate-950/80 p-3 rounded-xl border border-amber-500/30 text-center">
-                  <span className="text-[10px] uppercase font-semibold text-amber-400 block tracking-wider mb-1">
-                    Live Dispatched OTP Code (Testing Simulator)
-                  </span>
-                  <div className="font-mono text-xl font-bold tracking-[0.3em] text-white">
-                    {challenge.code}
-                  </div>
-                  <span className="text-[9px] text-slate-400 mt-1 block">
-                    (or enter master dev bypass code: <strong>123456</strong>)
-                  </span>
+                <div className="font-mono text-sm font-bold text-white tracking-wider bg-slate-900/80 py-1 px-3 rounded-lg border border-amber-500/20 inline-block">
+                  {challenge.maskedRecipient || '******'}
                 </div>
+                <p className="text-[10px] text-slate-400 pt-1">
+                  Valid for 5 minutes • Single-use security token
+                </p>
               </div>
 
+              {/* Error Banners */}
               {errorMessage && (
                 <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300 flex items-start space-x-2.5">
-                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                  <span>{errorMessage}</span>
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <div>{errorMessage}</div>
+                    {remainingAttempts !== null && remainingAttempts > 0 && (
+                      <div className="text-[11px] text-red-400 font-semibold">
+                        Remaining attempts: {remainingAttempts} / 5
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {isExpired && (
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-center space-x-2">
+                  <Clock className="w-4 h-4 shrink-0 text-amber-400" />
+                  <span>This verification code has expired. Please click "Resend Code" below.</span>
+                </div>
+              )}
+
+              {isLocked && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 flex items-center space-x-2">
+                  <ShieldAlert className="w-4 h-4 shrink-0 text-rose-400" />
+                  <span>Maximum verification attempts exceeded. Please request a fresh verification code.</span>
                 </div>
               )}
 
               <form onSubmit={handleTwoFactorSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5 text-center">
-                    6-Digit Verification Code
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2 text-center">
+                    Enter OTP
                   </label>
                   <input
                     type="text"
                     required
                     maxLength={6}
                     autoFocus
+                    disabled={loading || isLocked}
                     placeholder="• • • • • •"
                     value={twoFactorCode}
                     onChange={e => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
-                    className="w-full py-3 text-center font-mono text-2xl tracking-[0.4em] rounded-xl border border-slate-600 bg-slate-900 text-white placeholder-slate-600 focus:border-amber-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                    className="w-full py-3.5 text-center font-mono text-2xl tracking-[0.45em] rounded-xl border border-slate-600 bg-slate-900 text-white placeholder-slate-600 focus:border-amber-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  disabled={loading || twoFactorCode.length < 6}
+                  disabled={loading || twoFactorCode.length !== 6 || isLocked}
                   className="w-full py-3 px-4 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Verifying 2FA Code...</span>
+                      <span>Verifying Security Token...</span>
                     </>
                   ) : (
-                    <span>Verify & Access Admin Console</span>
+                    <span>Verify</span>
                   )}
                 </button>
 
-                <div className="flex items-center justify-between pt-1 text-xs">
+                {/* Resend and Back Controls */}
+                <div className="flex items-center justify-between pt-2 text-xs border-t border-slate-700/60">
                   <button
                     type="button"
-                    onClick={() => {
-                      setStep('credentials');
-                      setErrorMessage(null);
-                    }}
-                    className="text-slate-400 hover:text-white"
+                    onClick={handleBackToCredentials}
+                    className="text-slate-400 hover:text-white cursor-pointer"
                   >
-                    ← Back to credentials
+                    ← Back to Sign In
                   </button>
 
                   <button
                     type="button"
                     onClick={handleResendCode}
-                    className="text-amber-400 hover:text-amber-300 font-semibold flex items-center space-x-1"
+                    disabled={countdown > 0 || loading}
+                    className={`font-semibold flex items-center space-x-1.5 cursor-pointer ${
+                      countdown > 0 
+                        ? 'text-slate-500 cursor-not-allowed' 
+                        : 'text-amber-400 hover:text-amber-300'
+                    }`}
                   >
-                    <RefreshCw className="w-3 h-3" />
-                    <span>Resend Code</span>
+                    <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                    <span>
+                      {countdown > 0 ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
+                    </span>
                   </button>
                 </div>
               </form>

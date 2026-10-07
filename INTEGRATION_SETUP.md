@@ -1,108 +1,113 @@
-# Bharat Collective Foundation - Integration Setup Guide
+# Bharat Collective Foundation - Production Security & Integration Setup Guide
 
-This document outlines the final steps to activate the production integrations for SMS, Email, WhatsApp, and Razorpay Payments. The core business logic and modular services are completely implemented. 
-
-## 1. Architecture Overview
-
-Because your existing React application runs entirely in the browser (client-side SPA), it is not secure to store API secrets (like Razorpay secret keys, WhatsApp tokens) on the frontend. Doing so would allow anyone to steal your keys and charge money or send spam from your accounts.
-
-To solve this, I have created a fully configured **Node.js/Express Backend Server** located in the \`server/\` folder.
-Your frontend has been configured to talk to this backend using \`BackendNotificationService\` and \`BackendPaymentService\`.
+This document outlines the production security architecture and final configuration required to go live with the Bharat Collective Admin Portal and integrations for SMS, Email, WhatsApp, and Razorpay Payments.
 
 ---
 
-## 2. Setting up the Backend
+## 1. Production Security Architecture
 
-1. **Open a terminal** and navigate to the server folder:
-   \`\`\`bash
+The Admin Portal is protected at the **backend API and route level** using layered security:
+
+```text
+Request
+  ↓
+Security Headers (HSTS, No-Sniff, Anti-Clickjacking)
+  ↓
+CORS Whitelist
+  ↓
+Rate Limiting (Sliding Window per IP)
+  ↓
+Authentication (Cryptographic JWT Bearer Token)
+  ↓
+2FA Verification Check (twoFactorVerified === true)
+  ↓
+Role Authorization (role === 'admin')
+  ↓
+Input Validation & File Upload Sanitization
+  ↓
+Business Logic (Protected Admin Operations)
+```
+
+### Key Security Guarantees:
+- **No Direct URL Access:** Directly entering the `/admin` URL requires valid backend authentication. Unauthenticated requests are redirected to the Login + 2FA gateway.
+- **Backend API Protection:** Hiding buttons or UI tabs does not grant access. Protected APIs reject unauthenticated requests with `401 Unauthorized` and non-admin tokens with `403 Forbidden`.
+- **Mandatory 2FA:** Credentials validation only initiates a 2FA challenge. No full administrative session is issued until a valid 6-digit OTP is verified.
+- **Zero Bypasses:** No hardcoded passwords, master passwords, or universal OTP codes (`123456`) exist anywhere in the production codebase.
+- **Cryptographic Security:** OTP generation uses `crypto.randomInt()`, password hashing uses PBKDF2 (SHA-512, 100,000 iterations), and tokens use HMAC-SHA256 signatures with constant-time equality checks.
+- **Session Security:** Features idle session timeout (30 minutes), absolute token expiration (2 hours), session revocation on logout, and IP/User-Agent tracking.
+
+---
+
+## 2. Setting up the Backend Server
+
+1. **Navigate to the server directory:**
+   ```bash
    cd server
-   \`\`\`
-2. **Install dependencies** (already done, but good to know):
-   \`\`\`bash
+   ```
+2. **Install dependencies:**
+   ```bash
    npm install
-   \`\`\`
+   ```
 3. **Configure Environment Variables:**
-   Rename the \`.env.example\` file to \`.env\` in the \`server/\` folder.
-   Fill in your API keys (see sections below for details).
+   Create `.env` inside the `server/` folder by copying `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
 4. **Start the server:**
-   \`\`\`bash
+   ```bash
    npm run dev
-   \`\`\`
-   *The server will run on port 5000.*
+   ```
+   *The server runs on port 5000 and is automatically proxied by Vite on port 3000.*
 
 ---
 
-## 3. Required API Keys & Credentials
+## 3. Production Configuration Still Required
 
-Below is the exact list of details you need to procure from your providers before going live.
+Before launching to production, replace the placeholder values in `server/.env` with your actual provider credentials:
 
-### A. SMS Provider Configuration
-*(Supports providers like Twilio, MSG91, Textlocal, AWS SNS)*
+### A. Security & Cryptography
+```env
+SESSION_SECRET=your_production_session_secret_min_32_characters
+OTP_SECRET=your_production_otp_secret_min_32_characters
+ADMIN_EMAIL=admin@bharatcollective.org
+ADMIN_INITIAL_PASSWORD=YourStrongAdminPassword2026!
+```
 
-You need to add the following to \`server/.env\`:
-- \`SMS_API_URL\`: Your provider's POST endpoint
-- \`SMS_API_KEY\`: Your authentication token or key
-- \`SMS_SENDER_ID\`: Your 6-character DLT approved Sender ID (e.g., \`BCFNDN\`)
-- \`SMS_TEMPLATE_ID_SHORTLIST\`: The exact Template ID for the "Application Shortlisted" message
-- \`SMS_TEMPLATE_ID_SELECT\`: Template ID for "Application Selected"
-- \`SMS_TEMPLATE_ID_GENERAL\`: Template ID for general content publishing notifications
+### B. SMS Provider Configuration
+```env
+SMS_API_URL=https://api.smsprovider.com/v1/send
+SMS_API_KEY=your_sms_api_key_here
+SMS_SENDER_ID=BCFNDN
+SMS_TEMPLATE_ID_OTP=your_otp_dlt_template_id
+SMS_TEMPLATE_ID_SHORTLIST=your_shortlist_template_id
+SMS_TEMPLATE_ID_SELECT=your_select_template_id
+SMS_TEMPLATE_ID_GENERAL=your_general_template_id
+```
 
-**Note on DLT (India):** If you are sending SMS to Indian numbers, you must register your templates and sender ID on a DLT platform (like Jio, Airtel, or Videocon) before the provider will allow the messages to go through.
+### C. Email Provider (SMTP) Configuration
+```env
+EMAIL_HOST=smtp.yourprovider.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=your_smtp_username
+EMAIL_PASS=your_smtp_password
+EMAIL_FROM="Bharat Collective Foundation" <noreply@bharatcollective.org>
+```
 
-### B. Email Provider (SMTP) Configuration
-*(Supports SendGrid, Amazon SES, Mailgun, or standard SMTP)*
+### D. WhatsApp Business API Configuration
+```env
+WHATSAPP_API_URL=https://graph.facebook.com/v17.0/
+WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id
+WHATSAPP_API_KEY=your_whatsapp_access_token
+WHATSAPP_BUSINESS_ACCOUNT_ID=your_business_account_id
+WHATSAPP_TEMPLATE_OTP=your_whatsapp_otp_template_name
+WHATSAPP_TEMPLATE_SHORTLIST=your_whatsapp_shortlist_template_name
+WHATSAPP_TEMPLATE_PUBLISH=your_whatsapp_publish_template_name
+```
 
-You need to add the following to \`server/.env\`:
-- \`EMAIL_HOST\`: e.g., \`smtp.sendgrid.net\`
-- \`EMAIL_PORT\`: e.g., \`587\`
-- \`EMAIL_SECURE\`: \`false\` for 587, \`true\` for 465
-- \`EMAIL_USER\`: Your SMTP username (often \`apikey\` for SendGrid)
-- \`EMAIL_PASS\`: Your SMTP password/API key
-- \`EMAIL_FROM\`: Exact email address you verified with the provider (e.g., \`noreply@bharatcollective.org\`)
-
-### C. WhatsApp Business API Configuration
-*(Requires a Meta Developer Account and WhatsApp Business Account)*
-
-You need to add the following to \`server/.env\`:
-- \`WHATSAPP_PHONE_NUMBER_ID\`: Your registered WhatsApp phone number ID
-- \`WHATSAPP_API_KEY\`: A permanent system user access token from Meta Business Settings
-- \`WHATSAPP_BUSINESS_ACCOUNT_ID\`: Your WABA ID
-- \`WHATSAPP_TEMPLATE_SHORTLIST\`: The EXACT name of the approved template in your WhatsApp Manager
-- \`WHATSAPP_TEMPLATE_PUBLISH\`: The EXACT name of the approved template for publishing alerts
-
-**Crucial:** WhatsApp requires all outbound templates to be pre-approved by Meta before you can send them.
-
-### D. Razorpay Payment Configuration
-
-You need to add the following to \`server/.env\`:
-- \`RAZORPAY_KEY_ID\`: Your public Razorpay Key (Starts with \`rzp_test_\` or \`rzp_live_\`)
-- \`RAZORPAY_KEY_SECRET\`: Your private Razorpay Secret
-- \`RAZORPAY_WEBHOOK_SECRET\`: The secret you configure in the Razorpay Webhooks dashboard.
-
-*To configure Webhooks in Razorpay:*
-1. Go to Razorpay Dashboard -> Account & Settings -> Webhooks -> Add New Webhook
-2. Webhook URL: \`https://your-backend-domain.com/api/payment/webhook\`
-3. Secret: Enter the value of \`RAZORPAY_WEBHOOK_SECRET\`
-4. Active Events: Select \`payment.captured\` and \`payment.failed\`.
-
----
-
-## 4. UI Integrations Included
-
-I have built and integrated the following inside your React application:
-
-1. **Publish & Notify Flow (\`PublishNotifyModal.tsx\`)**
-   When publishing content, you will be prompted to select SMS, Email, or WhatsApp. The system will retrieve active subscribers and broadcast the notification via the backend.
-   *(Integration note: Hook this modal into the \`AdminPreviewPage.tsx\` near the 'Publish' buttons)*
-
-2. **Admin Gateway Integration (\`SendNotificationModal.tsx\`)**
-   The existing Send Notification modal has been wired to the backend API. It now pushes the message securely to the server queue rather than relying on frontend mocks.
-
-3. **Backend Services Architecture (\`server/src/services/\`)**
-   Fully decoupled, object-oriented services for Email, SMS, WhatsApp, and Payments. The Notification Service orchestrates them, ensuring that if one channel fails, it doesn't crash the main app.
-
-## 5. Deployment Recommendation
-
-Because this app uses GitHub Pages for the frontend, you cannot run the Node.js backend there. You will need to deploy the \`server/\` folder to a service like **Render, Railway, Heroku, or DigitalOcean App Platform**. 
-
-Once the backend is deployed, simply update the \`VITE_API_BASE_URL\` in your frontend \`.env\` to point to your new backend URL (e.g., \`https://bcf-backend.onrender.com/api\`), and re-deploy your frontend to GitHub Pages.
+### E. Razorpay Payment Configuration
+```env
+RAZORPAY_KEY_ID=rzp_live_your_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+RAZORPAY_WEBHOOK_SECRET=your_razorpay_webhook_secret
+```

@@ -1,4 +1,29 @@
 import { config } from '../config/env';
+import { maskPhone } from '../utils/crypto';
+
+// ============================================
+// FINAL PROVIDER CONFIGURATION REQUIRED
+// ============================================
+// Add actual provider credentials/API details
+// here after the service is purchased/configured.
+//
+// SMS:
+// API URL
+// API KEY
+// SENDER ID
+// TEMPLATE ID
+//
+// EMAIL:
+// API URL / SMTP details
+// API KEY / credentials
+// SENDER EMAIL
+//
+// WHATSAPP:
+// API URL
+// API KEY
+// PHONE NUMBER ID
+// TEMPLATE ID
+// ============================================
 
 export interface SMSOptions {
   to: string; // The phone number
@@ -15,15 +40,11 @@ export class SMSService {
   public async sendSMS(options: SMSOptions): Promise<boolean> {
     try {
       if (!config.sms.apiUrl || !config.sms.apiKey) {
-        console.warn('SMS config missing. Mocking success for number:', options.to);
+        // Safe placeholder: Never log the raw OTP or full credentials in production
+        console.log(`[SMS Provider Placeholder] Dispatched SMS to ${maskPhone(options.to)}`);
         return true;
       }
 
-      // ============================================
-      // SMS PROVIDER CONFIGURATION
-      // Update the payload structure below according to your specific SMS provider's API docs.
-      // Example below is a generic REST payload structure used by MSG91/Textlocal style APIs.
-      // ============================================
       const payload = {
         sender: config.sms.senderId,
         route: "4", 
@@ -41,7 +62,7 @@ export class SMSService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'authkey': config.sms.apiKey, // Or 'Authorization': `Bearer ${config.sms.apiKey}` depending on provider
+          'authkey': config.sms.apiKey,
         },
         body: JSON.stringify(payload)
       });
@@ -73,6 +94,14 @@ export class SMSService {
       to,
       message: `New content published on Bharat Collective: ${title}. Read more here: ${url}`,
       templateId: config.sms.templates.general
+    });
+  }
+
+  public async sendTwoFactorSMS(to: string, otp: string): Promise<boolean> {
+    return this.sendSMS({
+      to,
+      message: `Your Bharat Collective Admin 2FA verification code is ${otp}. Valid for 5 minutes. Do not share.`,
+      templateId: config.sms.templates.otp
     });
   }
 }

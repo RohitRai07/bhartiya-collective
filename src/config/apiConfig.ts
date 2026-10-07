@@ -7,7 +7,7 @@
 
 export const apiConfig = {
   // Base configuration
-  baseUrl: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || 'https://api.bhartiyacollective.org/v1',
+  baseUrl: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) || '/api',
   timeoutMs: 10000,
   
   // Phase 1 Default: Use local mock/in-memory data layer

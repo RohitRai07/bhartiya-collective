@@ -180,31 +180,38 @@ export const CareerDetailModal: React.FC<CareerDetailModalProps> = ({
             </div>
           )}
 
-          {/* CV Attachment Box */}
-          <div className="p-4 bg-gradient-to-r from-slate-50 to-amber-50/40 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
-                <FileText className="w-5 h-5" />
+          {/* CV Attachment Box (if present) */}
+          {record.cvDataUrl ? (
+            <div className="p-4 bg-gradient-to-r from-slate-50 to-amber-50/40 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-slate-900 block truncate max-w-xs">
+                    {record.cvFileName || 'Candidate_Resume.pdf'}
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {record.cvFileSize ? `${Math.round(record.cvFileSize / 1024)} KB` : 'PDF Document'}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="text-xs font-bold text-slate-900 block truncate max-w-xs">
-                  {record.cvFileName || 'Candidate_Resume.pdf'}
-                </span>
-                <span className="text-[11px] text-slate-500">
-                  {record.cvFileSize ? `${Math.round(record.cvFileSize / 1024)} KB` : 'PDF Document'} • Strictly ≤ 1 MB
-                </span>
-              </div>
-            </div>
 
-            <button
-              type="button"
-              onClick={handleDownloadCv}
-              className="px-4 py-2 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer shrink-0"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download CV (PDF)</span>
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={handleDownloadCv}
+                className="px-4 py-2 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center justify-center space-x-2 cursor-pointer shrink-0"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download CV</span>
+              </button>
+            </div>
+          ) : (
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500 flex items-center space-x-2">
+              <FileText className="w-4 h-4 text-slate-400 shrink-0" />
+              <span>Direct application submitted online without attached file.</span>
+            </div>
+          )}
 
           {/* Metadata */}
           <div className="text-[11px] text-slate-400 flex items-center justify-between border-t border-slate-100 pt-3">

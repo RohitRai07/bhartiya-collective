@@ -83,10 +83,10 @@ class CareerService {
   }
 
   create(input: CareerApplicationInput): CareerApplicationRecord {
-    if (input.cvFileSize > MAX_CV_SIZE_BYTES) {
+    if (input.cvFileSize && input.cvFileSize > MAX_CV_SIZE_BYTES) {
       throw new Error('CV file exceeds the strict maximum limit of 1 MB.');
     }
-    if (!input.cvFileName.toLowerCase().endsWith('.pdf')) {
+    if (input.cvFileName && !input.cvFileName.toLowerCase().endsWith('.pdf')) {
       throw new Error('Only PDF format (.pdf) is permitted for CV upload.');
     }
 
