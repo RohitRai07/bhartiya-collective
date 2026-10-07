@@ -93,17 +93,23 @@ async function runSecurityTests() {
     const replayDev = otpService.verifyOtp(devId, '111111');
     assert(replayDev.valid === false, 'Development fallback 111111 cannot be replayed (Single-use)');
 
-    // In production mode -> 111111 MUST BE STRICTLY REJECTED
-    const origEnv = config.nodeEnv;
-    config.nodeEnv = 'production';
+    // When real provider IS configured -> 111111 MUST BE STRICTLY REJECTED
+    const origHost = config.email.host;
+    const origUser = config.email.user;
+    const origPass = config.email.pass;
+    config.email.host = 'smtp.test.com';
+    config.email.user = 'user@test.com';
+    config.email.pass = 'password123';
     const prodChallenge = otpService.createChallenge('user-prod', 'rohitraicr10@gmail.com', 'email');
     if (prodChallenge.success) {
       const prodId = prodChallenge.data.challengeId;
       const prodMatch = otpService.verifyOtp(prodId, '111111');
-      assert(prodMatch.valid === false, 'Development fallback 111111 is strictly rejected in production mode');
+      assert(prodMatch.valid === false, 'Development fallback 111111 is strictly rejected when real provider is configured');
     }
-    config.nodeEnv = origEnv;
-    console.log('  ✅ PASS: 111111 works in dev without providers, automatically disabled in production');
+    config.email.host = origHost;
+    config.email.user = origUser;
+    config.email.pass = origPass;
+    console.log('  ✅ PASS: 111111 works without providers, automatically disabled when provider is configured');
   }
 
   // 6. Two-Factor Service Integration Layer

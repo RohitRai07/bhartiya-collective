@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { authService } from '../../services/authService';
 import { AuthSession, TwoFactorChallenge, AdminCredentials } from '../../types/auth';
 import { siteConfig } from '../../config/siteConfig';
+import { apiConfig } from '../../config/apiConfig';
 import { 
   Lock, 
   Mail, 
@@ -309,6 +310,13 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
                 <p className="text-[10px] text-slate-400 pt-1">
                   Valid for 5 minutes • Single-use security token
                 </p>
+                {!apiConfig.isRealOtpProviderConfigured && (
+                  <div className="pt-1.5">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      Testing Mode: Use temporary OTP <strong className="ml-1.5 font-mono tracking-widest text-white">111111</strong>
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Error Banners */}

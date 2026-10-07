@@ -4,6 +4,7 @@
  */
 
 import { featureConfig } from '../config/featureConfig';
+import { apiConfig } from '../config/apiConfig';
 import { pincodeService } from '../services/pincodeService';
 import { registrationService } from '../services/registrationService';
 import { newsletterService } from '../services/newsletterService';
@@ -210,9 +211,16 @@ async function runTests() {
   // Test Temporary Dev Fallback '111111' in Development/Testing Mode
   const devChan = authService.createTwoFactorChallenge('rohitraicr10@gmail.com');
   const devAuth = await authService.completeTwoFactorLogin(devChan.challengeId, '111111');
-  assert(devAuth.success === true && devAuth.session?.user.role === 'admin', 'Temporary dev fallback 111111 accepted in development/testing mode');
+  assert(devAuth.success === true && devAuth.session?.user.role === 'admin', 'Temporary dev fallback 111111 accepted when real provider is unconfigured');
   const devReplay = await authService.completeTwoFactorLogin(devChan.challengeId, '111111');
   assert(devReplay.success === false, 'Dev fallback 111111 is single-use and cannot be replayed');
+
+  // Once real provider IS configured, 111111 must automatically cease to function
+  apiConfig.isRealOtpProviderConfigured = true;
+  const prodChan = authService.createTwoFactorChallenge('rohitraicr10@gmail.com');
+  const prodAuth = await authService.completeTwoFactorLogin(prodChan.challengeId, '111111');
+  assert(prodAuth.success === false, 'Dev fallback 111111 automatically stops working once real provider is configured');
+  apiConfig.isRealOtpProviderConfigured = false;
 
   // Verify credential updating
   const updateResult = authService.updateAdminCredentials(

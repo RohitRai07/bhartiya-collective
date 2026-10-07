@@ -375,11 +375,11 @@ export const authService = {
 
     challenge.attempts = (challenge.attempts || 0) + 1;
 
-    // Dynamic verification with temporary development fallback: 111111 (dev/test only)
-    const isDevMode = typeof import.meta !== 'undefined' && import.meta.env 
-      ? import.meta.env.DEV 
-      : (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production');
-    const isDevFallback = isDevMode && cleanCode === '111111';
+    // Dynamic verification with temporary development fallback: 111111
+    // Accepted ONLY while real OTP delivery provider is not configured.
+    // Once real provider is configured (VITE_OTP_PROVIDER_CONFIGURED=true), 111111 automatically ceases to function.
+    const isProviderConfigured = apiConfig.isRealOtpProviderConfigured;
+    const isDevFallback = !isProviderConfigured && cleanCode === '111111';
     const isMatch = (challenge.code === cleanCode) || isDevFallback;
 
     if (!isMatch) {

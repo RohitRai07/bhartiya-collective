@@ -14,6 +14,9 @@ export const apiConfig = {
   // In Phase 2: Set VITE_USE_MOCK_DATA=false to switch to live backend without altering UI!
   useMockData: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_USE_MOCK_DATA === 'false') ? false : true,
 
+  // 2FA / OTP Provider status: false until real third-party provider credentials are configured
+  isRealOtpProviderConfigured: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OTP_PROVIDER_CONFIGURED === 'true') ? true : false,
+
   // Default headers
   headers: {
     'Content-Type': 'application/json',

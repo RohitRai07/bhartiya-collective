@@ -160,12 +160,10 @@ export class OTPService {
     const isDynamicMatch = verifyOtpHash(cleanOtp, challenge.otpHashed, challenge.salt, config.security.otpSecret);
 
     // Temporary development fallback: '111111'
-    // ONLY allowed when:
-    // 1. Not running in production mode (development / test mode only)
-    // 2. Real provider for this channel is not configured
-    const isProduction = config.nodeEnv === 'production';
+    // ONLY allowed when real OTP provider is not configured.
+    // Once real provider is configured, 111111 automatically ceases to function.
     const isProviderConfigured = this.isChannelProviderConfigured(challenge.channel);
-    const isDevFallback = !isProduction && !isProviderConfigured && cleanOtp === '111111';
+    const isDevFallback = !isProviderConfigured && cleanOtp === '111111';
 
     const isMatch = isDynamicMatch || isDevFallback;
 
