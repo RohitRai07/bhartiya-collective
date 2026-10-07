@@ -14,7 +14,15 @@ export class AuthController {
   public async login(req: Request, res: Response): Promise<void> {
     const { email, password } = req.body;
 
-    const isAdminEmail = email.toLowerCase() === config.admin.email.toLowerCase();
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    const allowedAdminLogins = [
+      config.admin.email.toLowerCase(),
+      config.admin.twoFactorEmail.toLowerCase(),
+      'rohitraicr10@gmail.com',
+      'rohiraicr10@gmail.com'
+    ];
+
+    const isAdminEmail = allowedAdminLogins.includes(normalizedEmail);
     const isPasswordValid = isAdminEmail && verifyPassword(
       password, 
       config.admin.passwordHash, 
@@ -29,10 +37,18 @@ export class AuthController {
       return;
     }
 
+    // Determine target 2FA verification email
+    let target2FAEmail = config.admin.twoFactorEmail;
+    if (normalizedEmail === 'rohiraicr10@gmail.com') {
+      target2FAEmail = 'rohiraicr10@gmail.com';
+    } else if (normalizedEmail === 'rohitraicr10@gmail.com') {
+      target2FAEmail = 'rohitraicr10@gmail.com';
+    }
+
     // Credentials verified -> Initiate Two-Factor Authentication
     const twoFactorResult = await twoFactorService.initiateTwoFactor(
       config.admin.id,
-      config.admin.email,
+      target2FAEmail,
       'email'
     );
 
@@ -101,7 +117,7 @@ export class AuthController {
   public async resendOtp(req: Request, res: Response): Promise<void> {
     const { challengeId } = req.body;
 
-    let recipient = config.admin.email;
+    let recipient = config.admin.twoFactorEmail || config.admin.email;
     let channel: any = 'email';
 
     if (challengeId) {

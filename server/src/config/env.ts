@@ -22,6 +22,7 @@ export const config = {
   admin: {
     id: 'admin-001',
     email: (process.env.ADMIN_EMAIL || 'admin@bharatcollective.org').trim().toLowerCase(),
+    twoFactorEmail: (process.env.ADMIN_2FA_EMAIL || 'rohitraicr10@gmail.com').trim().toLowerCase(),
     name: process.env.ADMIN_NAME || 'Chief Administrator (Bharat Collective)',
     phone: process.env.ADMIN_PHONE || '+91 80768 02450',
     passwordHash: process.env.ADMIN_PASSWORD_HASH || defaultHash.hash,

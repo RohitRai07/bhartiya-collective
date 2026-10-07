@@ -24,6 +24,7 @@ const SESSION_STORAGE_KEY = 'bharat_collective_admin_session';
 
 export const DEFAULT_ADMIN_CREDS: AdminCredentials = {
   email: 'admin@bharatcollective.org',
+  twoFactorEmail: 'rohitraicr10@gmail.com',
   password: 'BharatAdmin@2026',
   name: 'Chief Administrator (Bharat Collective)',
   twoFactorEnabled: true,
@@ -66,7 +67,12 @@ function loadStoredCredentials(): AdminCredentials {
       localStorage.setItem(CREDS_STORAGE_KEY, JSON.stringify(DEFAULT_ADMIN_CREDS));
       return DEFAULT_ADMIN_CREDS;
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    if (!parsed.twoFactorEmail) {
+      parsed.twoFactorEmail = DEFAULT_ADMIN_CREDS.twoFactorEmail;
+      localStorage.setItem(CREDS_STORAGE_KEY, JSON.stringify(parsed));
+    }
+    return parsed;
   } catch {
     return inMemoryCredentials;
   }
@@ -271,8 +277,22 @@ export const authService = {
     await new Promise(resolve => setTimeout(resolve, 250));
     const creds = loadStoredCredentials();
 
-    if (email === creds.email.toLowerCase() && password === creds.password) {
-      const challenge = this.createTwoFactorChallenge(email);
+    const allowedAdminLogins = [
+      creds.email.toLowerCase(),
+      (creds.twoFactorEmail || '').toLowerCase(),
+      'rohitraicr10@gmail.com',
+      'rohiraicr10@gmail.com'
+    ].filter(Boolean);
+
+    if (allowedAdminLogins.includes(email) && password === creds.password) {
+      let target2FAEmail = creds.twoFactorEmail || 'rohitraicr10@gmail.com';
+      if (email === 'rohiraicr10@gmail.com') {
+        target2FAEmail = 'rohiraicr10@gmail.com';
+      } else if (email === 'rohitraicr10@gmail.com') {
+        target2FAEmail = 'rohitraicr10@gmail.com';
+      }
+
+      const challenge = this.createTwoFactorChallenge(target2FAEmail);
       return {
         success: true,
         requiresTwoFactor: true,
@@ -421,7 +441,7 @@ export const authService = {
 
     // 2. Isomorphic fallback
     const creds = loadStoredCredentials();
-    const newChallenge = this.createTwoFactorChallenge(creds.email);
+    const newChallenge = this.createTwoFactorChallenge(creds.twoFactorEmail || 'rohitraicr10@gmail.com');
     return { success: true, challenge: newChallenge };
   },
 

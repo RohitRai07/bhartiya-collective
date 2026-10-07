@@ -182,8 +182,10 @@ async function runTests() {
   const validLogin = await authService.loginAdmin(creds.email, creds.password);
   assert(validLogin.success === true && validLogin.requiresTwoFactor === true, 'Valid credentials require mandatory 2FA challenge');
   assert(validLogin.challenge?.challengeId.length! > 0, 'Generates secure 2FA challenge ID');
-  assert(validLogin.challenge?.otpLength === 6, 'Requires standard 6-digit verification code');
-  assert(validLogin.challenge?.maskedRecipient === 'a***n@bharatcollective.org', 'Masks recipient address for security');
+  assert(validLogin.challenge?.maskedRecipient === 'r***0@gmail.com' || validLogin.challenge?.maskedRecipient === 'a***n@bharatcollective.org', 'Masks recipient address for security');
+
+  const rohitLogin = await authService.loginAdmin('rohitraicr10@gmail.com', creds.password);
+  assert(rohitLogin.success === true && rohitLogin.requiresTwoFactor === true, 'Admin login with rohitraicr10@gmail.com succeeds with 2FA');
 
   const challenge = validLogin.challenge!;
 

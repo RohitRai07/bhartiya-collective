@@ -20,6 +20,7 @@ export interface AuthSession {
 
 export interface AdminCredentials {
   email: string;
+  twoFactorEmail?: string;
   password: string;
   name: string;
   twoFactorEnabled: boolean;

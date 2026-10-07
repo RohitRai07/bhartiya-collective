@@ -22,6 +22,8 @@ async function runSecurityTests() {
   // 2. Masking
   console.log('\n📌 Testing Recipient Masking:');
   assert(maskEmail('admin@bharatcollective.org') === 'a***n@bharatcollective.org', 'Email masked correctly');
+  assert(maskEmail('rohitraicr10@gmail.com') === 'r***0@gmail.com', 'Admin 2FA email masked correctly');
+  assert(maskEmail('rohiraicr10@gmail.com') === 'r***0@gmail.com', 'Admin 2FA email variant masked correctly');
   assert(maskPhone('+918076802450') === '+91 ******2450', 'Phone masked correctly');
   console.log('  ✅ PASS: Recipient details properly masked for UI delivery');
 
