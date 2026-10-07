@@ -49,6 +49,7 @@ interface InternalChallenge extends TwoFactorChallenge {
 
 let activeChallenges: Record<string, InternalChallenge> = {};
 let inMemoryCredentials: AdminCredentials = { ...DEFAULT_ADMIN_CREDS };
+let inMemorySession: AuthSession | null = null;
 
 function maskEmailAddress(email: string): string {
   const parts = email.split('@');
@@ -140,12 +141,19 @@ export const authService = {
    * Get active admin session from local storage and configure apiClient
    */
   getAdminSession(): AuthSession | null {
-    if (typeof window === 'undefined') return null;
     try {
-      const stored = localStorage.getItem(SESSION_STORAGE_KEY);
-      if (!stored) return null;
-      const session = JSON.parse(stored) as AuthSession;
+      let session: AuthSession | null = null;
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem(SESSION_STORAGE_KEY);
+        if (stored) {
+          session = JSON.parse(stored) as AuthSession;
+        }
+      } else {
+        session = inMemorySession;
+      }
       
+      if (!session) return null;
+
       // Basic expiry check
       if (session?.expiresAt && new Date(session.expiresAt).getTime() < Date.now()) {
         this.logoutAdmin();
@@ -197,6 +205,7 @@ export const authService = {
       ...session,
       lastActiveAt: Date.now(),
     };
+    inMemorySession = updated;
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updated));
@@ -358,9 +367,14 @@ export const authService = {
     }
 
     if (challenge.consumed) {
+      const isLocked = (challenge.attempts || 0) >= 5;
       return {
         success: false,
-        error: 'This verification code has already been used. Please request a new code.',
+        error: isLocked
+          ? 'Maximum verification attempts exceeded. Code has been locked. Please request a new code.'
+          : 'This verification code has already been used. Please request a new code.',
+        locked: isLocked,
+        remainingAttempts: 0,
       };
     }
 
@@ -424,7 +438,7 @@ export const authService = {
   },
 
   /**
-   * Resend 2FA OTP code
+   * Resend 2FA OTP code / Issue new challenge
    */
   async resendTwoFactorOtp(challengeId?: string): Promise<{
     success: boolean;
@@ -449,8 +463,23 @@ export const authService = {
     }
 
     // 2. Isomorphic fallback
+    if (challengeId && activeChallenges[challengeId]) {
+      const existing = activeChallenges[challengeId];
+      if (Date.now() < existing.resendAvailableAt) {
+        const secondsLeft = Math.ceil((existing.resendAvailableAt - Date.now()) / 1000);
+        return {
+          success: false,
+          error: `Resend cooldown active. Please wait ${secondsLeft} second(s) before requesting a new code.`,
+          secondsLeft,
+        };
+      }
+      // Invalidate the previous challenge so it cannot be used anymore
+      existing.consumed = true;
+    }
+
     const creds = loadStoredCredentials();
-    const newChallenge = this.createTwoFactorChallenge(creds.twoFactorEmail || 'rohitraicr10@gmail.com');
+    const targetEmail = (challengeId && activeChallenges[challengeId]?.email) || creds.twoFactorEmail || 'rohitraicr10@gmail.com';
+    const newChallenge = this.createTwoFactorChallenge(targetEmail);
     return { success: true, challenge: newChallenge };
   },
 
@@ -492,6 +521,7 @@ export const authService = {
    * Save session to storage and set active API token
    */
   setAdminSession(session: AuthSession): void {
+    inMemorySession = { ...session };
     if (typeof window !== 'undefined') {
       localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
     }
@@ -503,6 +533,7 @@ export const authService = {
    */
   async logoutAdmin(): Promise<void> {
     const session = this.getAdminSession();
+    inMemorySession = null;
     if (session?.token) {
       try {
         await apiClient.post('/auth/logout', {});

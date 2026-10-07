@@ -60,13 +60,17 @@ export class OTPService {
     // Enforce Resend Cooldown
     if (existingChallengeId) {
       const existing = this.challenges.get(existingChallengeId);
-      if (existing && !existing.consumed && Date.now() < existing.resendAvailableAt) {
+      if (existing && Date.now() < existing.resendAvailableAt) {
         const secondsLeft = Math.ceil((existing.resendAvailableAt - Date.now()) / 1000);
         return {
           success: false,
           error: `Resend cooldown active. Please wait ${secondsLeft} second(s) before requesting a new code.`,
           secondsLeft,
         };
+      }
+      if (existing) {
+        // Invalidate previous challenge upon issuing a fresh challenge
+        existing.consumed = true;
       }
     }
 
@@ -145,7 +149,15 @@ export class OTPService {
     }
 
     if (challenge.consumed) {
-      return { valid: false, error: 'This verification code has already been used. Please request a new code.' };
+      const isLocked = challenge.attempts >= challenge.maxAttempts;
+      return { 
+        valid: false, 
+        error: isLocked
+          ? 'Maximum verification attempts exceeded. For security, this code has been invalidated. Please request a new code.'
+          : 'This verification code has already been used. Please request a new code.',
+        locked: isLocked,
+        remainingAttempts: 0
+      };
     }
 
     // Check expiration
@@ -208,6 +220,16 @@ export class OTPService {
       return Boolean(config.whatsapp.apiKey && config.whatsapp.phoneNumberId);
     }
     return false;
+  }
+
+  /**
+   * Explicitly invalidate an existing challenge
+   */
+  public invalidateChallenge(challengeId: string): void {
+    const ch = this.challenges.get(challengeId);
+    if (ch) {
+      ch.consumed = true;
+    }
   }
 
   /**

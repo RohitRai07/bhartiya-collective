@@ -125,6 +125,7 @@ export class AuthController {
       if (existing) {
         recipient = existing.recipient;
         channel = existing.channel;
+        otpService.invalidateChallenge(challengeId);
       }
     }
 

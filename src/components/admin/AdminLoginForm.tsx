@@ -140,15 +140,16 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
 
     setLoading(true);
     setErrorMessage(null);
-    setIsLocked(false);
-    setIsExpired(false);
-    setRemainingAttempts(null);
 
     try {
       const result = await authService.resendTwoFactorOtp(challenge.challengeId);
       if (result.success && result.challenge) {
         setChallenge(result.challenge);
         setTwoFactorCode('');
+        setIsLocked(false);
+        setIsExpired(false);
+        setRemainingAttempts(null);
+        setErrorMessage(null);
         startCountdown(60);
       } else {
         setErrorMessage(result.error || 'Failed to dispatch a new verification code.');
@@ -334,17 +335,62 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
                 </div>
               )}
 
-              {isExpired && (
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-center space-x-2">
-                  <Clock className="w-4 h-4 shrink-0 text-amber-400" />
-                  <span>This verification code has expired. Please click "Resend Code" below.</span>
+              {isExpired && !isLocked && (
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="w-4 h-4 shrink-0 text-amber-400" />
+                    <span>This verification code has expired. Please request a new code.</span>
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleResendCode}
+                      disabled={loading || countdown > 0}
+                      className="w-full py-2 px-3 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-500 text-white transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                      <span>
+                        {loading 
+                          ? 'Generating New OTP...' 
+                          : countdown > 0 
+                            ? `Request New OTP (${countdown}s)` 
+                            : 'Request New OTP'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               )}
 
               {isLocked && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 flex items-center space-x-2">
-                  <ShieldAlert className="w-4 h-4 shrink-0 text-rose-400" />
-                  <span>Maximum verification attempts exceeded. Please request a fresh verification code.</span>
+                <div className="p-4 rounded-xl bg-rose-500/15 border border-rose-500/40 text-xs text-rose-200 space-y-3">
+                  <div className="flex items-start space-x-2.5">
+                    <ShieldAlert className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
+                    <div className="space-y-1">
+                      <div className="font-semibold text-rose-200 text-sm">
+                        Maximum verification attempts exceeded.
+                      </div>
+                      <p className="text-rose-300/90 text-xs">
+                        This verification code has been locked for security. You can request a fresh verification code to proceed.
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleResendCode}
+                      disabled={loading || countdown > 0}
+                      className="w-full py-2.5 px-4 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-md transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                      <span>
+                        {loading 
+                          ? 'Generating New OTP...' 
+                          : countdown > 0 
+                            ? `Request New OTP (${countdown}s)` 
+                            : 'Request New OTP'}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -403,7 +449,9 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                     <span>
-                      {countdown > 0 ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
+                      {countdown > 0 
+                        ? `Resend OTP in ${countdown}s` 
+                        : isLocked ? 'Request New OTP' : 'Resend OTP'}
                     </span>
                   </button>
                 </div>

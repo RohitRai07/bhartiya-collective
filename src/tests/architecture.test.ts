@@ -740,6 +740,26 @@ async function runTests() {
   const lockedRes = await authService.completeTwoFactorLogin(fakeId, '000000');
   assert(lockedRes.locked === true || lockedRes.success === false, 'Challenge locks or denies after max invalid attempts');
 
+  // Test Cooldown active on locked challenge
+  const earlyResend = await authService.resendTwoFactorOtp(fakeId);
+  assert(earlyResend.success === false && typeof earlyResend.secondsLeft === 'number', 'Resend cooldown enforced while active on locked challenge');
+
+  // Test Self-Service Recovery: Request New OTP after cooldown
+  (testChan as any).resendAvailableAt = Date.now() - 1000;
+  const newChanResult = await authService.resendTwoFactorOtp(fakeId);
+  assert(newChanResult.success === true && !!newChanResult.challenge, 'Request New OTP succeeds after cooldown without developer intervention');
+  assert(newChanResult.challenge!.challengeId !== fakeId, 'New OTP challenge receives completely distinct challenge ID');
+  assert(newChanResult.challenge!.attempts === 0, 'New challenge resets verification attempt counter to 0');
+
+  // Test Old Challenge is permanently invalidated
+  const oldChanVerify = await authService.completeTwoFactorLogin(fakeId, '111111');
+  assert(oldChanVerify.success === false, 'Invalidated old challenge rejects verification attempts');
+
+  // Test New Challenge can be verified with fresh OTP / development fallback
+  const freshVerify = await authService.completeTwoFactorLogin(newChanResult.challenge!.challengeId, '111111');
+  assert(freshVerify.success === true && !!freshVerify.session, 'New challenge verifies successfully and creates session');
+  assert(authService.isAdminAuthenticated() === true, 'Admin is successfully authenticated after recovery');
+
   // Test Admin Logout
   await authService.logoutAdmin();
   assert(authService.getAdminSession() === null, 'Admin logout removes session and clears auth token');
