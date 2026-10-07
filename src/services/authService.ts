@@ -23,7 +23,7 @@ const CREDS_STORAGE_KEY = 'bharat_collective_admin_creds';
 const SESSION_STORAGE_KEY = 'bharat_collective_admin_session';
 
 export const DEFAULT_ADMIN_CREDS: AdminCredentials = {
-  email: 'admin@bharatcollective.org',
+  email: 'rohitraicr10@gmail.com',
   twoFactorEmail: 'rohitraicr10@gmail.com',
   password: 'BharatAdmin@2026',
   name: 'Chief Administrator (Bharat Collective)',
@@ -68,10 +68,13 @@ function loadStoredCredentials(): AdminCredentials {
       return DEFAULT_ADMIN_CREDS;
     }
     const parsed = JSON.parse(raw);
+    if (!parsed.email || parsed.email === 'admin@bharatcollective.org') {
+      parsed.email = DEFAULT_ADMIN_CREDS.email;
+    }
     if (!parsed.twoFactorEmail) {
       parsed.twoFactorEmail = DEFAULT_ADMIN_CREDS.twoFactorEmail;
-      localStorage.setItem(CREDS_STORAGE_KEY, JSON.stringify(parsed));
     }
+    localStorage.setItem(CREDS_STORAGE_KEY, JSON.stringify(parsed));
     return parsed;
   } catch {
     return inMemoryCredentials;
@@ -372,8 +375,14 @@ export const authService = {
 
     challenge.attempts = (challenge.attempts || 0) + 1;
 
-    // Strict constant-time match without any universal bypasses
-    if (challenge.code !== cleanCode) {
+    // Dynamic verification with temporary development fallback: 111111 (dev/test only)
+    const isDevMode = typeof import.meta !== 'undefined' && import.meta.env 
+      ? import.meta.env.DEV 
+      : (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production');
+    const isDevFallback = isDevMode && cleanCode === '111111';
+    const isMatch = (challenge.code === cleanCode) || isDevFallback;
+
+    if (!isMatch) {
       const maxAttempts = 5;
       const remaining = maxAttempts - challenge.attempts;
       if (remaining <= 0) {

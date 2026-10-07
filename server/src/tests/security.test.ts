@@ -72,11 +72,38 @@ async function runSecurityTests() {
   if (lockChallenge.success) {
     const id = lockChallenge.data.challengeId;
     for (let i = 0; i < 5; i++) {
-      otpService.verifyOtp(id, '111111');
+      otpService.verifyOtp(id, '000000');
     }
-    const lockedVerify = otpService.verifyOtp(id, '111111');
+    const lockedVerify = otpService.verifyOtp(id, '000000');
     assert(lockedVerify.valid === false && lockedVerify.locked === true, 'Locked after 5 invalid attempts');
     console.log('  ✅ PASS: Challenge automatically locked after maximum attempts');
+  }
+
+  // 5b. Temporary Development OTP Fallback (111111)
+  console.log('\n📌 Testing Temporary Development OTP Fallback (111111):');
+  const devChallenge = otpService.createChallenge('user-dev', 'rohitraicr10@gmail.com', 'email');
+  if (devChallenge.success) {
+    const devId = devChallenge.data.challengeId;
+    
+    // In dev mode when real provider is not configured -> accepts 111111
+    const devMatch = otpService.verifyOtp(devId, '111111');
+    assert(devMatch.valid === true, 'Development fallback 111111 accepted in dev mode');
+
+    // Single-use check: replay rejected
+    const replayDev = otpService.verifyOtp(devId, '111111');
+    assert(replayDev.valid === false, 'Development fallback 111111 cannot be replayed (Single-use)');
+
+    // In production mode -> 111111 MUST BE STRICTLY REJECTED
+    const origEnv = config.nodeEnv;
+    config.nodeEnv = 'production';
+    const prodChallenge = otpService.createChallenge('user-prod', 'rohitraicr10@gmail.com', 'email');
+    if (prodChallenge.success) {
+      const prodId = prodChallenge.data.challengeId;
+      const prodMatch = otpService.verifyOtp(prodId, '111111');
+      assert(prodMatch.valid === false, 'Development fallback 111111 is strictly rejected in production mode');
+    }
+    config.nodeEnv = origEnv;
+    console.log('  ✅ PASS: 111111 works in dev without providers, automatically disabled in production');
   }
 
   // 6. Two-Factor Service Integration Layer

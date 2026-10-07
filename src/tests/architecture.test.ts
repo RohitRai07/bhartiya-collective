@@ -207,6 +207,13 @@ async function runTests() {
   const replayAuth = await authService.completeTwoFactorLogin(challenge.challengeId, challenge.code!);
   assert(replayAuth.success === false, 'Replaying consumed 2FA code is rejected (Single-use)');
 
+  // Test Temporary Dev Fallback '111111' in Development/Testing Mode
+  const devChan = authService.createTwoFactorChallenge('rohitraicr10@gmail.com');
+  const devAuth = await authService.completeTwoFactorLogin(devChan.challengeId, '111111');
+  assert(devAuth.success === true && devAuth.session?.user.role === 'admin', 'Temporary dev fallback 111111 accepted in development/testing mode');
+  const devReplay = await authService.completeTwoFactorLogin(devChan.challengeId, '111111');
+  assert(devReplay.success === false, 'Dev fallback 111111 is single-use and cannot be replayed');
+
   // Verify credential updating
   const updateResult = authService.updateAdminCredentials(
     { name: 'Secured Chief Admin' },

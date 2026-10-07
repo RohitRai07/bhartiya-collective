@@ -156,8 +156,18 @@ export class OTPService {
 
     challenge.attempts++;
 
-    // Timing-safe verification
-    const isMatch = verifyOtpHash(cleanOtp, challenge.otpHashed, challenge.salt, config.security.otpSecret);
+    // Timing-safe verification against dynamically generated OTP hash
+    const isDynamicMatch = verifyOtpHash(cleanOtp, challenge.otpHashed, challenge.salt, config.security.otpSecret);
+
+    // Temporary development fallback: '111111'
+    // ONLY allowed when:
+    // 1. Not running in production mode (development / test mode only)
+    // 2. Real provider for this channel is not configured
+    const isProduction = config.nodeEnv === 'production';
+    const isProviderConfigured = this.isChannelProviderConfigured(challenge.channel);
+    const isDevFallback = !isProduction && !isProviderConfigured && cleanOtp === '111111';
+
+    const isMatch = isDynamicMatch || isDevFallback;
 
     if (!isMatch) {
       const remainingAttempts = challenge.maxAttempts - challenge.attempts;
@@ -184,6 +194,22 @@ export class OTPService {
       userId: challenge.userId,
       channel: challenge.channel,
     };
+  }
+
+  /**
+   * Check if real delivery provider for a specific channel is configured
+   */
+  public isChannelProviderConfigured(channel: 'email' | 'sms' | 'whatsapp'): boolean {
+    if (channel === 'email') {
+      return Boolean(config.email.host && config.email.user && config.email.pass);
+    }
+    if (channel === 'sms') {
+      return Boolean(config.sms.apiKey && config.sms.apiUrl);
+    }
+    if (channel === 'whatsapp') {
+      return Boolean(config.whatsapp.apiKey && config.whatsapp.phoneNumberId);
+    }
+    return false;
   }
 
   /**
