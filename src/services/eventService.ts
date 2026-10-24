@@ -42,6 +42,8 @@ function loadStoredEvents(): EventItem[] {
     }
     const parsed: EventItem[] = JSON.parse(raw);
     let needsUpdate = false;
+    const todayStr = new Date().toISOString().split('T')[0];
+
     const migrated = parsed.map(evt => {
       let updatedEvt = { ...evt };
       const defaultEvt = mockEvents.find(m => m.id === evt.id);
@@ -55,12 +57,40 @@ function loadStoredEvents(): EventItem[] {
         updatedEvt.bannerImage = getYouTubeThumbnail('5qap5aO4i9A');
         needsUpdate = true;
       }
+      if (updatedEvt.id === 'evt-live-ucc-broadcast') {
+        if (updatedEvt.date !== todayStr) {
+          updatedEvt.date = todayStr;
+          needsUpdate = true;
+        }
+        if (updatedEvt.liveStatus !== 'live') {
+          updatedEvt.liveStatus = 'live';
+          needsUpdate = true;
+        }
+        if (updatedEvt.status !== 'published') {
+          updatedEvt.status = 'published';
+          needsUpdate = true;
+        }
+      }
       if (updatedEvt.youtubeUrl && !updatedEvt.youtubeId) {
         updatedEvt.youtubeId = extractYouTubeId(updatedEvt.youtubeUrl);
         needsUpdate = true;
       }
       return updatedEvt;
     });
+
+    // Ensure all seeded mock events (like the YouTube Live broadcast) exist for returning visitors
+    for (const defaultEvt of mockEvents) {
+      if (!migrated.some(e => e.id === defaultEvt.id)) {
+        migrated.unshift({
+          ...defaultEvt,
+          date: defaultEvt.id === 'evt-live-ucc-broadcast' ? todayStr : defaultEvt.date,
+          liveStatus: defaultEvt.id === 'evt-live-ucc-broadcast' ? 'live' : defaultEvt.liveStatus,
+          status: defaultEvt.status || 'published',
+          youtubeId: defaultEvt.youtubeId || (defaultEvt.youtubeUrl ? extractYouTubeId(defaultEvt.youtubeUrl) : undefined),
+        });
+        needsUpdate = true;
+      }
+    }
     if (needsUpdate) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
     }

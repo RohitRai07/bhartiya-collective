@@ -56,7 +56,9 @@ export const LiveEventWatchModal: React.FC<LiveEventWatchModalProps> = ({
         // 5: HTML5 player error
         // 100: Video not found / removed
         // 101 or 150: Video owner does not permit playback in embedded players
-        if (data && (data.event === 'onError' || typeof data.info === 'number')) {
+        // Note: Do NOT match data.info on regular 'infoDelivery' events because
+        // info: 2 represents YT.PlayerState.PAUSED and info: 5 represents YT.PlayerState.CUED
+        if (data && data.event === 'onError') {
           const code = Number(data.info);
           if (code === 101 || code === 150 || code === 100 || code === 2 || code === 5) {
             setErrorCode(code);
