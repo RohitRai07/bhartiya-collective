@@ -3,12 +3,8 @@ import { adminController } from '../controllers/admin.controller';
 import { authenticateAdmin } from '../middleware/auth.middleware';
 import { adminApiRateLimiter } from '../middleware/rateLimit.middleware';
 import { validateFileUpload } from '../middleware/validation.middleware';
-import { checkAdminPortalEnabled } from '../middleware/adminGuard.middleware';
 
 const router = Router();
-
-// 0. Enforce Admin Portal availability master gate
-router.use(checkAdminPortalEnabled);
 
 // Apply administrative authentication and rate limiting to all /api/admin/* endpoints
 router.use(adminApiRateLimiter);

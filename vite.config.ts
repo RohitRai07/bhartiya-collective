@@ -5,7 +5,7 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/',
+  base: process.env.GITHUB_ACTIONS === 'true' ? '/bhartiya-collective/' : (process.env.VITE_BASE_PATH || '/'),
   plugins: [
     react(),
     tailwindcss(),

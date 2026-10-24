@@ -274,7 +274,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                     </button>
                   </li>
                 ))}
-              <li className={features.adminPanel ? "pt-2" : "hidden"} style={{ display: features.adminPanel ? undefined : 'none' }}>
+              <li className="pt-2">
                 <button
                   type="button"
                   onClick={() => onNavigate('/admin')}
@@ -299,12 +299,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <button
               type="button"
               onClick={() => onNavigate('/admin')}
-              className={features.adminPanel ? "text-slate-500 hover:text-slate-400 text-[11px] cursor-pointer" : "hidden"}
-              style={{ display: features.adminPanel ? undefined : 'none' }}
+              className="text-slate-500 hover:text-slate-400 text-[11px] cursor-pointer"
             >
               Admin Access
             </button>
-            <span className={features.adminPanel ? "text-slate-700" : "hidden"}>|</span>
+            <span className="text-slate-700">|</span>
             <span className="text-slate-400">Non-Partisan & Open-Access</span>
           </div>
         </div>
