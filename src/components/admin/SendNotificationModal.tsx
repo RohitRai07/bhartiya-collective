@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { NotificationRecipient } from '../../types/notification';
 import { backendNotificationService } from '../../services/backendNotificationService';
+import { ContactDetailsSection } from './ContactDetailsSection';
 
 export interface TemplateOption {
   id: string;
@@ -69,6 +70,16 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'warning'; text: string } | null>(null);
 
+  // Manual additional contacts state
+  const [showAdditionalContacts, setShowAdditionalContacts] = useState(false);
+  const [additionalContactsData, setAdditionalContactsData] = useState<{
+    emails: any;
+    phones: any;
+    allValid: boolean;
+    recipients: NotificationRecipient[];
+    channels: { email: boolean; sms: boolean; whatsapp: boolean };
+  } | null>(null);
+
   const availableTemplates = templateOptions.length > 0 ? templateOptions : DEFAULT_GLOBAL_TEMPLATES;
 
   useEffect(() => {
@@ -77,6 +88,8 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
       setMessage(defaultMessage);
       setSelectedTemplate(defaultTemplateId || (availableTemplates.length > 0 ? availableTemplates[0].id : 'CUSTOM'));
       setFeedback(null);
+      setShowAdditionalContacts(false);
+      setAdditionalContactsData(null);
     }
   }, [isOpen, defaultSubject, defaultMessage, defaultTemplateId, availableTemplates]);
 
@@ -156,7 +169,20 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
       return;
     }
 
-    if (!window.confirm(`Are you sure you want to dispatch this notification to ${recipients.length} recipient(s)? This will update notification history across all modules.`)) {
+    const extraRecipients = (showAdditionalContacts && additionalContactsData?.recipients) ? additionalContactsData.recipients : [];
+    const combinedRecipients = [...recipients, ...extraRecipients];
+
+    if (combinedRecipients.length === 0) {
+      setFeedback({ type: 'error', text: 'Please specify at least one recipient or enter contact details.' });
+      return;
+    }
+
+    if (showAdditionalContacts && additionalContactsData && !additionalContactsData.allValid) {
+      setFeedback({ type: 'error', text: 'Sending disabled: All additional entered contacts must pass validation without errors or duplicates.' });
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to dispatch this notification to ${combinedRecipients.length} recipient(s)? This will update notification history across all modules.`)) {
       return;
     }
 
@@ -176,7 +202,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
       };
 
       const result: any = await backendNotificationService.broadcast(
-        recipients.map(r => ({
+        combinedRecipients.map(r => ({
           ...r,
           id: r.id || Date.now().toString(),
           sourceModule: r.sourceModule || sourceModule || 'general',
@@ -192,7 +218,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
 
       setFeedback({ 
         type: 'success', 
-        text: `Message successfully dispatched to ${recipients.length} recipient(s). [${statusNote}]` 
+        text: `Message successfully dispatched to ${combinedRecipients.length} recipient(s). [${statusNote}]` 
       });
       
       if (onSuccess) onSuccess();
@@ -257,6 +283,43 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
             <span className="px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 font-mono text-[11px] font-bold">
               {recipients.length}
             </span>
+          </div>
+
+          {/* Expandable Manual / Direct Contact Details Entry */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50">
+            <button
+              type="button"
+              onClick={() => setShowAdditionalContacts(!showAdditionalContacts)}
+              className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center space-x-2">
+                <Users className="w-3.5 h-3.5 text-amber-700" />
+                <span>
+                  {showAdditionalContacts 
+                    ? 'Hide Additional Direct Contact Entry' 
+                    : '+ Add / Paste Additional Contacts (Emails & Phones with +91)'}
+                </span>
+                {showAdditionalContacts && additionalContactsData && additionalContactsData.recipients.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold">
+                    +{additionalContactsData.recipients.length} Added
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] text-amber-800 font-semibold">
+                {showAdditionalContacts ? 'Collapse' : 'Expand'}
+              </span>
+            </button>
+
+            {showAdditionalContacts && (
+              <div className="p-3 bg-white border-t border-slate-200">
+                <ContactDetailsSection
+                  embedded={true}
+                  onValidatedContactsChange={(data) => {
+                    setAdditionalContactsData(data);
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Unsubscribe Compliance Warning */}
@@ -412,11 +475,20 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={sending || (selectedTemplate === 'CUSTOM' && !message.trim())}
+              disabled={
+                sending || 
+                (selectedTemplate === 'CUSTOM' && !message.trim()) ||
+                (showAdditionalContacts && additionalContactsData && !additionalContactsData.allValid) ||
+                (recipients.length === 0 && (!additionalContactsData || !additionalContactsData.allValid))
+              }
               className="inline-flex items-center space-x-1.5 px-5 py-2 rounded-xl text-xs font-semibold bg-amber-700 hover:bg-amber-800 disabled:opacity-50 text-white transition-colors shadow-sm cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>{sending ? 'Dispatching...' : `Dispatch to ${recipients.length} Recipient(s)`}</span>
+              <span>
+                {sending 
+                  ? 'Dispatching...' 
+                  : `Dispatch to ${recipients.length + (showAdditionalContacts && additionalContactsData?.recipients ? additionalContactsData.recipients.length : 0)} Recipient(s)`}
+              </span>
             </button>
           </div>
 

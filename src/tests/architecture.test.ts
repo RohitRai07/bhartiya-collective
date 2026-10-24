@@ -28,6 +28,16 @@ import { searchService } from '../services/searchService';
 import { centreService } from '../services/centreService';
 import { contactService } from '../services/contactService';
 import { centralizedNotificationService } from '../services/centralizedNotificationService';
+import { backendNotificationService } from '../services/backendNotificationService';
+import { 
+  validateAndFormatEmail, 
+  validateAndFormatPhoneNumber, 
+  parseEmailList, 
+  parsePhoneList,
+  organizeCleanLines,
+  deduplicateLines,
+  removeInvalidLines,
+} from '../services/contactValidation';
 import { MAX_CV_SIZE_BYTES } from '../types/career';
 import { UserRegistrationInput } from '../types/registration';
 
@@ -873,6 +883,150 @@ async function runTests() {
   const retryResult = await notificationService.retryFailedNotification(lastLog.id);
   assert(retryResult.success === true, 'Notification retry mechanism completes successfully');
   assert(typeof retryResult.log?.retryCount === 'number' && retryResult.log.retryCount >= 1, 'Retry counter increments cleanly on the unified record');
+
+  // 8. Contact Details Validation, Default +91 India Formatting, and Strict Sending Gate
+  console.log('\n📌 Testing Contact Details Validation, +91 Phone Formatting & Sending Gate:');
+
+  // A. Email Formatting & Validation
+  const validEmailRes = validateAndFormatEmail('  Admin.Scholar@bharatcollective.org  ');
+  assert(validEmailRes.isValid === true, 'Valid RFC email with uppercase and spaces is accepted');
+  assert(validEmailRes.formatted === 'admin.scholar@bharatcollective.org', 'Email formatted to clean lowercase');
+
+  const invalidEmailNoAt = validateAndFormatEmail('scholar.domain.com');
+  assert(invalidEmailNoAt.isValid === false, 'Email missing @ is rejected');
+  assert(invalidEmailNoAt.error?.includes('@') === true, 'Email error explains missing @ symbol');
+
+  const invalidEmailNoDomain = validateAndFormatEmail('scholar@');
+  assert(invalidEmailNoDomain.isValid === false, 'Email missing domain is rejected');
+
+  const invalidEmailShortTld = validateAndFormatEmail('scholar@domain.c');
+  assert(invalidEmailShortTld.isValid === false, 'Email with 1-character TLD is rejected');
+
+  // B. Phone Number Formatting & +91 Default India Country Code
+  // Case 1: 10 digits without country code -> gets +91 automatically
+  const p1 = validateAndFormatPhoneNumber('9876543210');
+  assert(p1.isValid === true, '10-digit Indian phone accepted');
+  assert(p1.formatted === '+91 9876543210', 'Default +91 automatically applied when country code is missing');
+  assert(p1.countryCode === '+91', 'Country code identified as +91');
+
+  // Case 2: Number with leading trunk 0 -> strips 0 and applies +91
+  const p2 = validateAndFormatPhoneNumber('09876543210');
+  assert(p2.isValid === true, 'Phone with leading trunk 0 accepted');
+  assert(p2.formatted === '+91 9876543210', 'Leading 0 stripped and default +91 applied without duplication');
+
+  // Case 3: 12-digit number starting with 91 -> formats without duplicate 91
+  const p3 = validateAndFormatPhoneNumber('919876543210');
+  assert(p3.isValid === true, '12-digit starting with 91 accepted');
+  assert(p3.formatted === '+91 9876543210', 'Existing 91 prefix detected; does not duplicate to +91 919876543210');
+
+  // Case 4: Already formatted with +91 -> preserved cleanly
+  const p4 = validateAndFormatPhoneNumber('+91 9876543210');
+  assert(p4.isValid === true, 'Already formatted +91 number accepted');
+  assert(p4.formatted === '+91 9876543210', 'Existing +91 retained without duplicating country code');
+
+  // Case 5: International country code -> preserved, does not add +91
+  const p5 = validateAndFormatPhoneNumber('+1 202 555 0199');
+  assert(p5.isValid === true, 'US international number accepted');
+  assert(p5.formatted.startsWith('+1'), 'International country code (+1) preserved; does not apply +91');
+  assert(!p5.formatted.includes('+91'), 'International number does not contain +91');
+
+  const pUK = validateAndFormatPhoneNumber('+44 20 7946 0919');
+  assert(pUK.isValid === true, 'UK international number accepted');
+  assert(pUK.formatted.startsWith('+44'), 'UK country code (+44) preserved without +91');
+
+  // Case 6: Invalid numbers rejected with clear reasons
+  const pShort = validateAndFormatPhoneNumber('98765');
+  assert(pShort.isValid === false, 'Short phone number rejected');
+  assert(pShort.error?.includes('digits') === true, 'Error explains minimum required digits');
+
+  const pLetters = validateAndFormatPhoneNumber('98765abcde');
+  assert(pLetters.isValid === false, 'Phone with alphabetic characters rejected');
+
+  // C. Multiline Parsing & Duplicate Identification with Line Cross-References
+  const emailBlock = `
+    contact1@bharatcollective.org
+    contact2@bharatcollective.org
+    contact1@bharatcollective.org
+    invalid-email-line
+  `;
+  const emailSummary = parseEmailList(emailBlock);
+  assert(emailSummary.totalCount === 4, 'Parses 4 total email lines');
+  assert(emailSummary.validCount === 2, 'Detects exactly 2 distinct valid email lines');
+  assert(emailSummary.duplicateCount === 1, 'Identifies exactly 1 duplicate email line');
+  assert(emailSummary.invalidCount === 1, 'Identifies exactly 1 invalid email line');
+  assert(emailSummary.hasErrors === true, 'hasErrors flag true when duplicate or invalid line exists');
+
+  // Check cross-reference line numbering
+  const dupEmailItem = emailSummary.items.find(i => i.isDuplicate);
+  assert(!!dupEmailItem && typeof dupEmailItem.duplicateOfLine === 'number', 'Duplicate item contains cross-reference line number');
+  assert(dupEmailItem?.duplicateOfLine === 1, 'Identifies Line 1 as original source of duplicate');
+
+  const phoneBlock = `
+    9876543210
+    9876543211
+    +91 9876543210
+    09876543210
+    12345
+  `;
+  const phoneSummary = parsePhoneList(phoneBlock);
+  assert(phoneSummary.totalCount === 5, 'Parses 5 total phone lines');
+  assert(phoneSummary.validCount === 2, 'Detects 2 distinct valid phone lines (9876543210 and 9876543211)');
+  assert(phoneSummary.duplicateCount === 2, 'Identifies both +91 and 0-prefixed variants as duplicates of Line 1');
+  assert(phoneSummary.invalidCount === 1, 'Identifies 5-digit number as invalid');
+
+  // D. Utility Operations (Organize, Deduplicate, Clear Invalid)
+  const organizedEmails = organizeCleanLines(emailBlock, 'email');
+  assert(organizedEmails.split('\n').length === 4, 'organizes lines with 1 line per entry');
+
+  const deduplicatedEmails = deduplicateLines(emailBlock, 'email');
+  const dedupSummary = parseEmailList(deduplicatedEmails);
+  assert(dedupSummary.duplicateCount === 0, 'Deduplicate lines eliminates duplicate occurrences');
+
+  const cleanedEmails = removeInvalidLines(emailBlock, 'email');
+  const cleanSummary = parseEmailList(cleanedEmails);
+  assert(cleanSummary.invalidCount === 0, 'Clear invalid lines removes syntax errors');
+
+  // E. Strict Validation Gate: Enable sending only when all entered contacts are valid
+  // If errors or duplicates exist, sending is blocked
+  const canSendWithErrors = !emailSummary.hasErrors && emailSummary.validCount > 0;
+  assert(canSendWithErrors === false, 'Strict Gate: Sending is blocked when invalid or duplicate lines exist');
+
+  const allCleanInput = `
+    scholar1@bharatcollective.org
+    scholar2@bharatcollective.org
+  `;
+  const cleanParsed = parseEmailList(allCleanInput);
+  const canSendClean = !cleanParsed.hasErrors && cleanParsed.validCount > 0;
+  assert(canSendClean === true, 'Strict Gate: Sending is enabled only when all entered contacts are valid');
+
+  // F. Cross-Module Automatic Notification on Career Status Change
+  const allCareers = careerService.getAll();
+  const testCandidate = allCareers[0];
+  assert(!!testCandidate, 'Test career candidate exists for auto-notification check');
+
+  const initialCandidateLogs = notificationService.getLogsForRecipient(testCandidate.id, testCandidate.email, testCandidate.phone);
+  const prevLogCount = initialCandidateLogs.length;
+
+  // Simulate auto-notification dispatching (as performed in handleCareerStatusChange when autoNotifyCareer is ON)
+  await backendNotificationService.sendNotification({
+    id: testCandidate.id,
+    name: testCandidate.fullName,
+    email: testCandidate.email,
+    phone: testCandidate.phone || '',
+    category: 'candidate',
+    sourceModule: 'career',
+    referenceCode: testCandidate.applicationCode,
+  }, 'CAREER_SHORTLISTED', {
+    name: testCandidate.fullName,
+    application_id: testCandidate.applicationCode,
+    status: 'shortlisted',
+    sourceModule: 'career',
+  }, 'all');
+
+  const updatedCandidateLogs = notificationService.getLogsForRecipient(testCandidate.id, testCandidate.email, testCandidate.phone);
+  assert(updatedCandidateLogs.length === prevLogCount + 1, 'Career status change auto-notification logs new entry');
+  assert(updatedCandidateLogs[0].sourceModule === 'career', 'Notification log preserves sourceModule="career"');
+  assert(updatedCandidateLogs[0].templateId === 'CAREER_SHORTLISTED', 'Notification log records correct templateId');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

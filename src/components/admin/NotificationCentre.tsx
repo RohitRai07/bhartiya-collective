@@ -40,7 +40,19 @@ import {
 } from '../../types/notification';
 import { centralizedNotificationService, CentralizedNotificationStats } from '../../services/centralizedNotificationService';
 import { notificationService, EmailGatewayConfig } from '../../services/notificationService';
+import { backendNotificationService } from '../../services/backendNotificationService';
+import { ContactDetailsSection } from './ContactDetailsSection';
 import { SendNotificationModal } from './SendNotificationModal';
+
+const COMPOSE_TEMPLATES = [
+  { id: 'CUSTOM', label: 'Custom Message (Compose Manually)' },
+  { id: 'ADMIN_NOTIFICATION', label: 'Official Secretariat Notice' },
+  { id: 'CAREER_UNDER_REVIEW', label: 'Career: Application Under Review' },
+  { id: 'CAREER_SHORTLISTED', label: 'Career: Application Shortlisted' },
+  { id: 'REGISTRATION_VERIFIED', label: 'Fellowship: Registration Verified' },
+  { id: 'CFP_UPDATE', label: 'Call for Papers: Abstract Review Update' },
+  { id: 'NEWSLETTER_DIGEST', label: 'Newsletter: Monograph & Digest Announcement' },
+];
 
 interface NotificationCentreProps {
   onNavigateToModule?: (tab: string, subTab?: string) => void;
@@ -50,7 +62,21 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
   onNavigateToModule,
 }) => {
   // Navigation sub-tabs inside Notification Centre
-  const [subTab, setSubTab] = useState<'directory' | 'logs' | 'gateway'>('directory');
+  const [subTab, setSubTab] = useState<'directory' | 'compose' | 'logs' | 'gateway'>('directory');
+
+  // Direct Compose & Contact Details State
+  const [composeTemplate, setComposeTemplate] = useState('CUSTOM');
+  const [composeSubject, setComposeSubject] = useState('Official Communication • Bharat Collective Foundation');
+  const [composeMessage, setComposeMessage] = useState('Namaste,\n\nWe are pleased to connect with you from the Bharat Collective Foundation.\n\nWarm regards,\nSecretariat • Bharat Collective Foundation');
+  const [composeValidatedData, setComposeValidatedData] = useState<{
+    emails: any;
+    phones: any;
+    allValid: boolean;
+    recipients: NotificationRecipient[];
+    channels: { email: boolean; sms: boolean; whatsapp: boolean };
+  } | null>(null);
+  const [composeDispatching, setComposeDispatching] = useState(false);
+  const [composeFeedback, setComposeFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Directory Data & Filtering
   const [recipients, setRecipients] = useState<AggregatedRecipient[]>([]);
@@ -276,6 +302,120 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
     }
   };
 
+  const handleComposeTemplateChange = (templateId: string) => {
+    setComposeTemplate(templateId);
+    switch (templateId) {
+      case 'ADMIN_NOTIFICATION':
+        setComposeSubject('Official Secretariat Notice • Bharat Collective Foundation');
+        setComposeMessage('Namaste,\n\nThis is an official administrative notice from the Bharat Collective Foundation Secretariat regarding our ongoing academic initiatives.\n\nWarm regards,\nSecretariat • Bharat Collective Foundation');
+        break;
+      case 'CAREER_UNDER_REVIEW':
+        setComposeSubject('Update on Your Application • Bharat Collective Foundation');
+        setComposeMessage('Namaste,\n\nYour application is currently under active review by our academic panel. We will communicate the next steps shortly.\n\nWarm regards,\nCareers Committee • Bharat Collective Foundation');
+        break;
+      case 'CAREER_SHORTLISTED':
+        setComposeSubject('Congratulations! Application Shortlisted • Bharat Collective');
+        setComposeMessage('Namaste,\n\nWe are pleased to inform you that your application has been shortlisted by the Review Committee. Our secretariat will connect with you soon regarding the schedule for your panel discussion.\n\nWarm regards,\nCareers Secretariat');
+        break;
+      case 'REGISTRATION_VERIFIED':
+        setComposeSubject('Fellowship Registration Status Verified • Bharat Collective');
+        setComposeMessage('Namaste,\n\nYour National Youth Scholar & Fellow registration has been verified by the Secretariat. You now have full access to our closed-door symposiums and policy monographs.\n\nWarm regards,\nAcademic Review Council');
+        break;
+      case 'CFP_UPDATE':
+        setComposeSubject('Scholarly Abstract Review Decision • Bharat Collective Call for Papers');
+        setComposeMessage('Namaste,\n\nWe are writing to provide an update on your manuscript abstract. The Editorial Committee has completed its initial peer review and invites you to submit the full draft.\n\nWarm regards,\nEditorial Secretariat');
+        break;
+      case 'NEWSLETTER_DIGEST':
+        setComposeSubject('New Research Monograph Published • Bharat Collective Foundation');
+        setComposeMessage('Namaste,\n\nWe are pleased to announce the release of our latest peer-reviewed policy monograph. You can now access the full digital edition on our portal.\n\nWarm regards,\nBharat Collective Secretariat');
+        break;
+      default:
+        // Keep current or custom
+        break;
+    }
+  };
+
+  const handleComposeDispatch = async (data?: {
+    recipients: NotificationRecipient[];
+    channels: { email: boolean; sms: boolean; whatsapp: boolean };
+    channel: NotificationChannel;
+  }) => {
+    const targetList = data?.recipients || composeValidatedData?.recipients || [];
+    const targetChannels = data?.channels || composeValidatedData?.channels || { email: true, sms: false, whatsapp: true };
+
+    if (targetList.length === 0) {
+      alert('No valid contacts to dispatch.');
+      return;
+    }
+
+    if (!composeSubject.trim() || !composeMessage.trim()) {
+      alert('Please provide both a subject and message content before dispatching.');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to dispatch this notification to ${targetList.length} contact(s)? All events will be recorded in the audit trail and synced across original modules.`)) {
+      return;
+    }
+
+    setComposeDispatching(true);
+    setComposeFeedback(null);
+
+    try {
+      // Map entered contacts against existing directory records for cross-module sync
+      const enrichedRecipients: NotificationRecipient[] = targetList.map((contact, idx) => {
+        // Find existing match by email or phone
+        const existing = recipients.find(r => 
+          (contact.email && r.email && r.email.toLowerCase() === contact.email.toLowerCase()) ||
+          (contact.phone && r.phone && r.phone.replace(/\D/g, '') === contact.phone.replace(/\D/g, ''))
+        );
+
+        return {
+          ...contact,
+          id: existing ? existing.id : contact.id || `direct-${Date.now()}-${idx}`,
+          name: existing ? existing.name : contact.name,
+          sourceModule: existing ? existing.sourceModule : 'general',
+          referenceCode: existing ? existing.referenceCode : undefined,
+          isSubscribed: existing ? existing.isSubscribed : true,
+          category: existing ? existing.sourceModule : 'custom',
+        };
+      });
+
+      // Dispatch via backendNotificationService broadcast
+      const result: any = await backendNotificationService.broadcast(
+        enrichedRecipients,
+        composeTemplate === 'CUSTOM' ? 'ADMIN_NOTIFICATION' : composeTemplate,
+        {
+          title: composeSubject,
+          subject: composeSubject,
+          message: composeMessage,
+          body: composeMessage,
+          sourceModule: 'notification-centre',
+        },
+        targetChannels
+      );
+
+      const statusNote = result?.status === 'delivered' 
+        ? 'Delivered through live gateway'
+        : 'Logged to audit trail (Simulation / Provider Pending Setup)';
+
+      setComposeFeedback({
+        type: 'success',
+        text: `Successfully dispatched notification to ${enrichedRecipients.length} contact(s). [${statusNote}]. Cross-module audit logs updated.`,
+      });
+
+      loadData();
+      window.dispatchEvent(new CustomEvent('bharat:notification-dispatched'));
+    } catch (err: any) {
+      console.error(err);
+      setComposeFeedback({
+        type: 'error',
+        text: err.message || 'Failed to dispatch notification to entered contacts.',
+      });
+    } finally {
+      setComposeDispatching(false);
+    }
+  };
+
   const getSourceBadge = (source: RecipientSourceModule) => {
     switch (source) {
       case 'career':
@@ -401,6 +541,18 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
           >
             <Users className="w-4 h-4" />
             <span>Recipients Directory ({filteredRecipients.length})</span>
+          </button>
+
+          <button
+            onClick={() => setSubTab('compose')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              subTab === 'compose'
+                ? 'bg-amber-800 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Send className="w-4 h-4" />
+            <span>Contact Details & Direct Dispatch</span>
           </button>
 
           <button
@@ -740,6 +892,144 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
                 <p>Try resetting filters or adjusting your search term.</p>
               </div>
             )}
+          </div>
+
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* SUB-TAB: CONTACT DETAILS & DIRECT DISPATCH */}
+      {/* ============================================================== */}
+      {subTab === 'compose' && (
+        <div className="space-y-6">
+          
+          {/* Feedback Banner */}
+          {composeFeedback && (
+            <div className={`p-4 rounded-2xl text-xs flex items-center justify-between border ${
+              composeFeedback.type === 'success'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                : 'bg-red-50 border-red-200 text-red-900'
+            }`}>
+              <div className="flex items-center space-x-2">
+                {composeFeedback.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                )}
+                <span className="font-semibold">{composeFeedback.text}</span>
+              </div>
+              <button
+                onClick={() => setComposeFeedback(null)}
+                className="p-1 hover:opacity-75 text-slate-500 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Section 1: Message Template & Content */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base flex items-center space-x-2">
+                  <FileText className="w-4 h-4 text-amber-700" />
+                  <span>1. Select Template & Message Content</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Choose an institutional template or compose a custom communication.
+                </p>
+              </div>
+
+              {/* Template Selector Dropdown */}
+              <div className="flex items-center space-x-2 text-xs">
+                <span className="text-slate-500 font-semibold hidden sm:inline">Template:</span>
+                <select
+                  value={composeTemplate}
+                  onChange={e => handleComposeTemplateChange(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500 text-xs cursor-pointer"
+                >
+                  {COMPOSE_TEMPLATES.map(tpl => (
+                    <option key={tpl.id} value={tpl.id}>{tpl.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  Subject / Heading:
+                </label>
+                <input
+                  type="text"
+                  value={composeSubject}
+                  onChange={e => setComposeSubject(e.target.value)}
+                  placeholder="Enter communication subject..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-slate-700 font-bold">
+                    Message Body:
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {composeMessage.length} chars • {composeMessage.split(/\s+/).filter(Boolean).length} words
+                  </span>
+                </div>
+                <textarea
+                  rows={4}
+                  value={composeMessage}
+                  onChange={e => setComposeMessage(e.target.value)}
+                  placeholder="Enter message body..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono leading-relaxed focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 resize-y"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2: Contact Details Section (Separate Email & Phone) */}
+          <ContactDetailsSection
+            onValidatedContactsChange={summary => setComposeValidatedData(summary)}
+            onDispatch={handleComposeDispatch}
+            isDispatching={composeDispatching}
+          />
+
+          {/* Action Bar */}
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div className="text-slate-600 space-y-0.5 text-center sm:text-left">
+              <div className="font-bold text-slate-800">
+                {composeValidatedData?.allValid ? (
+                  <span className="text-emerald-700 inline-flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Ready to dispatch to {composeValidatedData.recipients.length} validated contact(s)</span>
+                  </span>
+                ) : (
+                  <span className="text-amber-700 inline-flex items-center space-x-1.5">
+                    <AlertCircle className="w-4 h-4 text-amber-600" />
+                    <span>Sending disabled until all entered contacts pass strict validation</span>
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Automatic +91 applied to phone numbers without country code. All events logged and synced across modules.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={!composeValidatedData?.allValid || composeDispatching || !composeSubject.trim() || !composeMessage.trim()}
+              onClick={() => handleComposeDispatch()}
+              className="w-full sm:w-auto px-6 py-3 bg-amber-700 hover:bg-amber-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-xs flex items-center justify-center space-x-2 transition-all cursor-pointer"
+            >
+              <Send className="w-4 h-4" />
+              <span>
+                {composeDispatching 
+                  ? 'Dispatching Communications...' 
+                  : `Dispatch Notification (${composeValidatedData?.recipients.length || 0} Contacts)`}
+              </span>
+            </button>
           </div>
 
         </div>

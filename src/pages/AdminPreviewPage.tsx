@@ -11,6 +11,7 @@ import { researchService } from '../services/researchService';
 import { expertService } from '../services/expertService';
 import { newsService } from '../services/newsService';
 import { notificationService } from '../services/notificationService';
+import { backendNotificationService } from '../services/backendNotificationService';
 import { registrationCsvExporter } from '../export/registrationCsvExporter';
 
 import { UserRegistrationRecord } from '../types/registration';
@@ -396,6 +397,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       email: record.email,
       phone: record.phoneNumber?.fullFormatted || '',
       category: 'candidate',
+      sourceModule: 'registration',
+      referenceCode: record.registrationNumber,
     }]);
     setNotifyDefaultSubject(`Important Update Regarding Application ${record.registrationNumber}`);
     setNotifyDefaultMessage(`Namaste ${record.firstName},\n\nWe are writing from the Bharat Collective Foundation regarding your application (${record.registrationNumber}).\n\nWarm regards,\nAcademic Review Secretariat`);
@@ -410,6 +413,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       email: r.email,
       phone: r.phoneNumber?.fullFormatted || '',
       category: 'candidate',
+      sourceModule: 'registration',
+      referenceCode: r.registrationNumber,
     })));
     setNotifyDefaultSubject('Official Announcement: Bharat Collective Foundation');
     setNotifyDefaultMessage('Namaste,\n\nWe are pleased to share an update with you regarding our research colloquium and publications.\n\nWarm regards,\nBharat Collective Secretariat');
@@ -423,6 +428,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       email: s.email,
       phone: '',
       category: 'subscriber',
+      sourceModule: 'newsletter',
     })));
     setNotifyDefaultSubject('Bharat Collective Research Digest • Monthly Monograph Release');
     setNotifyDefaultMessage('Namaste,\n\nOur latest policy monograph is now published and accessible on our portal. We invite you to read the executive abstract and engage with our civilizational inquiry.\n\nWarm regards,\nEditorial Secretariat');
@@ -485,6 +491,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       email: sub.authorEmail,
       phone: '',
       category: 'candidate',
+      sourceModule: 'submission',
+      referenceCode: sub.submissionCode,
     }]);
     setNotifyDefaultSubject(`Update on Your Manuscript Submission: ${sub.submissionCode}`);
     setNotifyDefaultMessage(`Dear ${sub.authorName},\n\nWe have reviewed your abstract "${sub.paperTitle}" (Code: ${sub.submissionCode}).\n\nYour current review status is: ${sub.status.toUpperCase().replace(/_/g, ' ')}.\n\nWarm regards,\nEditorial Review Board\nBharat Collective Foundation`);
@@ -555,6 +563,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         email: s.email,
         phone: '',
         category: 'subscriber',
+        sourceModule: 'newsletter',
       })));
       setNotifyDefaultSubject(`New Update: ${title} • Bharat Collective`);
       setNotifyDefaultMessage(`Namaste,\n\nWe have just released an important update on our portal: "${title}".\n\nVisit the Bharat Collective Foundation portal to read the full brief and engage with our scholars.\n\nWarm regards,\nBharat Collective Secretariat`);
@@ -790,9 +799,41 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   // Career Handlers
   const handleCareerStatusChange = (id: string, newStatus: CareerApplicationStatus) => {
     careerService.updateStatus(id, newStatus);
-    setCareerApplications(careerService.getAll());
+    const updated = careerService.getAll();
+    setCareerApplications(updated);
     if (viewingCareerRecord && viewingCareerRecord.id === id) {
       setViewingCareerRecord({ ...viewingCareerRecord, status: newStatus });
+    }
+
+    if (autoNotifyCareer) {
+      const app = updated.find(a => a.id === id);
+      if (app) {
+        const templateMap: Record<string, string> = {
+          'shortlisted': 'CAREER_SHORTLISTED',
+          'rejected': 'CAREER_REJECTED',
+          'selected': 'CAREER_SELECTED',
+          'reviewing': 'CAREER_UNDER_REVIEW',
+          'pending': 'CAREER_UNDER_REVIEW',
+        };
+        const templateId = templateMap[newStatus] || 'CAREER_UNDER_REVIEW';
+        backendNotificationService.sendNotification({
+          id: app.id,
+          name: app.fullName,
+          email: app.email,
+          phone: app.phone || '',
+          category: 'candidate',
+          sourceModule: 'career',
+          referenceCode: app.applicationCode,
+        }, templateId, {
+          name: app.fullName,
+          job_title: (app as any).position || app.areaOfInterest,
+          application_id: app.applicationCode,
+          status: newStatus,
+          sourceModule: 'career',
+        }, 'all').then(() => {
+          window.dispatchEvent(new CustomEvent('bharat:notification-dispatched'));
+        }).catch(err => console.error('Failed to auto-notify career applicant:', err));
+      }
     }
   };
 
@@ -830,7 +871,9 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       name: app.fullName,
       email: app.email,
       phone: app.phone || '',
-      category: 'candidate'
+      category: 'candidate',
+      sourceModule: 'career',
+      referenceCode: app.applicationCode,
     }]);
     setNotifyTemplateOptions(templateOptions);
     setNotifyDefaultTemplateId(currentTemplate);
@@ -867,7 +910,9 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       name: app.fullName,
       email: app.email,
       phone: app.phone || '',
-      category: 'candidate'
+      category: 'candidate',
+      sourceModule: 'career',
+      referenceCode: app.applicationCode,
     })));
     setNotifyTemplateOptions(templateOptions);
     setNotifyDefaultTemplateId('CAREER_UNDER_REVIEW');
