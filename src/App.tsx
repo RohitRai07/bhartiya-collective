@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { featureConfig, FeatureFlags } from './config/featureConfig';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -44,6 +45,16 @@ function getPathFromHash(): string {
 
 export function App() {
   const [currentPath, setCurrentPath] = useState<string>(() => getInitialPath());
+  const [features, setFeatures] = useState<FeatureFlags>(() => featureConfig.get());
+
+  // Listen to feature flag changes reactively
+  useEffect(() => {
+    const onFeatureChange = () => {
+      setFeatures(featureConfig.get());
+    };
+    window.addEventListener('bhartiya:feature-change', onFeatureChange);
+    return () => window.removeEventListener('bhartiya:feature-change', onFeatureChange);
+  }, []);
 
   // Listen to hash changes safely without causing reload loops
   useEffect(() => {
@@ -89,8 +100,18 @@ export function App() {
     }
   }, []);
 
-  // Isolated Admin Portal Route (Protected by Admin Credentials)
-  if (currentPath === '/admin' || currentPath === '/admin/login') {
+  // When Admin Portal is temporarily disabled, redirect any /admin attempt to public home
+  useEffect(() => {
+    if (!features.adminPanel && (currentPath === '/admin' || currentPath === '/admin/login')) {
+      if (window.location.hash === '#/admin' || window.location.hash === '#/admin/login') {
+        window.location.hash = '#/';
+      }
+      setCurrentPath('/');
+    }
+  }, [features.adminPanel, currentPath]);
+
+  // Isolated Admin Portal Route (Protected by Feature Flag & Admin Credentials)
+  if (features.adminPanel && (currentPath === '/admin' || currentPath === '/admin/login')) {
     return (
       <ErrorBoundary>
         <AdminPreviewPage onBackToPublicSite={() => navigateTo('/')} />

@@ -4,6 +4,7 @@ import { hashPassword, verifyPassword, generateSecureOtp, signJwtToken, verifyJw
 import { otpService } from '../services/otp.service';
 import { twoFactorService } from '../services/twoFactor.service';
 import { sessionService, SessionUser } from '../services/session.service';
+import { checkAdminPortalEnabled } from '../middleware/adminGuard.middleware';
 import { app } from '../index';
 
 async function runSecurityTests() {
@@ -168,6 +169,36 @@ async function runSecurityTests() {
   assert(nonAdminCheck.payload?.role === 'user', 'Non-admin user has role = user');
 
   console.log('  ✅ PASS: Backend authorization distinguishes Admin vs Non-Admin and 2FA verified states');
+
+  // 9. Admin Portal Temporary Lockdown Guard Middleware
+  console.log('\n📌 Testing Admin Portal Temporary Lockdown Guard:');
+  const mockReq = {} as any;
+  let blockedStatus = 0;
+  let blockedJson: any = null;
+  const mockRes = {
+    status: (s: number) => {
+      blockedStatus = s;
+      return {
+        json: (data: any) => { blockedJson = data; }
+      };
+    }
+  } as any;
+  let nextCalled = false;
+  const mockNext = () => { nextCalled = true; };
+
+  // When disabled:
+  config.adminPortalEnabled = false;
+  checkAdminPortalEnabled(mockReq, mockRes, mockNext);
+  assert(blockedStatus === 503, 'Returns 503 when admin portal is disabled');
+  assert(blockedJson?.code === 'ADMIN_PORTAL_DISABLED', 'Returns ADMIN_PORTAL_DISABLED error code');
+  assert(nextCalled === false, 'Blocks progression through router middleware');
+
+  // When enabled:
+  config.adminPortalEnabled = true;
+  nextCalled = false;
+  checkAdminPortalEnabled(mockReq, mockRes, mockNext);
+  assert(nextCalled === true, 'Allows request progression when admin portal is enabled');
+  console.log('  ✅ PASS: Guard blocks with 503 when disabled and permits when enabled');
 
   console.log('\n====================================================');
   console.log('🎉 ALL BACKEND PRODUCTION SECURITY TESTS PASSED!');

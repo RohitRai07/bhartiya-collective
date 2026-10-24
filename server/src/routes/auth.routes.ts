@@ -3,8 +3,12 @@ import { authController } from '../controllers/auth.controller';
 import { authenticateAdmin } from '../middleware/auth.middleware';
 import { validateLoginInput, validateOtpInput } from '../middleware/validation.middleware';
 import { loginRateLimiter, otpRequestRateLimiter, otpVerifyRateLimiter } from '../middleware/rateLimit.middleware';
+import { checkAdminPortalEnabled } from '../middleware/adminGuard.middleware';
 
 const router = Router();
+
+// Enforce admin portal availability master gate on authentication endpoints
+router.use(checkAdminPortalEnabled);
 
 // Public Authentication Flow
 router.post('/login', loginRateLimiter, validateLoginInput, (req, res) => authController.login(req, res));

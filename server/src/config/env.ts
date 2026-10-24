@@ -10,6 +10,10 @@ export const config = {
   port: parseInt(process.env.PORT || '5000'),
   nodeEnv: process.env.NODE_ENV || 'development',
 
+  // Master switch for Admin Portal & Administrative APIs (Temporarily disabled for production launch)
+  // Set ENABLE_ADMIN_PORTAL=true in .env to unlock
+  adminPortalEnabled: process.env.ENABLE_ADMIN_PORTAL === 'true' || process.env.NODE_ENV === 'test',
+
   // Security Configuration
   security: {
     sessionSecret: process.env.SESSION_SECRET || 'bcf_prod_session_secret_2026_a98bf421cd879e612f04e1bc',

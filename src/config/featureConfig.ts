@@ -50,12 +50,20 @@ export interface FeatureFlags {
   flagshipBanner: boolean;
 }
 
+/**
+ * Master Switch for the Admin Portal
+ * 
+ * Set to FALSE to temporarily disable the Admin Portal for public production hosting.
+ * To re-enable when requested ("Enable Admin"), simply toggle this back to TRUE.
+ */
+export const IS_ADMIN_PORTAL_ENABLED = false;
+
 export const defaultFeatureConfig: FeatureFlags = {
   donations: true,
   userRegistration: true,
   newsletter: true,
   paymentIntegration: false,    // Payment gateway is NOT required currently (clean service boundary only)
-  adminPanel: false,            // Isolated from public website
+  adminPanel: IS_ADMIN_PORTAL_ENABLED, // Master Admin Portal gate (temporarily disabled)
   authentication: false,        // Deferred to future Phase 4
   callForPapers: true,
   events: true,
@@ -82,7 +90,11 @@ function loadStoredFeatures(): FeatureFlags {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...defaultFeatureConfig };
     const parsed = JSON.parse(raw);
-    return { ...defaultFeatureConfig, ...parsed };
+    return { 
+      ...defaultFeatureConfig, 
+      ...parsed, 
+      adminPanel: IS_ADMIN_PORTAL_ENABLED && (parsed.adminPanel ?? defaultFeatureConfig.adminPanel) 
+    };
   } catch {
     return { ...defaultFeatureConfig };
   }
@@ -119,6 +131,9 @@ export const featureConfig = {
    */
   update(newFlags: Partial<FeatureFlags>): FeatureFlags {
     currentFeatures = { ...currentFeatures, ...newFlags };
+    if (!IS_ADMIN_PORTAL_ENABLED) {
+      currentFeatures.adminPanel = false;
+    }
     saveFeatures(currentFeatures);
     // Notify listeners if needed
     if (typeof window !== 'undefined') {

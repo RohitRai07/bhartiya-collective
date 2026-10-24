@@ -467,7 +467,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
               <button
                 type="button"
                 onClick={() => handleLinkClick('/admin')}
-                className="text-amber-800 hover:text-amber-950 font-semibold underline cursor-pointer shrink-0"
+                style={{ display: features.adminPanel ? undefined : 'none' }}
+                className={features.adminPanel ? "text-amber-800 hover:text-amber-950 font-semibold underline cursor-pointer shrink-0" : "hidden"}
               >
                 Admin Portal
               </button>
