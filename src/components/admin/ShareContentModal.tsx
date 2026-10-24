@@ -94,16 +94,16 @@ export function ShareContentModal({ isOpen, onClose, contentTitle, contentUrl }:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between p-4 border-b border-slate-100">
+        <div className="flex items-center justify-between p-3.5 sm:p-4 border-b border-slate-100">
           <h2 className="text-lg font-serif font-bold text-slate-900">Share Content</h2>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-5 space-y-5 overflow-y-auto">
+        <div className="p-3.5 sm:p-5 space-y-4 sm:space-y-5 overflow-y-auto">
           <div>
             <div className="text-sm font-semibold text-slate-800 mb-1">Content:</div>
             <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 truncate">
@@ -111,7 +111,7 @@ export function ShareContentModal({ isOpen, onClose, contentTitle, contentUrl }:
             </div>
           </div>
 
-          <div className="flex bg-slate-100 p-1 rounded-lg">
+          <div className="flex flex-wrap sm:flex-nowrap bg-slate-100 p-1 rounded-xl gap-1">
             <button
               onClick={() => setShareMode('social')}
               className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${shareMode === 'social' ? 'bg-white shadow-xs text-amber-900' : 'text-slate-500 hover:text-slate-700'}`}
@@ -133,7 +133,7 @@ export function ShareContentModal({ isOpen, onClose, contentTitle, contentUrl }:
           </div>
 
           {shareMode === 'social' ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
               <button onClick={handleCopyLink} className="flex items-center justify-center space-x-2 p-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors text-slate-700 cursor-pointer">
                 <Copy className="w-4 h-4" />
                 <span className="text-sm font-medium">Copy Link</span>

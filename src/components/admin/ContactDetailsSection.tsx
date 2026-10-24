@@ -612,7 +612,7 @@ export const ContactDetailsSection: React.FC<ContactDetailsSectionProps> = ({
             </span>
           </div>
         ) : (
-          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs flex items-center justify-between">
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center space-x-2 text-emerald-900 font-semibold">
               <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
               <span>
@@ -627,7 +627,7 @@ export const ContactDetailsSection: React.FC<ContactDetailsSectionProps> = ({
       </div>
 
       {onDispatch && (
-        <div className="pt-2 flex justify-end">
+        <div className="pt-2 flex flex-col sm:flex-row justify-end">
           <button
             type="button"
             disabled={!canDispatch || isDispatching}
@@ -643,7 +643,7 @@ export const ContactDetailsSection: React.FC<ContactDetailsSectionProps> = ({
                 channel: ch,
               });
             }}
-            className="px-5 py-2.5 bg-amber-700 hover:bg-amber-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-xs flex items-center space-x-2 cursor-pointer transition-all text-xs"
+            className="w-full sm:w-auto justify-center px-5 py-2.5 bg-amber-700 hover:bg-amber-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-xs flex items-center space-x-2 cursor-pointer transition-all text-xs text-center"
           >
             <Send className="w-4 h-4" />
             <span>{isDispatching ? 'Dispatching...' : `Dispatch to ${combinedRecipients.length} Valid Contact(s)`}</span>

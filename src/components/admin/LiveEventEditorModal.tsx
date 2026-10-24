@@ -169,7 +169,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-5">
       <div className="bg-white rounded-3xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
@@ -438,21 +438,21 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
         </div>
 
         {/* Modal Actions: Save Draft vs Publish */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-semibold transition-colors cursor-pointer text-xs"
+            className="w-full sm:w-auto justify-center px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-semibold transition-colors cursor-pointer text-xs text-center"
           >
             Cancel
           </button>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <button
               type="button"
               disabled={saving}
               onClick={() => handleFormSubmit('draft')}
-              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 disabled:opacity-50 text-slate-800 rounded-xl font-bold transition-colors cursor-pointer text-xs"
+              className="w-full sm:w-auto justify-center px-4 py-2 bg-slate-200 hover:bg-slate-300 disabled:opacity-50 text-slate-800 rounded-xl font-bold transition-colors cursor-pointer text-xs text-center"
             >
               Save as Draft
             </button>
@@ -460,7 +460,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
               type="button"
               disabled={saving}
               onClick={() => handleFormSubmit('published')}
-              className="px-5 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-xl font-bold shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer text-xs"
+              className="w-full sm:w-auto justify-center px-5 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white rounded-xl font-bold shadow-xs transition-colors flex items-center justify-center space-x-1.5 cursor-pointer text-xs"
             >
               <Save className="w-3.5 h-3.5" />
               <span>{saving ? 'Publishing...' : isEditing ? 'Update & Publish' : 'Publish Live Event'}</span>

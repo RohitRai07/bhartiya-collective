@@ -78,11 +78,11 @@ export const CareerDetailModal: React.FC<CareerDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4">
       <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 text-white p-5 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 text-white p-3.5 sm:p-5 flex items-center justify-between">
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
@@ -96,7 +96,7 @@ export const CareerDetailModal: React.FC<CareerDetailModalProps> = ({
                 {record.applicationCode}
               </span>
             </div>
-            <h3 className="text-lg font-serif font-bold text-white">
+            <h3 className="text-base sm:text-lg font-serif font-bold text-white">
               {record.fullName}
             </h3>
           </div>
@@ -110,7 +110,7 @@ export const CareerDetailModal: React.FC<CareerDetailModalProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 max-h-[75vh] overflow-y-auto">
           
           {/* Status Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
@@ -122,7 +122,7 @@ export const CareerDetailModal: React.FC<CareerDetailModalProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center space-x-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-xs text-slate-500 font-medium">Update:</span>
               {(['pending', 'reviewing', 'shortlisted', 'rejected'] as CareerApplicationStatus[]).map(st => (
                 <button
@@ -311,13 +311,13 @@ export const CareerDetailModal: React.FC<CareerDetailModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-          <div>
+        <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          <div className="w-full sm:w-auto">
             {onOpenNotify && (
               <button
                 type="button"
                 onClick={() => onOpenNotify(record)}
-                className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-semibold flex items-center space-x-2 transition-colors cursor-pointer shadow-xs"
+                className="w-full sm:w-auto justify-center px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-xs font-semibold flex items-center space-x-2 transition-colors cursor-pointer shadow-xs"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Send Notification</span>
@@ -327,7 +327,7 @@ export const CareerDetailModal: React.FC<CareerDetailModalProps> = ({
 
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+            className="w-full sm:w-auto justify-center px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
           >
             Close Dossier
           </button>

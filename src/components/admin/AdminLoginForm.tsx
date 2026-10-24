@@ -175,22 +175,22 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-center pt-24 pb-12 sm:px-6 lg:px-8 px-4">
+    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-center pt-20 sm:pt-24 pb-12 px-3 sm:px-6 lg:px-8 overflow-x-hidden">
       
       {/* Top Header Bar */}
-      <header className="fixed top-0 inset-x-0 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between z-30 shadow-md">
+      <header className="fixed top-0 inset-x-0 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-3 sm:px-8 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 z-30 shadow-md">
         <div 
           onClick={onBackToPublicSite}
-          className="flex items-center space-x-2.5 cursor-pointer group"
+          className="flex items-center space-x-2 sm:space-x-2.5 cursor-pointer group min-w-0"
         >
-          <div className="w-8 h-8 rounded-lg bg-white p-0.5 border border-slate-700 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
+          <div className="w-8 h-8 rounded-lg bg-white p-0.5 border border-slate-700 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform overflow-hidden shrink-0">
             <img src={siteConfig.emblemUrl} alt="Emblem" className="w-full h-full object-contain" />
           </div>
-          <div>
-            <span className="block font-serif text-sm sm:text-base font-bold text-white leading-tight">
+          <div className="min-w-0">
+            <span className="block font-serif text-xs sm:text-base font-bold text-white leading-tight truncate max-w-[150px] sm:max-w-none">
               {siteConfig.name}
             </span>
-            <span className="block text-[10px] uppercase tracking-wider font-semibold text-amber-400">
+            <span className="block text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-amber-400 truncate">
               Administrative Secretariat
             </span>
           </div>
@@ -199,19 +199,20 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
         <button
           type="button"
           onClick={onBackToPublicSite}
-          className="flex items-center space-x-1.5 text-xs text-amber-400 hover:text-amber-300 font-semibold bg-slate-900 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+          className="flex items-center space-x-1 sm:space-x-1.5 text-xs text-amber-400 hover:text-amber-300 font-semibold bg-slate-900 hover:bg-slate-800 px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-700 transition-colors cursor-pointer shrink-0"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Public Website</span>
+          <span className="hidden sm:inline">Public Website</span>
+          <span className="sm:hidden">Website</span>
         </button>
       </header>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
-        <div className="w-20 h-20 bg-white rounded-2xl mx-auto flex items-center justify-center p-1.5 shadow-xl shadow-amber-600/20 border border-slate-700 overflow-hidden">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3 px-2">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl mx-auto flex items-center justify-center p-1.5 shadow-xl shadow-amber-600/20 border border-slate-700 overflow-hidden">
           <img src={siteConfig.emblemUrl} alt={siteConfig.name} className="w-full h-full object-contain" />
         </div>
 
-        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">
+        <h2 className="font-serif text-xl sm:text-3xl font-bold text-white tracking-tight">
           {step === '2fa' ? 'Two-Factor Authentication' : 'Admin Portal Access'}
         </h2>
         <p className="text-xs sm:text-sm text-slate-400">
@@ -219,8 +220,8 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-slate-800/90 py-8 px-6 sm:px-10 shadow-2xl rounded-3xl border border-slate-700/80 backdrop-blur-sm space-y-6">
+      <div className="mt-6 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-slate-800/90 py-6 sm:py-8 px-4 sm:px-10 shadow-2xl rounded-2xl sm:rounded-3xl border border-slate-700/80 backdrop-blur-sm space-y-5 sm:space-y-6">
           
           {/* STEP 1: CREDENTIALS FORM */}
           {step === 'credentials' && (
@@ -408,7 +409,7 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
                     placeholder="• • • • • •"
                     value={twoFactorCode}
                     onChange={e => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
-                    className="w-full py-3.5 text-center font-mono text-2xl tracking-[0.45em] rounded-xl border border-slate-600 bg-slate-900 text-white placeholder-slate-600 focus:border-amber-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+                    className="w-full py-3 sm:py-3.5 text-center font-mono text-xl sm:text-2xl tracking-[0.3em] sm:tracking-[0.45em] rounded-xl border border-slate-600 bg-slate-900 text-white placeholder-slate-600 focus:border-amber-500 focus:outline-hidden focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
                   />
                 </div>
 
@@ -428,11 +429,11 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
                 </button>
 
                 {/* Resend and Back Controls */}
-                <div className="flex items-center justify-between pt-2 text-xs border-t border-slate-700/60">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2 text-xs border-t border-slate-700/60">
                   <button
                     type="button"
                     onClick={handleBackToCredentials}
-                    className="text-slate-400 hover:text-white cursor-pointer"
+                    className="text-slate-400 hover:text-white cursor-pointer order-2 sm:order-1"
                   >
                     ← Back to Sign In
                   </button>
@@ -441,7 +442,7 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
                     type="button"
                     onClick={handleResendCode}
                     disabled={countdown > 0 || loading}
-                    className={`font-semibold flex items-center space-x-1.5 cursor-pointer ${
+                    className={`font-semibold flex items-center space-x-1.5 cursor-pointer order-1 sm:order-2 ${
                       countdown > 0 
                         ? 'text-slate-500 cursor-not-allowed' 
                         : 'text-amber-400 hover:text-amber-300'

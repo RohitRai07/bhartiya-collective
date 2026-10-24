@@ -174,7 +174,7 @@ export const PdfUploadWithUrl: React.FC<PdfUploadWithUrlProps> = ({
   return (
     <div className="space-y-2">
       {/* Label and Subtext */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-1">
         <label className="block text-xs font-bold text-slate-900">
           {label}
         </label>
@@ -187,12 +187,12 @@ export const PdfUploadWithUrl: React.FC<PdfUploadWithUrlProps> = ({
       <div className="border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-xs">
         
         {/* Top Tab Bar */}
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/80 px-3 py-1.5 text-xs">
-          <div className="flex items-center space-x-1">
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between border-b border-slate-100 bg-slate-50/80 px-2.5 sm:px-3 py-1.5 text-xs gap-1.5">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setActiveTab('upload')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center space-x-1.5 cursor-pointer shrink-0 ${
                 activeTab === 'upload'
                   ? 'bg-white text-amber-800 shadow-2xs font-bold'
                   : 'text-slate-600 hover:text-slate-900'
@@ -205,7 +205,7 @@ export const PdfUploadWithUrl: React.FC<PdfUploadWithUrlProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('url')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center space-x-1.5 cursor-pointer shrink-0 ${
                 activeTab === 'url'
                   ? 'bg-white text-amber-800 shadow-2xs font-bold'
                   : 'text-slate-600 hover:text-slate-900'
@@ -218,7 +218,7 @@ export const PdfUploadWithUrl: React.FC<PdfUploadWithUrlProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('library')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center space-x-1.5 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center space-x-1.5 cursor-pointer shrink-0 ${
                 activeTab === 'library'
                   ? 'bg-white text-amber-800 shadow-2xs font-bold'
                   : 'text-slate-600 hover:text-slate-900'
@@ -295,7 +295,7 @@ export const PdfUploadWithUrl: React.FC<PdfUploadWithUrlProps> = ({
         {/* Tab 2: Direct PDF URL Input */}
         {activeTab === 'url' && (
           <div className="p-4 space-y-3">
-            <form onSubmit={handleUrlApply} className="flex gap-2">
+            <form onSubmit={handleUrlApply} className="flex flex-col sm:flex-row gap-2">
               <input
                 type="url"
                 value={urlInput}
@@ -308,7 +308,7 @@ export const PdfUploadWithUrl: React.FC<PdfUploadWithUrlProps> = ({
               />
               <button
                 type="submit"
-                className="px-4 py-2.5 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                className="w-full sm:w-auto justify-center px-4 py-2.5 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer text-center"
               >
                 Apply URL
               </button>

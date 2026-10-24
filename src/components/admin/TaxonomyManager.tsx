@@ -496,7 +496,7 @@ export const TaxonomyManager: React.FC = () => {
                 <CurrentIcon className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <h3 className="font-serif font-bold text-base text-slate-900 truncate">
                     {currentMeta.title}
                   </h3>
@@ -510,7 +510,7 @@ export const TaxonomyManager: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => handleResetGroup(activeGroup)}
@@ -531,18 +531,18 @@ export const TaxonomyManager: React.FC = () => {
             <label className="block text-xs font-bold text-slate-800">
               Add New Option to this Dropdown (Type & Press Enter)
             </label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 value={newOptionInput}
                 onChange={e => setNewOptionInput(e.target.value)}
                 placeholder={`Type new choice for ${currentMeta.subTabLabel} and press Enter...`}
-                className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs bg-slate-50 focus:bg-white focus:ring-1 focus:ring-amber-600 focus:border-amber-600 outline-none"
+                className="w-full sm:flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs bg-slate-50 focus:bg-white focus:ring-1 focus:ring-amber-600 focus:border-amber-600 outline-none"
               />
               <button
                 type="submit"
                 disabled={!newOptionInput.trim()}
-                className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-800 hover:bg-amber-900 disabled:opacity-50 text-white shadow-xs transition-colors cursor-pointer shrink-0"
+                className="w-full sm:w-auto justify-center inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-800 hover:bg-amber-900 disabled:opacity-50 text-white shadow-xs transition-colors cursor-pointer shrink-0 text-center"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Option (Enter)</span>
@@ -604,7 +604,7 @@ export const TaxonomyManager: React.FC = () => {
       </div>
 
       {/* Global Tags & Keywords Pool Card */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-xs space-y-4">
         <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center space-x-2.5">
             <div className="p-2 rounded-xl bg-amber-100 text-amber-900">
@@ -626,18 +626,18 @@ export const TaxonomyManager: React.FC = () => {
         </div>
 
         {/* Enter-to-Add Tag */}
-        <form onSubmit={handleAddTag} className="flex gap-2 max-w-lg">
+        <form onSubmit={handleAddTag} className="flex flex-col sm:flex-row gap-2 max-w-lg">
           <input
             type="text"
             value={newTagInput}
             onChange={e => setNewTagInput(e.target.value)}
             placeholder="Type new tag & press Enter (e.g. Maritime Law, Jan Vishwas)..."
-            className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs bg-slate-50 focus:bg-white focus:ring-1 focus:ring-amber-600 focus:border-amber-600 outline-none"
+            className="w-full sm:flex-1 px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs bg-slate-50 focus:bg-white focus:ring-1 focus:ring-amber-600 focus:border-amber-600 outline-none"
           />
           <button
             type="submit"
             disabled={!newTagInput.trim()}
-            className="inline-flex items-center space-x-1 px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-800 hover:bg-amber-900 disabled:opacity-50 text-white shadow-xs transition-colors cursor-pointer shrink-0"
+            className="w-full sm:w-auto justify-center inline-flex items-center space-x-1 px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-800 hover:bg-amber-900 disabled:opacity-50 text-white shadow-xs transition-colors cursor-pointer shrink-0 text-center"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Tag</span>

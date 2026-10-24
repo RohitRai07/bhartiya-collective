@@ -653,7 +653,7 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
         </div>
 
         {/* Modal Footer Key Hints */}
-        <div className="px-4 py-2.5 border-t border-slate-800 bg-slate-950 flex items-center justify-between text-[11px] text-slate-500">
+        <div className="px-3 sm:px-4 py-2 sm:py-2.5 border-t border-slate-800 bg-slate-950 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500">
           <div className="flex items-center space-x-3">
             <span className="flex items-center space-x-1">
               <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded font-mono text-[10px] text-slate-300">↑</kbd>

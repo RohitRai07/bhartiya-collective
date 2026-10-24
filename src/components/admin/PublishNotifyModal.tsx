@@ -76,11 +76,11 @@ export const PublishNotifyModal: React.FC<PublishNotifyModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs p-2.5 sm:p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative font-sans">
         
         {/* Header */}
-        <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
+        <div className="bg-slate-900 px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between">
           <div>
             <h3 className="text-white font-bold text-sm">Publish Content</h3>
             <p className="text-slate-400 text-xs">You are about to publish {title}</p>
@@ -90,7 +90,7 @@ export const PublishNotifyModal: React.FC<PublishNotifyModalProps> = ({
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-5">
           {/* Notify Toggle */}
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
@@ -107,7 +107,7 @@ export const PublishNotifyModal: React.FC<PublishNotifyModalProps> = ({
           {notify && (
             <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
               <label className="font-bold text-xs text-slate-700">Notification Channel</label>
-              <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <label className="flex items-center space-x-2 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors border border-transparent hover:border-slate-200">
                   <input
                     type="checkbox"
@@ -148,19 +148,19 @@ export const PublishNotifyModal: React.FC<PublishNotifyModalProps> = ({
             </div>
           )}
 
-          <div className="flex justify-end space-x-2 pt-2">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
               disabled={processing}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              className="w-full sm:w-auto justify-center px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer text-center"
             >
               Cancel
             </button>
             <button
               onClick={handlePublish}
               disabled={processing}
-              className="inline-flex items-center space-x-1.5 px-5 py-2 rounded-xl text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white disabled:opacity-50"
+              className="w-full sm:w-auto justify-center inline-flex items-center space-x-1.5 px-5 py-2 rounded-xl text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white disabled:opacity-50 cursor-pointer"
             >
               <Globe className="w-4 h-4" />
               <span>{processing ? 'Publishing...' : notify ? 'Publish & Notify' : 'Publish Now'}</span>
