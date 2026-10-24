@@ -39,7 +39,12 @@ import {
   NotificationRecipient 
 } from '../../types/notification';
 import { centralizedNotificationService, CentralizedNotificationStats } from '../../services/centralizedNotificationService';
-import { notificationService, EmailGatewayConfig } from '../../services/notificationService';
+import { 
+  notificationService, 
+  EmailGatewayConfig,
+  WhatsAppGatewayConfig,
+  SmsGatewayConfig
+} from '../../services/notificationService';
 import { backendNotificationService } from '../../services/backendNotificationService';
 import { ContactDetailsSection } from './ContactDetailsSection';
 import { SendNotificationModal } from './SendNotificationModal';
@@ -106,8 +111,12 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
   const [inspectingRecipient, setInspectingRecipient] = useState<AggregatedRecipient | null>(null);
   const [recipientLogs, setRecipientLogs] = useState<NotificationLog[]>([]);
 
-  // Email Gateway Config State
+  // Gateway Config States (Email, WhatsApp, SMS)
   const [gatewayConfig, setGatewayConfig] = useState<EmailGatewayConfig>(notificationService.getEmailGatewayConfig());
+  const [whatsAppConfig, setWhatsAppConfig] = useState<WhatsAppGatewayConfig>(notificationService.getWhatsAppGatewayConfig());
+  const [smsConfig, setSmsConfig] = useState<SmsGatewayConfig>(notificationService.getSmsGatewayConfig());
+  const [gatewaySavedToast, setGatewaySavedToast] = useState<string | null>(null);
+
   const [testEmailAddress, setTestEmailAddress] = useState('');
   const [testEmailStatus, setTestEmailStatus] = useState<string | null>(null);
   const [testEmailLoading, setTestEmailLoading] = useState(false);
@@ -300,6 +309,30 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
     } finally {
       setTestEmailLoading(false);
     }
+  };
+
+  const handleSaveEmailConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updated = notificationService.updateEmailGatewayConfig(gatewayConfig);
+    setGatewayConfig(updated);
+    setGatewaySavedToast('Email Delivery Gateway configuration saved successfully.');
+    setTimeout(() => setGatewaySavedToast(null), 3000);
+  };
+
+  const handleSaveWhatsAppConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updated = notificationService.updateWhatsAppGatewayConfig(whatsAppConfig);
+    setWhatsAppConfig(updated);
+    setGatewaySavedToast('WhatsApp Business Cloud API credentials saved successfully.');
+    setTimeout(() => setGatewaySavedToast(null), 3000);
+  };
+
+  const handleSaveSmsConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updated = notificationService.updateSmsGatewayConfig(smsConfig);
+    setSmsConfig(updated);
+    setGatewaySavedToast('SMS Gateway (DLT) credentials saved successfully.');
+    setTimeout(() => setGatewaySavedToast(null), 3000);
   };
 
   const handleComposeTemplateChange = (templateId: string) => {
@@ -1174,73 +1207,308 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
       {subTab === 'gateway' && (
         <div className="space-y-6">
           
-          {/* Provider Readiness Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Notification / Toast for Config Saved */}
+          {gatewaySavedToast && (
+            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl text-xs font-semibold flex items-center justify-between animate-in fade-in">
+              <div className="flex items-center space-x-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{gatewaySavedToast}</span>
+              </div>
+              <button
+                onClick={() => setGatewaySavedToast(null)}
+                className="p-1 hover:opacity-75 text-emerald-700 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Interactive Provider Configuration & Ready-to-Paste API Key Forms */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             
-            {/* Email Gateway */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-slate-900 font-bold text-xs uppercase tracking-wider">
-                  <Mail className="w-4 h-4 text-blue-600" />
-                  <span>Email Channel</span>
+            {/* 1. EMAIL DELIVERY GATEWAY */}
+            <form onSubmit={handleSaveEmailConfig} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center space-x-2 text-slate-900 font-bold text-xs uppercase tracking-wider">
+                    <Mail className="w-4 h-4 text-blue-600" />
+                    <span>Email Gateway</span>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                    gatewayConfig.provider === 'webhook' && gatewayConfig.webhookUrl
+                      ? 'bg-emerald-100 text-emerald-900'
+                      : 'bg-amber-100 text-amber-900'
+                  }`}>
+                    {gatewayConfig.provider === 'webhook' && gatewayConfig.webhookUrl ? 'Live Configured' : gatewayConfig.provider.toUpperCase()}
+                  </span>
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                  gatewayConfig.provider === 'simulation'
-                    ? 'bg-amber-100 text-amber-900'
-                    : 'bg-emerald-100 text-emerald-900'
-                }`}>
-                  {gatewayConfig.provider.toUpperCase()}
-                </span>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Configure SMTP Webhook API or local letterhead simulations.
+                </p>
+
+                <div className="space-y-2.5 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Mode:</label>
+                    <select
+                      value={gatewayConfig.provider}
+                      onChange={e => setGatewayConfig({ ...gatewayConfig, provider: e.target.value as any })}
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-xs text-slate-800"
+                    >
+                      <option value="simulation">Simulation Mode (Safe Letterhead Preview)</option>
+                      <option value="webhook">Live Webhook (Zapier / Make / Resend / Formspree)</option>
+                      <option value="mailto">Native Mail Client Bridge (mailto:)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Sender Name:</label>
+                    <input
+                      type="text"
+                      value={gatewayConfig.senderName}
+                      onChange={e => setGatewayConfig({ ...gatewayConfig, senderName: e.target.value })}
+                      placeholder="e.g. Bharat Collective Secretariat"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Sender Email:</label>
+                    <input
+                      type="email"
+                      value={gatewayConfig.senderEmail}
+                      onChange={e => setGatewayConfig({ ...gatewayConfig, senderEmail: e.target.value })}
+                      placeholder="e.g. secretariat@bharatcollective.org"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Webhook POST URL (Paste API Endpoint):
+                    </label>
+                    <input
+                      type="url"
+                      value={gatewayConfig.webhookUrl}
+                      onChange={e => setGatewayConfig({ ...gatewayConfig, webhookUrl: e.target.value })}
+                      placeholder="https://hooks.zapier.com/... or https://formspree.io/f/..."
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono"
+                    />
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Supports real-time Webhook forwarding, SMTP server integration, or client-side Simulation letterhead previews.
-              </p>
-              <div className="text-[11px] text-slate-600 space-y-1 border-t border-slate-100 pt-2 font-mono">
-                <div>Sender: {gatewayConfig.senderEmail}</div>
-                <div>Provider: {gatewayConfig.provider}</div>
+
+              <button
+                type="submit"
+                className="w-full py-2 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer mt-2"
+              >
+                Save Email Gateway Settings
+              </button>
+            </form>
+
+            {/* 2. WHATSAPP BUSINESS CLOUD API */}
+            <form onSubmit={handleSaveWhatsAppConfig} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center space-x-2 text-slate-900 font-bold text-xs uppercase tracking-wider">
+                    <Smartphone className="w-4 h-4 text-emerald-600" />
+                    <span>WhatsApp Cloud API</span>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                    whatsAppConfig.provider === 'meta_cloud' && whatsAppConfig.apiKey && whatsAppConfig.phoneNumberId
+                      ? 'bg-emerald-100 text-emerald-900'
+                      : 'bg-amber-100 text-amber-900'
+                  }`}>
+                    {whatsAppConfig.provider === 'meta_cloud' && whatsAppConfig.apiKey ? 'Live Connected' : 'Ready for API Key'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Meta WhatsApp Business Cloud API integration for template notifications.
+                </p>
+
+                <div className="space-y-2.5 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">Provider Mode:</label>
+                    <select
+                      value={whatsAppConfig.provider}
+                      onChange={e => setWhatsAppConfig({ ...whatsAppConfig, provider: e.target.value as any })}
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-xs text-slate-800"
+                    >
+                      <option value="simulation">Simulation Mode (Decoupled Fallback)</option>
+                      <option value="meta_cloud">Meta WhatsApp Cloud API (Live Production)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Phone Number ID:
+                    </label>
+                    <input
+                      type="text"
+                      value={whatsAppConfig.phoneNumberId}
+                      onChange={e => setWhatsAppConfig({ ...whatsAppConfig, phoneNumberId: e.target.value })}
+                      placeholder="Paste Phone Number ID (e.g. 104857291029384)"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Meta Access Token / API Key:
+                    </label>
+                    <input
+                      type="password"
+                      value={whatsAppConfig.apiKey}
+                      onChange={e => setWhatsAppConfig({ ...whatsAppConfig, apiKey: e.target.value })}
+                      placeholder="Paste Permanent System User Token (Bearer EAA...)"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      WhatsApp Business Account ID:
+                    </label>
+                    <input
+                      type="text"
+                      value={whatsAppConfig.businessAccountId}
+                      onChange={e => setWhatsAppConfig({ ...whatsAppConfig, businessAccountId: e.target.value })}
+                      placeholder="Paste WABA ID (e.g. 981273645019)"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer mt-2"
+              >
+                Save WhatsApp Credentials
+              </button>
+            </form>
+
+            {/* 3. SMS GATEWAY (TRAI DLT INDIA) */}
+            <form onSubmit={handleSaveSmsConfig} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center space-x-2 text-slate-900 font-bold text-xs uppercase tracking-wider">
+                    <MessageSquare className="w-4 h-4 text-purple-600" />
+                    <span>SMS Gateway (DLT)</span>
+                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                    smsConfig.provider !== 'simulation' && smsConfig.apiKey
+                      ? 'bg-emerald-100 text-emerald-900'
+                      : 'bg-amber-100 text-amber-900'
+                  }`}>
+                    {smsConfig.provider !== 'simulation' && smsConfig.apiKey ? 'Live Configured' : 'DLT Ready'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Indian SMS gateway with TRAI DLT header & registered template routing.
+                </p>
+
+                <div className="space-y-2.5 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">SMS Provider:</label>
+                    <select
+                      value={smsConfig.provider}
+                      onChange={e => setSmsConfig({ ...smsConfig, provider: e.target.value as any })}
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 font-semibold text-xs text-slate-800"
+                    >
+                      <option value="simulation">Simulation Mode (DLT Test Log)</option>
+                      <option value="msg91">MSG91 (India Transactional)</option>
+                      <option value="textlocal">Textlocal (India DLT)</option>
+                      <option value="twilio">Twilio Programmable SMS</option>
+                      <option value="custom_http">Custom HTTP POST Gateway</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      SMS API Key / Auth Token:
+                    </label>
+                    <input
+                      type="password"
+                      value={smsConfig.apiKey}
+                      onChange={e => setSmsConfig({ ...smsConfig, apiKey: e.target.value })}
+                      placeholder="Paste SMS Provider API Key / Auth Token"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      DLT Sender ID / Header:
+                    </label>
+                    <input
+                      type="text"
+                      value={smsConfig.senderId}
+                      onChange={e => setSmsConfig({ ...smsConfig, senderId: e.target.value })}
+                      placeholder="e.g. BCFNDN"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                      Gateway API POST Endpoint:
+                    </label>
+                    <input
+                      type="url"
+                      value={smsConfig.apiUrl}
+                      onChange={e => setSmsConfig({ ...smsConfig, apiUrl: e.target.value })}
+                      placeholder="https://api.smsprovider.com/v1/send"
+                      className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer mt-2"
+              >
+                Save SMS Credentials
+              </button>
+            </form>
+
+          </div>
+
+          {/* Backend Production .env Cheat Sheet Card */}
+          <div className="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-serif font-bold text-sm text-amber-400 flex items-center space-x-2">
+                <ShieldCheck className="w-4 h-4 text-amber-400" />
+                <span>Backend Production Environment Variables (`server/.env`)</span>
+              </h4>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                server/.env.example
+              </span>
+            </div>
+            <p className="text-xs text-slate-300">
+              Credentials entered in the cards above are persisted in your Admin session. For production Node.js servers, you can also paste these exact keys into your server environment variables:
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px] font-mono bg-slate-950 p-4 rounded-xl border border-slate-800 text-slate-300">
+              <div className="space-y-1">
+                <span className="text-blue-400 font-bold block"># Email Gateway</span>
+                <div>EMAIL_HOST=smtp.sendgrid.net</div>
+                <div>EMAIL_PORT=587</div>
+                <div>EMAIL_USER=apikey</div>
+                <div>EMAIL_PASS=your_api_key</div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-emerald-400 font-bold block"># WhatsApp Business API</span>
+                <div>WHATSAPP_PHONE_NUMBER_ID=...</div>
+                <div>WHATSAPP_API_KEY=EAA...</div>
+                <div>WHATSAPP_BUSINESS_ACCOUNT_ID=...</div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-purple-400 font-bold block"># SMS DLT Gateway</span>
+                <div>SMS_API_URL=https://...</div>
+                <div>SMS_API_KEY=your_sms_key</div>
+                <div>SMS_SENDER_ID=BCFNDN</div>
               </div>
             </div>
-
-            {/* WhatsApp Business API */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-slate-900 font-bold text-xs uppercase tracking-wider">
-                  <Smartphone className="w-4 h-4 text-emerald-600" />
-                  <span>WhatsApp Channel</span>
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-900">
-                  Ready for API Key
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Configured for Meta WhatsApp Business Cloud API. Dispatches pre-approved templates for candidate alerts and updates.
-              </p>
-              <div className="text-[11px] text-slate-600 space-y-1 border-t border-slate-100 pt-2 font-mono">
-                <div>Endpoint: https://graph.facebook.com/v18.0</div>
-                <div>Status: Decoupled / Simulated Fallback Active</div>
-              </div>
-            </div>
-
-            {/* SMS Gateway */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-slate-900 font-bold text-xs uppercase tracking-wider">
-                  <MessageSquare className="w-4 h-4 text-purple-600" />
-                  <span>SMS Channel</span>
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-100 text-amber-900">
-                  DLT Ready
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Connects to Indian SMS gateways (MSG91 / Textlocal / Twilio) adhering to TRAI DLT registration templates.
-              </p>
-              <div className="text-[11px] text-slate-600 space-y-1 border-t border-slate-100 pt-2 font-mono">
-                <div>Route: Transactional 4</div>
-                <div>Country: +91 (India)</div>
-              </div>
-            </div>
-
           </div>
 
           {/* Test Dispatch Form */}

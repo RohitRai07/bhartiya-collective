@@ -174,6 +174,84 @@ function saveGatewayConfig(cfg: EmailGatewayConfig) {
   }
 }
 
+// WhatsApp Cloud API Configuration
+export interface WhatsAppGatewayConfig {
+  provider: 'simulation' | 'meta_cloud';
+  apiUrl: string;
+  phoneNumberId: string;
+  apiKey: string;
+  businessAccountId: string;
+}
+
+const WHATSAPP_STORAGE_KEY = 'bharat_collective_whatsapp_gateway';
+
+export const DEFAULT_WHATSAPP_CONFIG: WhatsAppGatewayConfig = {
+  provider: 'simulation',
+  apiUrl: 'https://graph.facebook.com/v18.0',
+  phoneNumberId: '',
+  apiKey: '',
+  businessAccountId: '',
+};
+
+function loadStoredWhatsAppConfig(): WhatsAppGatewayConfig {
+  if (typeof window === 'undefined') return DEFAULT_WHATSAPP_CONFIG;
+  try {
+    const raw = localStorage.getItem(WHATSAPP_STORAGE_KEY);
+    if (!raw) return DEFAULT_WHATSAPP_CONFIG;
+    return { ...DEFAULT_WHATSAPP_CONFIG, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_WHATSAPP_CONFIG;
+  }
+}
+
+function saveWhatsAppConfig(cfg: WhatsAppGatewayConfig) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(WHATSAPP_STORAGE_KEY, JSON.stringify(cfg));
+  } catch (e) {
+    console.error('Failed to save whatsapp gateway config:', e);
+  }
+}
+
+// SMS Gateway Configuration (TRAI DLT Compliant)
+export interface SmsGatewayConfig {
+  provider: 'simulation' | 'msg91' | 'textlocal' | 'twilio' | 'custom_http';
+  apiUrl: string;
+  apiKey: string;
+  senderId: string;
+  route: string;
+}
+
+const SMS_STORAGE_KEY = 'bharat_collective_sms_gateway';
+
+export const DEFAULT_SMS_CONFIG: SmsGatewayConfig = {
+  provider: 'simulation',
+  apiUrl: 'https://api.smsprovider.com/v1/send',
+  apiKey: '',
+  senderId: 'BCFNDN',
+  route: 'Transactional 4',
+};
+
+function loadStoredSmsConfig(): SmsGatewayConfig {
+  if (typeof window === 'undefined') return DEFAULT_SMS_CONFIG;
+  try {
+    const raw = localStorage.getItem(SMS_STORAGE_KEY);
+    if (!raw) return DEFAULT_SMS_CONFIG;
+    return { ...DEFAULT_SMS_CONFIG, ...JSON.parse(raw) };
+  } catch {
+    return DEFAULT_SMS_CONFIG;
+  }
+}
+
+function saveSmsConfig(cfg: SmsGatewayConfig) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(SMS_STORAGE_KEY, JSON.stringify(cfg));
+  } catch (e) {
+    console.error('Failed to save sms gateway config:', e);
+  }
+}
+
 export const notificationService = {
   /**
    * Fetch Email Gateway Configuration
@@ -189,6 +267,40 @@ export const notificationService = {
     const current = loadStoredGatewayConfig();
     const updated = { ...current, ...updates };
     saveGatewayConfig(updated);
+    return updated;
+  },
+
+  /**
+   * Fetch WhatsApp Gateway Configuration
+   */
+  getWhatsAppGatewayConfig(): WhatsAppGatewayConfig {
+    return loadStoredWhatsAppConfig();
+  },
+
+  /**
+   * Update WhatsApp Gateway Configuration
+   */
+  updateWhatsAppGatewayConfig(updates: Partial<WhatsAppGatewayConfig>): WhatsAppGatewayConfig {
+    const current = loadStoredWhatsAppConfig();
+    const updated = { ...current, ...updates };
+    saveWhatsAppConfig(updated);
+    return updated;
+  },
+
+  /**
+   * Fetch SMS Gateway Configuration
+   */
+  getSmsGatewayConfig(): SmsGatewayConfig {
+    return loadStoredSmsConfig();
+  },
+
+  /**
+   * Update SMS Gateway Configuration
+   */
+  updateSmsGatewayConfig(updates: Partial<SmsGatewayConfig>): SmsGatewayConfig {
+    const current = loadStoredSmsConfig();
+    const updated = { ...current, ...updates };
+    saveSmsConfig(updated);
     return updated;
   },
 
