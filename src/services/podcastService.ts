@@ -1,28 +1,9 @@
 import { PodcastEpisode, PodcastInput } from '../types/podcast';
+import { extractYouTubeId as ytExtract } from '../utils/youtube';
 
 const STORAGE_KEY = 'bharat_podcasts';
 
-export function extractYouTubeId(url: string): string {
-  if (!url) return '';
-  const cleanUrl = url.trim();
-
-  // Match youtu.be/<id>
-  const shortMatch = cleanUrl.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-  if (shortMatch && shortMatch[1]) return shortMatch[1];
-
-  // Match youtube.com/watch?v=<id>
-  const watchMatch = cleanUrl.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-  if (watchMatch && watchMatch[1]) return watchMatch[1];
-
-  // Match youtube.com/embed/<id>
-  const embedMatch = cleanUrl.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
-  if (embedMatch && embedMatch[1]) return embedMatch[1];
-
-  // Match raw 11 char ID
-  if (/^[a-zA-Z0-9_-]{11}$/.test(cleanUrl)) return cleanUrl;
-
-  return '';
-}
+export const extractYouTubeId = ytExtract;
 
 const SEED_PODCASTS: PodcastEpisode[] = [
   {

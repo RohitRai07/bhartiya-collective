@@ -2,6 +2,28 @@ import { EventItem } from '../types/event';
 
 export const mockEvents: EventItem[] = [
   {
+    id: 'evt-live-ucc-broadcast',
+    title: '🔴 LIVE BROADCAST: Constitutional Morality & Article 44 Implementation',
+    type: 'Live Stream',
+    date: new Date().toISOString().split('T')[0],
+    time: '05:30 PM – 07:30 PM IST',
+    location: 'Constitutional Club / YouTube Live Global Broadcast',
+    mode: 'Online Webinar',
+    description: 'Special live-streamed keynote panel and public consultation addressing personal law reforms, civilizational values, and foundational constitutional rights under Article 44.',
+    speakers: [
+      { name: 'Hon. Justice (Retd.) M. Ramachandran', affiliation: 'Former Judge, Supreme Court of India', role: 'Keynote Speaker' },
+      { name: 'Sr. Adv. J. Sai Deepak', affiliation: 'Supreme Court of India', role: 'Plenary Panelist' },
+    ],
+    registrationOpen: true,
+    seatsLeft: 500,
+    bannerImage: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80',
+    isLive: true,
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    youtubeId: 'dQw4w9WgXcQ',
+    liveStatus: 'live',
+    status: 'published',
+  },
+  {
     id: 'evt-ucc-flagship',
     title: '#BharatDialogue on UNIFORM CIVIL CODE (UCC)',
     type: 'Symposium',

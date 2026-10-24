@@ -40,6 +40,12 @@ import {
 } from '../services/contactValidation';
 import { MAX_CV_SIZE_BYTES } from '../types/career';
 import { UserRegistrationInput } from '../types/registration';
+import { 
+  computeLiveEventStatus, 
+  getYouTubeEmbedUrl, 
+  getYouTubeWatchUrl, 
+  getYouTubeThumbnail 
+} from '../utils/youtube';
 
 async function runTests() {
   console.log('🚀 Running Bhartiya Collective Architecture Verification Suite...\n');
@@ -1027,6 +1033,84 @@ async function runTests() {
   assert(updatedCandidateLogs.length === prevLogCount + 1, 'Career status change auto-notification logs new entry');
   assert(updatedCandidateLogs[0].sourceModule === 'career', 'Notification log preserves sourceModule="career"');
   assert(updatedCandidateLogs[0].templateId === 'CAREER_SHORTLISTED', 'Notification log records correct templateId');
+
+  console.log('\n📌 Testing YouTube Live Streaming & Events Integration:');
+
+  // 1. YouTube Live URL Parsing
+  const liveUrl1 = 'https://www.youtube.com/live/5qap5aO4i9A';
+  const liveUrl2 = 'https://youtube.com/live/5qap5aO4i9A?si=xyz123';
+  const watchUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+  const shortUrl = 'https://youtu.be/kJQP7kiw5Fk';
+  const embedUrl = 'https://www.youtube.com/embed/3JZ_D3ELwOQ';
+
+  assert(extractYouTubeId(liveUrl1) === '5qap5aO4i9A', 'Extracts ID from youtube.com/live/<id>');
+  assert(extractYouTubeId(liveUrl2) === '5qap5aO4i9A', 'Extracts ID from youtube.com/live/<id>?si=...');
+  assert(extractYouTubeId(watchUrl) === 'dQw4w9WgXcQ', 'Extracts ID from youtube.com/watch?v=...');
+  assert(extractYouTubeId(shortUrl) === 'kJQP7kiw5Fk', 'Extracts ID from youtu.be/<id>');
+  assert(extractYouTubeId(embedUrl) === '3JZ_D3ELwOQ', 'Extracts ID from youtube.com/embed/<id>');
+  assert(extractYouTubeId('https://example.com/not-youtube') === '', 'Gracefully rejects non-YouTube URL');
+
+  // 2. YouTube Helper Utilities
+  assert(getYouTubeThumbnail('dQw4w9WgXcQ') === 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg', 'Generates valid thumbnail URL');
+  assert(getYouTubeEmbedUrl('dQw4w9WgXcQ').includes('https://www.youtube.com/embed/dQw4w9WgXcQ'), 'Generates valid embed player URL');
+  assert(getYouTubeWatchUrl('dQw4w9WgXcQ') === 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'Generates valid watch URL');
+
+  // 3. Dynamic Live Status Computation
+  assert(computeLiveEventStatus({ liveStatus: 'live' }) === 'live', 'Explicit live status respected');
+  assert(computeLiveEventStatus({ liveStatus: 'upcoming' }) === 'upcoming', 'Explicit upcoming status respected');
+  assert(computeLiveEventStatus({ liveStatus: 'ended' }) === 'ended', 'Explicit ended status respected');
+
+  const todayStr = new Date().toISOString().split('T')[0];
+  assert(computeLiveEventStatus({ date: todayStr }) === 'live', 'Event scheduled for today computes as live');
+  assert(computeLiveEventStatus({ date: '2020-01-01' }) === 'ended', 'Event scheduled in past computes as ended');
+  assert(computeLiveEventStatus({ date: '2030-12-31' }) === 'upcoming', 'Event scheduled in future computes as upcoming');
+
+  // 4. Live Event Service CRUD & Publishing Lifecycle
+  const testLiveEvent = await eventService.createLiveEvent({
+    title: 'Test Live Stream on Judicial Accountability',
+    description: 'A test livestream dialogue examining judicial ethics and procedural jurisprudence.',
+    youtubeUrl: 'https://www.youtube.com/live/5qap5aO4i9A',
+    date: '2026-11-20',
+    time: '05:00 PM - 06:30 PM IST',
+    status: 'draft',
+    speakers: [{ name: 'Dr. Test Jurist', affiliation: 'Constitutional Council', role: 'Speaker' }],
+  });
+
+  assert(testLiveEvent.id.startsWith('evt-'), 'Live event created with evt- prefix');
+  assert(testLiveEvent.isLive === true, 'Live event marked with isLive=true');
+  assert(testLiveEvent.youtubeId === '5qap5aO4i9A', 'Live event automatically extracts and stores youtubeId');
+  assert(testLiveEvent.status === 'draft', 'Live event initializes with draft status as requested');
+  assert(testLiveEvent.bannerImage?.includes('5qap5aO4i9A'), 'Live event auto-assigns YouTube thumbnail');
+
+  // 5. Draft vs Published Visibility
+  const publicEventsBefore = await eventService.getEvents(false);
+  assert(!publicEventsBefore.some(e => e.id === testLiveEvent.id), 'Draft live event hidden from public website events');
+
+  const adminEventsWithDrafts = await eventService.getEvents(true);
+  assert(adminEventsWithDrafts.some(e => e.id === testLiveEvent.id), 'Draft live event visible in admin events list');
+
+  // 6. Publishing Live Event
+  const publishedLiveEvent = await eventService.togglePublish(testLiveEvent.id);
+  assert(publishedLiveEvent.status === 'published', 'Live event status toggles to published');
+
+  const publicEventsAfter = await eventService.getEvents(false);
+  assert(publicEventsAfter.some(e => e.id === testLiveEvent.id), 'Published live event immediately visible on public website');
+
+  const publicLiveStreams = await eventService.getLiveEvents();
+  assert(publicLiveStreams.some(e => e.id === testLiveEvent.id), 'Published live event returned in getLiveEvents query');
+
+  // 7. Update Live Event URL & Properties
+  const updatedLiveEvent = await eventService.updateEvent(testLiveEvent.id, {
+    youtubeUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    title: 'Updated Live Stream Title',
+  });
+  assert(updatedLiveEvent.youtubeId === 'dQw4w9WgXcQ', 'Updating youtubeUrl recomputes youtubeId correctly');
+  assert(updatedLiveEvent.title === 'Updated Live Stream Title', 'Live event title updated successfully');
+
+  // 8. Delete Live Event
+  await eventService.deleteEvent(testLiveEvent.id);
+  const eventsAfterDelete = await eventService.getEvents(true);
+  assert(!eventsAfterDelete.some(e => e.id === testLiveEvent.id), 'Live event cleaned up successfully from storage');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

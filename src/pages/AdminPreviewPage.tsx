@@ -49,6 +49,7 @@ import { TaxonomyManager } from '../components/admin/TaxonomyManager';
 import { CareerDetailModal } from '../components/admin/CareerDetailModal';
 import { NotificationCentre } from '../components/admin/NotificationCentre';
 import { PodcastEditorModal } from '../components/admin/PodcastEditorModal';
+import { LiveEventEditorModal } from '../components/admin/LiveEventEditorModal';
 import { MagazineEditorModal } from '../components/admin/MagazineEditorModal';
 import { AdminSearchModal, AdminSearchResultItem } from '../components/admin/AdminSearchModal';
 import { NationalMemberModal } from '../components/admin/NationalMemberModal';
@@ -107,7 +108,8 @@ import {
   Heart,
   Megaphone,
   Landmark,
-  ShieldAlert
+  ShieldAlert,
+  Radio
 } from 'lucide-react';
 
 interface AdminPreviewPageProps {
@@ -159,6 +161,11 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const [podcasts, setPodcasts] = useState<PodcastEpisode[]>([]);
   const [podcastEditorOpen, setPodcastEditorOpen] = useState(false);
   const [editingPodcast, setEditingPodcast] = useState<PodcastEpisode | null>(null);
+
+  // Live Events state
+  const [liveEventModalOpen, setLiveEventModalOpen] = useState(false);
+  const [editingLiveEvent, setEditingLiveEvent] = useState<EventItem | null>(null);
+  const [eventFilter, setEventFilter] = useState<'all' | 'regular' | 'live'>('all');
 
   // Magazine state
   const [magazines, setMagazines] = useState<MagazineIssue[]>([]);
@@ -939,6 +946,25 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Live Event Handlers
+  const handleSaveLiveEvent = async (data: Partial<EventItem>, publishStatus: 'published' | 'draft') => {
+    if (editingLiveEvent?.id) {
+      await eventService.updateEvent(editingLiveEvent.id, {
+        ...data,
+        status: publishStatus,
+      });
+    } else {
+      await eventService.createEvent({
+        ...data,
+        status: publishStatus,
+      } as any);
+    }
+    const refreshed = await eventService.getEvents(true);
+    setEvents(refreshed);
+    setLiveEventModalOpen(false);
+    setEditingLiveEvent(null);
   };
 
   // Podcast Handlers
@@ -1771,63 +1797,79 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
 
               <div>
                 {contentSubTab !== 'media' && contentSubTab !== 'taxonomy' && (
-                  <button
-                    onClick={() => {
-                      if (contentSubTab === 'centres') {
-                        setEditingCentre(null);
-                        setCentreEditorOpen(true);
-                        return;
-                      }
-                      if (contentSubTab === 'podcasts') {
-                        setEditingPodcast(null);
-                        setPodcastEditorOpen(true);
-                        return;
-                      }
-                      if (contentSubTab === 'magazine') {
-                        setEditingMagazine(null);
-                        setMagazineEditorOpen(true);
-                        return;
-                      }
-                      if (contentSubTab === 'nationalTeam') {
-                        setEditingNationalMember(null);
-                        setNationalMemberModalOpen(true);
-                        return;
-                      }
-                      if (contentSubTab === 'stateTeam') {
-                        setEditingStateChapter(null);
-                        setStateChapterModalOpen(true);
-                        return;
-                      }
-                      const typeMap: Record<string, ContentEntityType> = {
-                        publications: 'publication',
-                        circulars: 'circular',
-                        events: 'event',
-                        research: 'research',
-                        experts: 'expert',
-                        news: 'news',
-                      };
-                      if (typeMap[contentSubTab]) {
-                        handleOpenAddContent(typeMap[contentSubTab]);
-                      }
-                    }}
-                    className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-800 hover:bg-amber-900 text-white shadow-xs transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>
-                      Add New {
-                        contentSubTab === 'publications' ? 'Publication' :
-                        contentSubTab === 'circulars' ? 'Legal Circular' :
-                        contentSubTab === 'events' ? 'Event' :
-                        contentSubTab === 'research' ? 'Domain' :
-                        contentSubTab === 'centres' ? 'Centre' :
-                        contentSubTab === 'experts' ? 'Scholar' :
-                        contentSubTab === 'nationalTeam' ? 'National Leader' :
-                        contentSubTab === 'stateTeam' ? 'State Chapter' :
-                        contentSubTab === 'podcasts' ? 'Podcast Episode' :
-                        contentSubTab === 'magazine' ? 'Magazine Edition' : 'Article'
-                      }
-                    </span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {contentSubTab === 'events' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingLiveEvent(null);
+                          setLiveEventModalOpen(true);
+                        }}
+                        className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs transition-colors cursor-pointer"
+                        title="Add a YouTube Live Stream Event"
+                      >
+                        <Radio className="w-3.5 h-3.5 text-white" />
+                        <span>+ Live Event</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (contentSubTab === 'centres') {
+                          setEditingCentre(null);
+                          setCentreEditorOpen(true);
+                          return;
+                        }
+                        if (contentSubTab === 'podcasts') {
+                          setEditingPodcast(null);
+                          setPodcastEditorOpen(true);
+                          return;
+                        }
+                        if (contentSubTab === 'magazine') {
+                          setEditingMagazine(null);
+                          setMagazineEditorOpen(true);
+                          return;
+                        }
+                        if (contentSubTab === 'nationalTeam') {
+                          setEditingNationalMember(null);
+                          setNationalMemberModalOpen(true);
+                          return;
+                        }
+                        if (contentSubTab === 'stateTeam') {
+                          setEditingStateChapter(null);
+                          setStateChapterModalOpen(true);
+                          return;
+                        }
+                        const typeMap: Record<string, ContentEntityType> = {
+                          publications: 'publication',
+                          circulars: 'circular',
+                          events: 'event',
+                          research: 'research',
+                          experts: 'expert',
+                          news: 'news',
+                        };
+                        if (typeMap[contentSubTab]) {
+                          handleOpenAddContent(typeMap[contentSubTab]);
+                        }
+                      }}
+                      className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-amber-800 hover:bg-amber-900 text-white shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>
+                        Add New {
+                          contentSubTab === 'publications' ? 'Publication' :
+                          contentSubTab === 'circulars' ? 'Legal Circular' :
+                          contentSubTab === 'events' ? 'Event' :
+                          contentSubTab === 'research' ? 'Domain' :
+                          contentSubTab === 'centres' ? 'Centre' :
+                          contentSubTab === 'experts' ? 'Scholar' :
+                          contentSubTab === 'nationalTeam' ? 'National Leader' :
+                          contentSubTab === 'stateTeam' ? 'State Chapter' :
+                          contentSubTab === 'podcasts' ? 'Podcast Episode' :
+                          contentSubTab === 'magazine' ? 'Magazine Edition' : 'Article'
+                        }
+                      </span>
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -2346,6 +2388,44 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                   </div>
                 </div>
 
+                {/* Event Format / Live Stream Filter Pills */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setEventFilter('all')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
+                      eventFilter === 'all'
+                        ? 'bg-amber-800 text-white font-bold'
+                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    All Events ({events.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEventFilter('regular')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
+                      eventFilter === 'regular'
+                        ? 'bg-amber-800 text-white font-bold'
+                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    Conferences & Dialogues ({events.filter(e => !e.isLive && !e.youtubeUrl).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEventFilter('live')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer shrink-0 flex items-center space-x-1.5 ${
+                      eventFilter === 'live'
+                        ? 'bg-red-600 text-white font-bold'
+                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    <Radio className={`w-3.5 h-3.5 ${eventFilter === 'live' ? 'text-white' : 'text-red-600'}`} />
+                    <span>YouTube Live Streams ({events.filter(e => e.isLive || Boolean(e.youtubeUrl)).length})</span>
+                  </button>
+                </div>
+
                 <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
@@ -2354,73 +2434,114 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                         <th className="p-3.5">Event Title</th>
                         <th className="p-3.5">Date & Venue</th>
                         <th className="p-3.5">Category</th>
-                        <th className="p-3.5">Flagship</th>
-                        <th className="p-3.5">Status</th>
+                        <th className="p-3.5">Status / Flagship</th>
+                        <th className="p-3.5">Publishing</th>
                         <th className="p-3.5 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {events.map(e => (
-                        <tr key={e.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-3.5 max-w-sm">
-                            <div className="font-serif font-bold text-slate-900 text-xs">{e.title}</div>
-                            <div className="text-[10px] text-slate-500">{e.location || 'New Delhi'}</div>
-                          </td>
-                          <td className="p-3.5 text-slate-700">
-                            <div className="font-mono text-slate-900">{e.date}</div>
-                            <div className="text-[10px] text-slate-500">{e.location || 'Constitutional Club / Hybrid'}</div>
-                          </td>
-                          <td className="p-3.5 text-slate-600 capitalize">{e.type || (e as any).category || 'Symposium'}</td>
-                          <td className="p-3.5">
-                            {((e as any).isFlagship || e.id === 'evt-ucc-flagship') ? (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">Flagship</span>
-                            ) : (
-                              <span className="text-slate-400 text-[10px]">—</span>
-                            )}
-                          </td>
-                          <td className="p-3.5">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                              e.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                            }`}>
-                              {e.status || 'published'}
-                            </span>
-                          </td>
-                          <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
-                            <button
-                              onClick={() => handleTogglePublish('event', e.id)}
-                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
-                            >
-                              {e.status === 'published' ? 'Unpublish' : 'Publish'}
-                            </button>
-                            <button
-                              onClick={() => handleOpenEditContent('event', e)}
-                              className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded transition-colors inline-flex cursor-pointer"
-                              title="Edit Event"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                            type="button"
-                            onClick={() => {
-                              setShareTitle(e.title);
-                              setShareUrl('/events');
-                              setShareModalOpen(true);
-                            }}
-                            className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
-                            title="Share"
-                          >
-                            <Share2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                              onClick={() => handleDeleteContent('event', e.id)}
-                              className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
-                              title="Delete Event"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {events
+                        .filter(e => {
+                          if (eventFilter === 'regular') return !e.isLive && !e.youtubeUrl;
+                          if (eventFilter === 'live') return Boolean(e.isLive || e.youtubeUrl);
+                          return true;
+                        })
+                        .map(e => {
+                          const isLive = Boolean(e.isLive || e.youtubeUrl);
+                          return (
+                            <tr key={e.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="p-3.5 max-w-sm">
+                                <div className="flex items-center space-x-2">
+                                  {isLive && (
+                                    <span className="px-2 py-0.5 rounded-md bg-red-100 text-red-700 text-[10px] font-bold uppercase flex items-center space-x-1 shrink-0">
+                                      <Radio className="w-3 h-3 text-red-600" />
+                                      <span>Live Event</span>
+                                    </span>
+                                  )}
+                                  <div className="font-serif font-bold text-slate-900 text-xs truncate">{e.title}</div>
+                                </div>
+                                <div className="text-[10px] text-slate-500">{e.location || 'New Delhi'}</div>
+                              </td>
+                              <td className="p-3.5 text-slate-700">
+                                <div className="font-mono text-slate-900">{e.date}</div>
+                                <div className="text-[10px] text-slate-500">{e.time || (isLive ? 'Live Webcast' : 'Hybrid')}</div>
+                              </td>
+                              <td className="p-3.5 text-slate-600">
+                                {isLive ? (
+                                  <span className="text-red-700 font-semibold flex items-center space-x-1">
+                                    <Video className="w-3.5 h-3.5 text-red-600" />
+                                    <span>YouTube Live</span>
+                                  </span>
+                                ) : (
+                                  <span className="capitalize">{e.type || (e as any).category || 'Symposium'}</span>
+                                )}
+                              </td>
+                              <td className="p-3.5">
+                                {isLive ? (
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                    e.liveStatus === 'live' ? 'bg-red-600 text-white animate-pulse' :
+                                    e.liveStatus === 'upcoming' ? 'bg-amber-100 text-amber-900' :
+                                    'bg-slate-100 text-slate-600'
+                                  }`}>
+                                    {e.liveStatus === 'live' ? '🔴 Live Now' : e.liveStatus === 'upcoming' ? '⏳ Scheduled' : '⏹️ Ended'}
+                                  </span>
+                                ) : ((e as any).isFlagship || e.id === 'evt-ucc-flagship') ? (
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">Flagship</span>
+                                ) : (
+                                  <span className="text-slate-400 text-[10px]">—</span>
+                                )}
+                              </td>
+                              <td className="p-3.5">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                  e.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                                }`}>
+                                  {e.status || 'published'}
+                                </span>
+                              </td>
+                              <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                                <button
+                                  onClick={() => handleTogglePublish('event', e.id)}
+                                  className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
+                                >
+                                  {e.status === 'published' ? 'Unpublish' : 'Publish'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (isLive) {
+                                      setEditingLiveEvent(e);
+                                      setLiveEventModalOpen(true);
+                                    } else {
+                                      handleOpenEditContent('event', e);
+                                    }
+                                  }}
+                                  className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded transition-colors inline-flex cursor-pointer"
+                                  title={isLive ? 'Edit Live Event' : 'Edit Event'}
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShareTitle(e.title);
+                                    setShareUrl('/events');
+                                    setShareModalOpen(true);
+                                  }}
+                                  className="p-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors inline-flex cursor-pointer"
+                                  title="Share"
+                                >
+                                  <Share2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteContent('event', e.id)}
+                                  className="p-1 bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors inline-flex cursor-pointer"
+                                  title="Delete Event"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>
@@ -5421,6 +5542,17 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
           setEditingPodcast(null);
         }}
         onSave={handleSavePodcast}
+      />
+
+      {/* Live Event Editor Modal */}
+      <LiveEventEditorModal
+        isOpen={liveEventModalOpen}
+        initialData={editingLiveEvent}
+        onClose={() => {
+          setLiveEventModalOpen(false);
+          setEditingLiveEvent(null);
+        }}
+        onSave={handleSaveLiveEvent}
       />
 
       {/* Magazine Editor Modal */}
