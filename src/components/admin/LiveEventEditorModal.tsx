@@ -12,7 +12,13 @@ import {
 } from 'lucide-react';
 import { EventItem, EventSpeaker, LiveStreamStatus } from '../../types/event';
 import { extractYouTubeId, getYouTubeThumbnail } from '../../utils/youtube';
-import { ClockTimePicker } from './ClockTimePicker';
+import { BroadcastTimeInput } from './BroadcastTimeInput';
+import { 
+  validateBroadcastTime, 
+  extractBroadcastTime, 
+  formatBroadcastStorageTime, 
+  TIME_FORMAT_ERROR 
+} from '../../utils/timeValidation';
 
 interface LiveEventEditorModalProps {
   isOpen: boolean;
@@ -32,7 +38,8 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
   const [title, setTitle] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState('06:00 PM – 07:30 PM IST');
+  const [time, setTime] = useState('06:30 PM');
+  const [timeError, setTimeError] = useState<string | null>(null);
   const [location, setLocation] = useState('Online & YouTube Live Broadcast');
   const [liveStatus, setLiveStatus] = useState<LiveStreamStatus | 'auto'>('auto');
   const [customThumbnail, setCustomThumbnail] = useState('');
@@ -50,7 +57,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       setTitle(initialData.title || '');
       setYoutubeUrl(initialData.youtubeUrl || '');
       setDate(initialData.date || new Date().toISOString().split('T')[0]);
-      setTime(initialData.time || '06:00 PM – 07:30 PM IST');
+      setTime(extractBroadcastTime(initialData.time, '06:30 PM'));
       setLocation(initialData.location || 'Online & YouTube Live Broadcast');
       setLiveStatus(initialData.liveStatus || 'auto');
       setCustomThumbnail(initialData.bannerImage || initialData.customThumbnailUrl || '');
@@ -65,7 +72,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       setTitle('');
       setYoutubeUrl('');
       setDate(new Date().toISOString().split('T')[0]);
-      setTime('06:00 PM – 07:30 PM IST');
+      setTime('06:30 PM');
       setLocation('Online & YouTube Live Broadcast');
       setLiveStatus('auto');
       setCustomThumbnail('');
@@ -73,6 +80,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       setRegistrationOpen(true);
       setSpeakers([{ name: '', affiliation: '', role: 'Keynote Speaker' }]);
     }
+    setTimeError(null);
     setError(null);
   }, [initialData, isOpen]);
 
@@ -114,18 +122,28 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       return;
     }
 
+    const timeValidation = validateBroadcastTime(time);
+    if (!timeValidation.isValid) {
+      const errMsg = timeValidation.error || TIME_FORMAT_ERROR;
+      setTimeError(errMsg);
+      setError(errMsg);
+      return;
+    }
+
     setSaving(true);
     setError(null);
+    setTimeError(null);
 
     try {
       const filteredSpeakers = speakers.filter(s => s.name.trim() !== '');
+      const storageTime = formatBroadcastStorageTime(timeValidation.formattedTime);
 
       const payload: Partial<EventItem> = {
         title: title.trim(),
         type: 'Live Stream',
         mode: 'Online Webinar',
         date: date.trim(),
-        time: time.trim() || '06:00 PM – 07:30 PM IST',
+        time: storageTime,
         location: location.trim() || 'Online & YouTube Live Stream',
         description: description.trim(),
         speakers: filteredSpeakers.length > 0 ? filteredSpeakers : [
@@ -264,11 +282,19 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
               </div>
             </div>
 
-            <div className="space-y-1">
-              {/* Clock-Based Interactive Time Picker */}
-              <ClockTimePicker
+            <div>
+              {/* Manual Time Entry with Strict Validation */}
+              <BroadcastTimeInput
                 value={time}
-                onChange={setTime}
+                onChange={val => {
+                  setTime(val);
+                  if (timeError) {
+                    const res = validateBroadcastTime(val);
+                    if (res.isValid) setTimeError(null);
+                  }
+                }}
+                error={timeError}
+                onErrorChange={setTimeError}
                 label="Broadcast Time (IST) *"
               />
             </div>
@@ -301,7 +327,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
                   Broadcast Schedule Confirmation
                 </span>
                 <span className="font-semibold text-slate-900 text-xs">
-                  {date ? new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'Date not set'} • {time || '06:00 PM – 07:30 PM IST'}
+                  {date ? new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'Date not set'} • {validateBroadcastTime(time).isValid ? formatBroadcastStorageTime(validateBroadcastTime(time).formattedTime) : (time ? `${time} (Invalid Format)` : 'Time not set')}
                 </span>
               </div>
             </div>

@@ -46,7 +46,14 @@ import {
   getYouTubeWatchUrl, 
   getYouTubeThumbnail 
 } from '../utils/youtube';
-import { parseBroadcastTime, formatBroadcastTime } from '../components/admin/ClockTimePicker';
+import { 
+  validateBroadcastTime, 
+  extractBroadcastTime, 
+  formatBroadcastStorageTime, 
+  TIME_FORMAT_ERROR,
+  parseBroadcastTime, 
+  formatBroadcastTime 
+} from '../utils/timeValidation';
 
 async function runTests() {
   console.log('🚀 Running Bhartiya Collective Architecture Verification Suite...\n');
@@ -1125,8 +1132,57 @@ async function runTests() {
   const seededLive = await eventService.getEventById('evt-live-ucc-broadcast');
   assert(seededLive !== null, 'Seeded live event exists');
   assert(seededLive?.youtubeId === '5qap5aO4i9A', 'Live event uses active 24/7 stream (5qap5aO4i9A) permitting embedding');
+  const activeEmbedUrl = getYouTubeEmbedUrl('5qap5aO4i9A');
+  assert(!activeEmbedUrl.includes('origin='), 'Embed URL omits origin query parameter to avoid IP-based rejection by YouTube');
+  assert(activeEmbedUrl.includes('playsinline=1'), 'Embed URL includes playsinline=1');
+  assert(activeEmbedUrl.includes('enablejsapi=1'), 'Embed URL includes enablejsapi=1');
 
-  console.log('\n📌 Testing Clock-Based Time Picker in Admin Broadcast:');
+  console.log('\n📌 Testing Manual Time Entry & Validation in Admin Broadcast (HH:MM AM/PM):');
+  // Valid times
+  const v1 = validateBroadcastTime('09:30 AM');
+  assert(v1.isValid && v1.formattedTime === '09:30 AM', 'Accepts valid morning time 09:30 AM');
+  const v2 = validateBroadcastTime('12:00 PM');
+  assert(v2.isValid && v2.formattedTime === '12:00 PM', 'Accepts valid noon time 12:00 PM');
+  const v3 = validateBroadcastTime('06:45 PM');
+  assert(v3.isValid && v3.formattedTime === '06:45 PM', 'Accepts valid evening time 06:45 PM');
+  const v4 = validateBroadcastTime('11:15 PM');
+  assert(v4.isValid && v4.formattedTime === '11:15 PM', 'Accepts valid night time 11:15 PM');
+  
+  // Custom single-digit hour and lowercase AM/PM with surrounding whitespace
+  const v5 = validateBroadcastTime('  9:30 am  ');
+  assert(v5.isValid && v5.formattedTime === '09:30 AM', 'Trims whitespace and normalizes 9:30 am to 09:30 AM');
+  const v6 = validateBroadcastTime('1:05 pm');
+  assert(v6.isValid && v6.formattedTime === '01:05 PM', 'Normalizes 1:05 pm to 01:05 PM');
+
+  // Invalid times and error message
+  const inv1 = validateBroadcastTime('14:00');
+  assert(!inv1.isValid && inv1.error === TIME_FORMAT_ERROR, 'Rejects 24-hour format 14:00 with standard error message');
+  const inv2 = validateBroadcastTime('13:00 PM');
+  assert(!inv2.isValid && inv2.error === TIME_FORMAT_ERROR, 'Rejects hour 13 in 12-hour format');
+  const inv3 = validateBroadcastTime('00:30 AM');
+  assert(!inv3.isValid && inv3.error === TIME_FORMAT_ERROR, 'Rejects hour 00 in 12-hour format');
+  const inv4 = validateBroadcastTime('09:65 AM');
+  assert(!inv4.isValid && inv4.error === TIME_FORMAT_ERROR, 'Rejects minutes > 59');
+  const inv5 = validateBroadcastTime('invalid time');
+  assert(!inv5.isValid && inv5.error === TIME_FORMAT_ERROR, 'Rejects non-time string');
+  const inv6 = validateBroadcastTime('');
+  assert(!inv6.isValid && inv6.error === TIME_FORMAT_ERROR, 'Rejects empty time string');
+
+  // Extract time when editing or rescheduling an existing broadcast
+  const ext1 = extractBroadcastTime('06:00 PM – 07:30 PM IST');
+  assert(ext1 === '06:00 PM', 'Extracts 06:00 PM when editing an existing ranged broadcast');
+  const ext2 = extractBroadcastTime('09:30 AM IST');
+  assert(ext2 === '09:30 AM', 'Extracts 09:30 AM when editing a broadcast with IST suffix');
+  const ext3 = extractBroadcastTime('18:30');
+  assert(ext3 === '06:30 PM', 'Converts 24-hour stored time 18:30 to 06:30 PM during edit/reschedule');
+
+  // Time storage with timezone convention
+  const st1 = formatBroadcastStorageTime('09:30 AM');
+  assert(st1 === '09:30 AM IST', 'Formats storage time with IST timezone suffix');
+  const st2 = formatBroadcastStorageTime('06:45 PM IST');
+  assert(st2 === '06:45 PM IST', 'Preserves existing IST suffix without duplicating');
+
+  console.log('\n📌 Testing Legacy Backward Compatibility in Broadcast Time:');
   const parsedTime1 = parseBroadcastTime('06:00 PM – 07:30 PM IST');
   assert(parsedTime1.hour === 6, 'Clock parser resolves hour 6');
   assert(parsedTime1.minute === 0, 'Clock parser resolves minute 0');

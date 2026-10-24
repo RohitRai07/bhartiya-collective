@@ -63,17 +63,14 @@ export function getYouTubeThumbnail(youtubeId: string): string {
 
 /**
  * Return embed player URL with standard parameters for live streams and videos
- * Uses enablejsapi=1, playsinline=1, rel=0, and origin for maximum browser compatibility.
+ * Uses enablejsapi=1, playsinline=1, rel=0, and modestbranding=1.
+ * Omits origin query parameter to avoid YouTube player rejecting IP origins (e.g. 127.0.0.1:3000).
  */
 export function getYouTubeEmbedUrl(youtubeId: string, autoplay: boolean = true): string {
   if (!youtubeId) return '';
-  
-  const origin = typeof window !== 'undefined' && window.location.origin 
-    ? `&origin=${encodeURIComponent(window.location.origin)}` 
-    : '';
 
   // Use standard www.youtube.com embed with playsinline and JS API enabled
-  return `https://www.youtube.com/embed/${youtubeId}?autoplay=${autoplay ? 1 : 0}&playsinline=1&rel=0&enablejsapi=1&modestbranding=1${origin}`;
+  return `https://www.youtube.com/embed/${youtubeId}?autoplay=${autoplay ? 1 : 0}&playsinline=1&rel=0&enablejsapi=1&modestbranding=1`;
 }
 
 /**
