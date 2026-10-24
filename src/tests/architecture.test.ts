@@ -26,6 +26,8 @@ import { magazineService } from '../services/magazineService';
 import { teamService } from '../services/teamService';
 import { searchService } from '../services/searchService';
 import { centreService } from '../services/centreService';
+import { contactService } from '../services/contactService';
+import { centralizedNotificationService } from '../services/centralizedNotificationService';
 import { MAX_CV_SIZE_BYTES } from '../types/career';
 import { UserRegistrationInput } from '../types/registration';
 
@@ -763,6 +765,114 @@ async function runTests() {
   // Test Admin Logout
   await authService.logoutAdmin();
   assert(authService.getAdminSession() === null, 'Admin logout removes session and clears auth token');
+
+  // =========================================================================
+  // CENTRALIZED ADMIN NOTIFICATION MODULE & TWO-WAY SYNCHRONIZATION TESTS
+  // =========================================================================
+  console.log('\n📌 Testing Centralized Admin Notification Module & Two-Way Sync:');
+
+  // 1. Contact / Enquiries Service Verification
+  const testInquiry = await contactService.submitInquiry({
+    name: 'Dr. Vikramaditya Sharma',
+    email: 'vikram.sharma@sampurnanand.ac.in',
+    phone: '+91 94150 99887',
+    subject: 'Academic Collaboration on Indic Jurisprudence',
+    message: 'We wish to invite scholars from Bharat Collective to our upcoming symposium.',
+  });
+  assert(testInquiry.id.startsWith('inq-'), 'Contact enquiry created with inq- prefix');
+  assert(testInquiry.status === 'new', 'New enquiry initializes with status "new"');
+
+  const allInquiries = await contactService.getInquiries();
+  assert(allInquiries.some(i => i.id === testInquiry.id), 'Contact inquiry retrievable in directory');
+
+  const updatedInq = await contactService.updateInquiryStatus(testInquiry.id, 'in_progress');
+  assert(updatedInq?.status === 'in_progress', 'Contact inquiry status updates reactively');
+
+  // 2. Centralized Recipient Aggregation Across All Modules
+  const aggregatedRecipients = await centralizedNotificationService.getAllAggregatedRecipients();
+  assert(Array.isArray(aggregatedRecipients) && aggregatedRecipients.length > 0, 'Centralized aggregator queries live data across modules');
+
+  const modulesFound = new Set(aggregatedRecipients.map(r => r.sourceModule));
+  assert(modulesFound.has('career'), 'Aggregates career applicants');
+  assert(modulesFound.has('newsletter'), 'Aggregates newsletter subscribers');
+  assert(modulesFound.has('contact'), 'Aggregates contact inquiries');
+  assert(modulesFound.has('registration'), 'Aggregates member registrations');
+  assert(modulesFound.has('submission'), 'Aggregates CFP paper submissions');
+
+  // Verify no duplicate IDs or empty names
+  const testContactRecipient = aggregatedRecipients.find(r => r.id === testInquiry.id);
+  assert(!!testContactRecipient, 'Test contact inquiry is seamlessly aggregated as a notification recipient');
+  assert(testContactRecipient?.name === 'Dr. Vikramaditya Sharma', 'Recipient retains original submitted name');
+  assert(testContactRecipient?.email === 'vikram.sharma@sampurnanand.ac.in', 'Recipient retains submitted email');
+  assert(testContactRecipient?.hasEmail === true && testContactRecipient?.hasPhone === true, 'Channel capabilities computed accurately');
+
+  // 3. Centralized Aggregator Statistics
+  const stats = await centralizedNotificationService.getStats();
+  assert(stats.totalContacts >= aggregatedRecipients.length, 'Aggregator statistics calculate total recipients accurately');
+  assert(stats.totalWithEmail > 0, 'Aggregator statistics compute email-reachable count');
+  assert(stats.totalWithPhone > 0, 'Aggregator statistics compute phone/SMS/WhatsApp-reachable count');
+  assert(stats.byModule.career > 0, 'Statistics include career count');
+  assert(stats.byModule.newsletter > 0, 'Statistics include newsletter count');
+  assert(stats.byModule.contact > 0, 'Statistics include contact count');
+
+  // 4. Filtering and Unsubscribe Safety Rules
+  const careerOnly = centralizedNotificationService.filterRecipients(aggregatedRecipients, { sourceModule: 'career' });
+  assert(careerOnly.every(r => r.sourceModule === 'career'), 'Filter by sourceModule isolates module recipients correctly');
+
+  const emailReadyOnly = centralizedNotificationService.filterRecipients(aggregatedRecipients, { channelAvailability: 'has_email' });
+  assert(emailReadyOnly.every(r => r.hasEmail && !!r.email), 'Filter by channelAvailability="has_email" excludes empty email entries');
+
+  const searchFiltered = centralizedNotificationService.filterRecipients(aggregatedRecipients, { searchQuery: 'Vikramaditya' });
+  assert(searchFiltered.length >= 1 && searchFiltered[0].name.includes('Vikramaditya'), 'Filter by searchQuery finds matching recipients');
+
+  // 5. Two-Way Synchronization: Notification Dispatched from original module reflects in Centralized Service
+  const sampleCareer = aggregatedRecipients.find(r => r.sourceModule === 'career')!;
+  assert(!!sampleCareer, 'Sample career applicant found for two-way sync test');
+
+  // Dispatch notification using notificationService
+  const sendResult = await notificationService.sendNotification({
+    recipients: [{
+      id: sampleCareer.id,
+      name: sampleCareer.name,
+      email: sampleCareer.email,
+      phone: sampleCareer.phone,
+    }],
+    channel: 'both',
+    subject: 'Update on Your Application - Bharat Collective Foundation',
+    message: 'Namaste {{name}}, your application has been received and is currently under review.',
+    dynamicData: { name: sampleCareer.name },
+  });
+
+  assert(sendResult.success === true, 'Notification dispatched successfully');
+  assert(sendResult.honestStatus === 'simulated' || sendResult.honestStatus === 'delivered', 'Honest status reported transparently without false claims');
+
+  // Query logs for recipient via notificationService (source of truth)
+  const recipientLogs = notificationService.getLogsForRecipient(sampleCareer.id, sampleCareer.email, sampleCareer.phone);
+  assert(recipientLogs.length >= 1, 'Notification log retrieved via recipient ID/email/phone');
+  assert(recipientLogs[0].recipientItems?.some(item => (item.id === sampleCareer.id || item.recipientId === sampleCareer.id || item.email === sampleCareer.email)), 'Per-recipient log item contains correct ID & email mapping');
+
+  // Query logs via centralizedNotificationService
+  const centralizedLogs = await centralizedNotificationService.getLogsForRecipient(sampleCareer.id, sampleCareer.email, sampleCareer.phone);
+  assert(centralizedLogs.length === recipientLogs.length, 'Centralized Notification Centre logs synchronize identically with module logs');
+
+  // 6. Two-Way Synchronization: Dispatch from Notification Centre reflects in recipient history
+  const bulkSendResult = await centralizedNotificationService.sendBulkNotification({
+    recipients: [testContactRecipient!],
+    channel: 'email',
+    subject: 'Academic Collaboration - Bharat Collective',
+    message: 'Respected {{name}},\n\nThank you for reaching out regarding the academic symposium.',
+    dynamicData: { name: testContactRecipient!.name },
+  });
+
+  assert(bulkSendResult.success === true, 'Bulk notification from Notification Centre succeeds');
+  const inquiryLogs = notificationService.getLogsForRecipient(testInquiry.id, testInquiry.email, testInquiry.phone);
+  assert(inquiryLogs.length >= 1, 'Inquiry receives and synchronizes notification history from Notification Centre');
+
+  // 7. Retry Failed / Simulated Notification
+  const lastLog = inquiryLogs[0];
+  const retryResult = await notificationService.retryFailedNotification(lastLog.id);
+  assert(retryResult.success === true, 'Notification retry mechanism completes successfully');
+  assert(typeof retryResult.log?.retryCount === 'number' && retryResult.log.retryCount >= 1, 'Retry counter increments cleanly on the unified record');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

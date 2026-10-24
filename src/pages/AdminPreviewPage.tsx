@@ -46,6 +46,7 @@ import { ContentEditorModal, ContentEntityType } from '../components/admin/Conte
 import { ImageUploadWithUrl } from '../components/admin/ImageUploadWithUrl';
 import { TaxonomyManager } from '../components/admin/TaxonomyManager';
 import { CareerDetailModal } from '../components/admin/CareerDetailModal';
+import { NotificationCentre } from '../components/admin/NotificationCentre';
 import { PodcastEditorModal } from '../components/admin/PodcastEditorModal';
 import { MagazineEditorModal } from '../components/admin/MagazineEditorModal';
 import { AdminSearchModal, AdminSearchResultItem } from '../components/admin/AdminSearchModal';
@@ -58,6 +59,7 @@ import { taxonomyService } from '../services/taxonomyService';
 import { gazetteSyncService } from '../services/gazetteSyncService';
 
 import { 
+  Bell,
   ShieldCheck, 
   Download, 
   Search, 
@@ -111,7 +113,7 @@ interface AdminPreviewPageProps {
   onBackToPublicSite: () => void;
 }
 
-type MainTab = 'registrations' | 'careers' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings';
+type MainTab = 'registrations' | 'careers' | 'notifications' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings';
 type ContentSubTab = 'publications' | 'circulars' | 'events' | 'research' | 'centres' | 'experts' | 'nationalTeam' | 'stateTeam' | 'news' | 'podcasts' | 'magazine' | 'media' | 'taxonomy';
 
 export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPublicSite }) => {
@@ -1108,6 +1110,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
           {[
             { id: 'registrations', label: `Registrations (${registrations.length})`, icon: UserCheck },
             { id: 'careers', label: `Careers (${careerApplications.length})`, icon: Briefcase },
+            { id: 'notifications', label: 'Notification Centre', icon: Bell },
             { id: 'content', label: 'Website Content Management', icon: BookOpen },
             { id: 'communications', label: `Communications & Logs (${notificationLogs.length})`, icon: Send },
             { id: 'submissions', label: `Call for Papers (${submissions.length})`, icon: FileText },
@@ -1662,6 +1665,20 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
               )}
             </div>
           </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* TAB 2.5: CENTRALIZED NOTIFICATION CENTRE */}
+        {/* ============================================================== */}
+        {activeTab === 'notifications' && (
+          <NotificationCentre
+            onNavigateToModule={(tab, subTab) => {
+              setActiveTab(tab as MainTab);
+              if (subTab) {
+                setContentSubTab(subTab as ContentSubTab);
+              }
+            }}
+          />
         )}
 
         {/* ============================================================== */}
@@ -5347,6 +5364,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
         record={viewingCareerRecord}
         onClose={() => setViewingCareerRecord(null)}
         onStatusChange={handleCareerStatusChange}
+        onOpenNotify={openNotifyCareer}
       />
 
       {/* Podcast Editor Modal */}

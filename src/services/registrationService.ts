@@ -201,6 +201,13 @@ export const registrationService = {
   },
 
   /**
+   * Synchronous accessor for in-memory / stored records
+   */
+  getAll(): UserRegistrationRecord[] {
+    return loadStoredRegistrations();
+  },
+
+  /**
    * Admin Panel Read API (Section 16: View Registrations)
    */
   async getRegistrations(): Promise<UserRegistrationRecord[]> {

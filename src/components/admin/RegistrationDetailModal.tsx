@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserRegistrationRecord } from '../../types/registration';
 import { registrationCsvExporter } from '../../export/registrationCsvExporter';
+import { notificationService } from '../../services/notificationService';
+import { NotificationLog } from '../../types/notification';
 import { 
   X, 
   User, 
@@ -14,7 +16,8 @@ import {
   CheckCircle2, 
   Clock, 
   Archive,
-  ShieldCheck
+  ShieldCheck,
+  History
 } from 'lucide-react';
 
 interface RegistrationDetailModalProps {
@@ -30,6 +33,27 @@ export const RegistrationDetailModal: React.FC<RegistrationDetailModalProps> = (
   onStatusChange,
   onOpenNotify,
 }) => {
+  const [notificationHistory, setNotificationHistory] = useState<NotificationLog[]>([]);
+
+  useEffect(() => {
+    if (!record) return;
+
+    const loadHistory = () => {
+      const logs = notificationService.getLogsForRecipient(
+        record.id,
+        record.email,
+        record.phoneNumber?.fullFormatted
+      );
+      setNotificationHistory(logs);
+    };
+
+    loadHistory();
+
+    const handleDispatched = () => loadHistory();
+    window.addEventListener('bharat:notification-dispatched', handleDispatched);
+    return () => window.removeEventListener('bharat:notification-dispatched', handleDispatched);
+  }, [record]);
+
   if (!record) return null;
 
   const handleDownloadCsv = () => {
@@ -63,130 +87,105 @@ export const RegistrationDetailModal: React.FC<RegistrationDetailModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
-      <div 
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col"
-        onClick={e => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
+        
         {/* Header */}
-        <div className="bg-slate-900 text-white p-5 flex items-center justify-between border-b border-slate-800">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <ShieldCheck className="w-4 h-4 text-amber-400" />
-              <span className="text-xs uppercase tracking-wider text-amber-400 font-bold">
-                Registration Dossier
-              </span>
-              <span className="text-slate-500">•</span>
-              <span className="font-mono text-xs text-slate-300 font-bold">
-                {record.registrationNumber}
-              </span>
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-900 text-white shrink-0">
+          <div className="flex items-center space-x-3">
+            <div className="bg-amber-800/80 p-2 rounded-xl text-amber-300">
+              <User className="w-5 h-5" />
             </div>
-            <h3 className="font-serif text-lg font-bold text-white">
-              {record.firstName} {record.middleName ? `${record.middleName} ` : ''}{record.lastName}
-            </h3>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h2 className="text-base font-bold tracking-tight">
+                  {record.firstName} {record.middleName ? `${record.middleName} ` : ''}{record.lastName}
+                </h2>
+                {getStatusBadge(record.status)}
+              </div>
+              <p className="text-xs text-amber-400 font-mono tracking-wider">
+                {record.registrationNumber}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-3">
-            {getStatusBadge(record.status)}
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              aria-label="Close"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Content Body */}
+        {/* Modal Body */}
         <div className="p-6 overflow-y-auto space-y-6 text-xs text-slate-700">
           
-          {/* Identity & Contact Section */}
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-              <User className="w-3.5 h-3.5 text-amber-600" />
-              <span>Personal & Contact Credentials</span>
-            </h4>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Full Name</span>
-                <span className="font-semibold text-slate-900 text-sm">
-                  {record.firstName} {record.middleName} {record.lastName}
-                </span>
-              </div>
-
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Registration ID</span>
-                <span className="font-mono font-semibold text-amber-900 text-sm">
-                  {record.registrationNumber}
-                </span>
-              </div>
-
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Email Address</span>
-                <a 
-                  href={`mailto:${record.email}`} 
-                  className="font-medium text-amber-700 hover:underline inline-flex items-center space-x-1"
-                >
-                  <Mail className="w-3 h-3" />
-                  <span>{record.email}</span>
-                </a>
-              </div>
-
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Phone Number</span>
-                <a 
-                  href={`tel:${record.phoneNumber.fullFormatted}`} 
-                  className="font-mono font-medium text-slate-900 hover:text-amber-700 inline-flex items-center space-x-1"
-                >
-                  <Phone className="w-3 h-3 text-emerald-600" />
-                  <span>{record.phoneNumber.fullFormatted}</span>
-                </a>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-200">
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Role / Engagement</span>
-                <span className="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 capitalize">
-                  {record.engagementType || 'Membership'}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Profession</span>
-                <span className="font-semibold text-slate-900 text-xs mt-0.5 block">
-                  {record.profession || 'Student / Scholar'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Academic Affiliation */}
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-              <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
+          {/* Institutional Fellowship Card */}
+          <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4 space-y-2">
+            <div className="flex items-center space-x-2 text-amber-950 font-bold text-xs uppercase tracking-wider">
+              <GraduationCap className="w-4 h-4 text-amber-800" />
               <span>Academic Affiliation</span>
-            </h4>
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <span className="text-[10px] text-slate-400 uppercase font-semibold block">College / University Name</span>
-              <p className="font-semibold text-slate-900 text-sm mt-0.5">{record.collegeName}</p>
+            </div>
+            <div className="text-sm font-semibold text-slate-900">
+              {record.collegeName}
+            </div>
+            <div className="flex items-center space-x-2 text-slate-600 text-xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>National Youth Scholar & Fellow Candidate</span>
             </div>
           </div>
 
-          {/* Address & Geographic Hierarchy */}
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-              <MapPin className="w-3.5 h-3.5 text-amber-600" />
-              <span>Postal & Geographic Location</span>
-            </h4>
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">Street Address</span>
-                <p className="text-slate-800 font-medium">{record.address}</p>
+          {/* Contact Details Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* Direct Communications */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+              <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-[11px] border-b border-slate-200 pb-2">
+                Communication Channels
+              </h3>
+              
+              <div className="space-y-2.5">
+                <div className="flex items-center space-x-2.5">
+                  <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Email Address</span>
+                    <a href={`mailto:${record.email}`} className="font-medium text-amber-800 hover:underline">
+                      {record.email}
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2.5">
+                  <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Mobile Number</span>
+                    <span className="font-mono font-medium text-slate-900">
+                      {record.phoneNumber.fullFormatted}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Postal Address & Location Beats */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider text-[11px]">
+                  Postal Geography
+                </h3>
+                <span className="text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700 font-mono">
+                  Beat Auto-Resolved
+                </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-200/80">
+              <div className="space-y-1">
+                <div className="flex items-start space-x-2 text-slate-600">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+                  <span className="leading-relaxed">{record.address}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/60 text-[11px]">
                 <div>
                   <span className="text-[10px] text-slate-400 uppercase font-semibold block">PIN Code</span>
                   <span className="font-mono font-bold text-slate-900">{record.pincode}</span>
@@ -205,6 +204,68 @@ export const RegistrationDetailModal: React.FC<RegistrationDetailModalProps> = (
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Synchronized Notification History */}
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <History className="w-4 h-4 text-amber-700" />
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Notification History ({notificationHistory.length})
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenNotify(record);
+                }}
+                className="px-2.5 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-colors cursor-pointer"
+              >
+                <Send className="w-3 h-3" />
+                <span>Notify Fellow</span>
+              </button>
+            </div>
+
+            {notificationHistory.length === 0 ? (
+              <p className="text-xs text-slate-400 italic">
+                No communications dispatched to this candidate yet.
+              </p>
+            ) : (
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                {notificationHistory.map(log => (
+                  <div key={log.id} className="p-2.5 bg-white rounded-lg border border-slate-200/80 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          log.channel === 'whatsapp' ? 'bg-emerald-100 text-emerald-800' :
+                          log.channel === 'email' ? 'bg-blue-100 text-blue-800' :
+                          'bg-purple-100 text-purple-800'
+                        }`}>
+                          {log.channel}
+                        </span>
+                        <span className="font-semibold text-slate-800">{log.subject || 'Secretariat Update'}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400">
+                        {new Date(log.sentAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 text-[11px] line-clamp-2 italic">
+                      "{log.messageSnippet}"
+                    </p>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+                      <span>Source: {log.sourceModule || 'Direct'}</span>
+                      <span className={`font-semibold ${
+                        log.status === 'delivered' ? 'text-emerald-600' : 'text-amber-600'
+                      }`}>
+                        {log.status === 'delivered' ? '✓ Delivered' : '• Simulated / Pending'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Submission Audit Metadata */}

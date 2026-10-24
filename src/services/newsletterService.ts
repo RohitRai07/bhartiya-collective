@@ -190,6 +190,10 @@ export const newsletterService = {
     return loadStoredSubscribers();
   },
 
+  getAll(): NewsletterSubscriptionRecord[] {
+    return loadStoredSubscribers();
+  },
+
   /**
    * Admin: Query list of all subscribers (async accessor)
    */

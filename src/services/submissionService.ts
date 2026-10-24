@@ -91,6 +91,10 @@ export const submissionService = {
     return record;
   },
 
+  getAll(): PaperSubmissionRecord[] {
+    return loadStoredSubmissions();
+  },
+
   async getSubmissions(): Promise<PaperSubmissionRecord[]> {
     if (!apiConfig.useMockData) {
       const response = await apiClient.get<PaperSubmissionRecord[]>(

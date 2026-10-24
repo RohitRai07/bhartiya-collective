@@ -17,7 +17,8 @@ import {
   ArrowRight, 
   CornerDownLeft, 
   Sparkles,
-  Landmark
+  Landmark,
+  Bell
 } from 'lucide-react';
 import { UserRegistrationRecord } from '../../types/registration';
 import { CareerApplicationRecord } from '../../types/career';
@@ -36,7 +37,7 @@ export interface AdminSearchResultItem {
   title: string;
   subtitle: string;
   category: string;
-  tab: 'registrations' | 'careers' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings';
+  tab: 'registrations' | 'careers' | 'content' | 'communications' | 'submissions' | 'newsletter' | 'settings' | 'notifications';
   subTab?: 'publications' | 'circulars' | 'events' | 'research' | 'centres' | 'experts' | 'nationalTeam' | 'stateTeam' | 'news' | 'podcasts' | 'magazine' | 'media' | 'taxonomy';
   recordId?: string;
   recordType?: 'registration' | 'career';
@@ -432,6 +433,25 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
           });
         }
       }
+
+      // 15. Notification Centre Keywords
+      const notifKeywords = [
+        { key: 'notification centre', label: 'Centralized Notification Centre' },
+        { key: 'broadcast', label: 'Multi-Channel Broadcast (Email, SMS, WhatsApp)' },
+        { key: 'sms gateway', label: 'SMS & WhatsApp Gateway Integration' },
+        { key: 'recipients directory', label: 'Unified Recipients Directory' },
+      ];
+      for (const nk of notifKeywords) {
+        if (nk.key.includes(q) || nk.label.toLowerCase().includes(q)) {
+          allResults.push({
+            id: `notif-${nk.key}`,
+            title: nk.label,
+            subtitle: 'Centralized Notification Centre & Multi-Channel Communications',
+            category: 'Notification',
+            tab: 'notifications',
+          });
+        }
+      }
     } catch (err) {
       console.error('Error computing admin search results:', err);
     }
@@ -475,6 +495,7 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
       case 'Podcast': return <Video className="w-4 h-4 text-rose-600" />;
       case 'Magazine': return <BookOpen className="w-4 h-4 text-teal-600" />;
       case 'Subscriber': return <Mail className="w-4 h-4 text-sky-600" />;
+      case 'Notification': return <Bell className="w-4 h-4 text-amber-500" />;
       case 'Paper Submission': return <FileText className="w-4 h-4 text-slate-600" />;
       default: return <Settings className="w-4 h-4 text-slate-600" />;
     }
@@ -534,6 +555,7 @@ export const AdminSearchModal: React.FC<AdminSearchModalProps> = ({
             { id: 'all', label: 'All Records' },
             { id: 'registrations', label: 'Registrations' },
             { id: 'careers', label: 'Careers' },
+            { id: 'notifications', label: 'Notifications' },
             { id: 'content', label: 'Website Content' },
             { id: 'newsletter', label: 'Subscribers' },
             { id: 'submissions', label: 'CFP Submissions' },
