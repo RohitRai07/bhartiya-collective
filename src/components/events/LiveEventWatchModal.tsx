@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   ExternalLink, 
@@ -9,7 +9,10 @@ import {
   AlertCircle,
   Radio,
   Share2,
-  CheckCircle2
+  CheckCircle2,
+  Play,
+  RotateCcw,
+  ShieldAlert
 } from 'lucide-react';
 import { EventItem } from '../../types/event';
 import { 
@@ -34,7 +37,40 @@ export const LiveEventWatchModal: React.FC<LiveEventWatchModalProps> = ({
   onRegisterInterest,
   isRegistered = false,
 }) => {
-  const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
+  const [errorCode, setErrorCode] = useState<number | null>(null);
+
+  useEffect(() => {
+    setUseFallback(false);
+    setErrorCode(null);
+  }, [event?.id, isOpen]);
+
+  // Listen for YouTube iframe player error messages via postMessage API
+  useEffect(() => {
+    const handleWindowMessage = (e: MessageEvent) => {
+      try {
+        const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        // YouTube API onError event:
+        // 2: Invalid parameter
+        // 5: HTML5 player error
+        // 100: Video not found / removed
+        // 101 or 150: Video owner does not permit playback in embedded players
+        if (data && (data.event === 'onError' || typeof data.info === 'number')) {
+          const code = Number(data.info);
+          if (code === 101 || code === 150 || code === 100 || code === 2 || code === 5) {
+            setErrorCode(code);
+            setUseFallback(true);
+          }
+        }
+      } catch {
+        // Not a JSON message, ignore
+      }
+    };
+
+    window.addEventListener('message', handleWindowMessage);
+    return () => window.removeEventListener('message', handleWindowMessage);
+  }, []);
 
   if (!isOpen || !event) return null;
 
@@ -97,7 +133,7 @@ export const LiveEventWatchModal: React.FC<LiveEventWatchModalProps> = ({
                 href={getYouTubeWatchUrl(youtubeId)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-red-600/20 text-red-400 hover:bg-red-600/30 border border-red-500/30 text-xs font-semibold transition-colors"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white border border-red-500 text-xs font-bold transition-all shadow-sm cursor-pointer"
                 title="Watch on YouTube in new tab"
               >
                 <span>Watch on YouTube</span>
@@ -121,34 +157,101 @@ export const LiveEventWatchModal: React.FC<LiveEventWatchModalProps> = ({
           </div>
         </div>
 
-        {/* Video Player or Fallback */}
-        <div className="relative aspect-video w-full bg-black flex-shrink-0">
-          {isValidYouTube ? (
-            <iframe
-              src={getYouTubeEmbedUrl(youtubeId, true)}
-              title={event.title}
-              className="w-full h-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-3 bg-slate-950">
-              <AlertCircle className="w-12 h-12 text-amber-400/80" />
-              <h4 className="font-serif text-lg font-bold text-white">Livestream Unavailable</h4>
-              <p className="text-xs text-slate-400 max-w-md">
-                The YouTube stream URL is currently pending or invalid. Please check back shortly or visit our YouTube channel directly.
-              </p>
-              {youtubeUrl && (
+        {/* Video Player or Fallback View */}
+        <div className="relative aspect-video w-full bg-black flex-shrink-0 overflow-hidden">
+          {isValidYouTube && !useFallback ? (
+            <>
+              <iframe
+                src={getYouTubeEmbedUrl(youtubeId, true)}
+                title={event.title}
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+
+              {/* Troubleshooting bar overlay at bottom of player */}
+              <div className="absolute bottom-2 right-2 z-10 flex items-center space-x-2 bg-slate-950/80 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-white/10 text-[10px] text-slate-300">
+                <span>Playback issues?</span>
+                <button
+                  type="button"
+                  onClick={() => setUseFallback(true)}
+                  className="text-amber-400 hover:underline font-semibold cursor-pointer"
+                >
+                  Switch to Fallback
+                </button>
+                <span>•</span>
                 <a
-                  href={youtubeUrl}
+                  href={getYouTubeWatchUrl(youtubeId)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors"
+                  className="text-red-400 hover:underline font-bold inline-flex items-center space-x-0.5"
                 >
-                  <span>Open Stream URL</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open on YouTube</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
                 </a>
-              )}
+              </div>
+            </>
+          ) : (
+            /* Fallback Screen for Unavailable, Ended, or Embedding-Restricted Streams */
+            <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-4 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+              <div className="w-16 h-16 rounded-2xl bg-red-600/20 text-red-400 border border-red-500/30 flex items-center justify-center shadow-lg">
+                {errorCode === 101 || errorCode === 150 ? (
+                  <ShieldAlert className="w-8 h-8 text-amber-400" />
+                ) : (
+                  <AlertCircle className="w-8 h-8 text-red-500" />
+                )}
+              </div>
+
+              <div className="space-y-1.5 max-w-lg">
+                <h4 className="font-serif text-lg sm:text-xl font-bold text-white">
+                  {errorCode === 101 || errorCode === 150
+                    ? 'Embedding Restricted by Broadcaster'
+                    : errorCode === 100
+                    ? 'Live Stream Ended or Offline'
+                    : !isValidYouTube
+                    ? 'Livestream Link Unavailable'
+                    : 'Watch Broadcast Directly on YouTube'}
+                </h4>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {errorCode === 101 || errorCode === 150
+                    ? 'The broadcaster or video copyright holder has restricted third-party embedded playback for this livestream. You can watch it directly on YouTube without restrictions.'
+                    : errorCode === 100
+                    ? 'This live broadcast has ended or is currently unavailable. You can visit the YouTube channel to check for replays and upcoming sessions.'
+                    : !isValidYouTube
+                    ? 'The YouTube Live URL is currently invalid or pending. Please verify the URL or visit our YouTube channel.'
+                    : 'If this video displays "Video unavailable" due to browser policies or channel permissions, you can stream it smoothly on YouTube.'}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                {isValidYouTube && (
+                  <a
+                    href={getYouTubeWatchUrl(youtubeId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xl transition-all hover:scale-105 cursor-pointer"
+                  >
+                    <Play className="w-4 h-4 fill-white" />
+                    <span>Watch Directly on YouTube</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                )}
+
+                {isValidYouTube && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseFallback(false);
+                      setErrorCode(null);
+                    }}
+                    className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors cursor-pointer border border-slate-700"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Retry Embedded Player</span>
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>

@@ -49,6 +49,12 @@ function loadStoredEvents(): EventItem[] {
         needsUpdate = true;
         updatedEvt.bannerImage = defaultEvt.bannerImage;
       }
+      if (updatedEvt.youtubeId === 'dQw4w9WgXcQ' || updatedEvt.youtubeUrl?.includes('dQw4w9WgXcQ')) {
+        updatedEvt.youtubeUrl = 'https://www.youtube.com/watch?v=5qap5aO4i9A';
+        updatedEvt.youtubeId = '5qap5aO4i9A';
+        updatedEvt.bannerImage = getYouTubeThumbnail('5qap5aO4i9A');
+        needsUpdate = true;
+      }
       if (updatedEvt.youtubeUrl && !updatedEvt.youtubeId) {
         updatedEvt.youtubeId = extractYouTubeId(updatedEvt.youtubeUrl);
         needsUpdate = true;

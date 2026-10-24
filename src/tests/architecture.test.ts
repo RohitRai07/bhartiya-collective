@@ -46,6 +46,7 @@ import {
   getYouTubeWatchUrl, 
   getYouTubeThumbnail 
 } from '../utils/youtube';
+import { parseBroadcastTime, formatBroadcastTime } from '../components/admin/ClockTimePicker';
 
 async function runTests() {
   console.log('🚀 Running Bhartiya Collective Architecture Verification Suite...\n');
@@ -1048,12 +1049,20 @@ async function runTests() {
   assert(extractYouTubeId(watchUrl) === 'dQw4w9WgXcQ', 'Extracts ID from youtube.com/watch?v=...');
   assert(extractYouTubeId(shortUrl) === 'kJQP7kiw5Fk', 'Extracts ID from youtu.be/<id>');
   assert(extractYouTubeId(embedUrl) === '3JZ_D3ELwOQ', 'Extracts ID from youtube.com/embed/<id>');
+  assert(extractYouTubeId('https://www.youtube.com/watch?feature=shared&v=5qap5aO4i9A') === '5qap5aO4i9A', 'Extracts ID from watch?feature=shared&v=<id>');
+  assert(extractYouTubeId('https://m.youtube.com/live/5qap5aO4i9A') === '5qap5aO4i9A', 'Extracts ID from m.youtube.com/live/<id>');
+  assert(extractYouTubeId('https://www.youtube-nocookie.com/embed/5qap5aO4i9A') === '5qap5aO4i9A', 'Extracts ID from youtube-nocookie.com/embed/<id>');
+  assert(extractYouTubeId('https://youtube.com/shorts/5qap5aO4i9A') === '5qap5aO4i9A', 'Extracts ID from youtube.com/shorts/<id>');
   assert(extractYouTubeId('https://example.com/not-youtube') === '', 'Gracefully rejects non-YouTube URL');
 
   // 2. YouTube Helper Utilities
-  assert(getYouTubeThumbnail('dQw4w9WgXcQ') === 'https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg', 'Generates valid thumbnail URL');
-  assert(getYouTubeEmbedUrl('dQw4w9WgXcQ').includes('https://www.youtube.com/embed/dQw4w9WgXcQ'), 'Generates valid embed player URL');
-  assert(getYouTubeWatchUrl('dQw4w9WgXcQ') === 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'Generates valid watch URL');
+  assert(getYouTubeThumbnail('5qap5aO4i9A') === 'https://img.youtube.com/vi/5qap5aO4i9A/hqdefault.jpg', 'Generates valid thumbnail URL');
+  const embedUrlGenerated = getYouTubeEmbedUrl('5qap5aO4i9A', true);
+  assert(embedUrlGenerated.includes('https://www.youtube.com/embed/5qap5aO4i9A'), 'Generates valid embed player URL');
+  assert(embedUrlGenerated.includes('enablejsapi=1'), 'Embed URL includes enablejsapi=1 for error and state event messaging');
+  assert(embedUrlGenerated.includes('playsinline=1'), 'Embed URL includes playsinline=1 for smooth mobile inline playback');
+  assert(embedUrlGenerated.includes('rel=0'), 'Embed URL includes rel=0 to suppress unrelated videos');
+  assert(getYouTubeWatchUrl('5qap5aO4i9A') === 'https://www.youtube.com/watch?v=5qap5aO4i9A', 'Generates valid watch URL');
 
   // 3. Dynamic Live Status Computation
   assert(computeLiveEventStatus({ liveStatus: 'live' }) === 'live', 'Explicit live status respected');
@@ -1111,6 +1120,42 @@ async function runTests() {
   await eventService.deleteEvent(testLiveEvent.id);
   const eventsAfterDelete = await eventService.getEvents(true);
   assert(!eventsAfterDelete.some(e => e.id === testLiveEvent.id), 'Live event cleaned up successfully from storage');
+
+  // 9. Active 24/7 Seed Stream Embeddability Verification
+  const seededLive = await eventService.getEventById('evt-live-ucc-broadcast');
+  assert(seededLive !== null, 'Seeded live event exists');
+  assert(seededLive?.youtubeId === '5qap5aO4i9A', 'Live event uses active 24/7 stream (5qap5aO4i9A) permitting embedding');
+
+  console.log('\n📌 Testing Clock-Based Time Picker in Admin Broadcast:');
+  const parsedTime1 = parseBroadcastTime('06:00 PM – 07:30 PM IST');
+  assert(parsedTime1.hour === 6, 'Clock parser resolves hour 6');
+  assert(parsedTime1.minute === 0, 'Clock parser resolves minute 0');
+  assert(parsedTime1.period === 'PM', 'Clock parser resolves PM period');
+  assert(parsedTime1.durationMinutes === 90, 'Clock parser resolves 90 min broadcast duration');
+  assert(parsedTime1.timezone === 'IST', 'Clock parser resolves IST timezone');
+
+  const parsedTime2 = parseBroadcastTime('10:15 AM');
+  assert(parsedTime2.hour === 10, 'Clock parser resolves morning hour 10');
+  assert(parsedTime2.minute === 15, 'Clock parser resolves minute 15');
+  assert(parsedTime2.period === 'AM', 'Clock parser resolves AM period');
+
+  const formatted1 = formatBroadcastTime({
+    hour: 5,
+    minute: 30,
+    period: 'PM',
+    durationMinutes: 120,
+    timezone: 'IST',
+  });
+  assert(formatted1 === '05:30 PM – 07:30 PM IST', 'Clock formatter formats 2-hour duration range correctly');
+
+  const formattedSingle = formatBroadcastTime({
+    hour: 7,
+    minute: 0,
+    period: 'PM',
+    durationMinutes: 0,
+    timezone: 'IST',
+  });
+  assert(formattedSingle === '07:00 PM IST', 'Clock formatter formats single time point correctly');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

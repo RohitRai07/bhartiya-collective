@@ -6,13 +6,13 @@ import {
   Check, 
   Radio, 
   Calendar, 
-  Clock, 
   Plus, 
   Trash2,
   AlertCircle
 } from 'lucide-react';
 import { EventItem, EventSpeaker, LiveStreamStatus } from '../../types/event';
 import { extractYouTubeId, getYouTubeThumbnail } from '../../utils/youtube';
+import { ClockTimePicker } from './ClockTimePicker';
 
 interface LiveEventEditorModalProps {
   isOpen: boolean;
@@ -125,7 +125,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
         type: 'Live Stream',
         mode: 'Online Webinar',
         date: date.trim(),
-        time: time.trim() || 'Scheduled Time IST',
+        time: time.trim() || '06:00 PM – 07:30 PM IST',
         location: location.trim() || 'Online & YouTube Live Stream',
         description: description.trim(),
         speakers: filteredSpeakers.length > 0 ? filteredSpeakers : [
@@ -246,7 +246,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
             ) : null}
           </div>
 
-          {/* Schedule (Date, Time, Live Status) */}
+          {/* Schedule (Date, Time with Clock Picker, Live Status) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1">
               <label className="block font-semibold text-slate-900">
@@ -265,19 +265,12 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="block font-semibold text-slate-900">
-                Broadcast Time
-              </label>
-              <div className="relative">
-                <Clock className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
-                <input
-                  type="text"
-                  placeholder="06:00 PM – 07:30 PM IST"
-                  value={time}
-                  onChange={e => setTime(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white"
-                />
-              </div>
+              {/* Clock-Based Interactive Time Picker */}
+              <ClockTimePicker
+                value={time}
+                onChange={setTime}
+                label="Broadcast Time (IST) *"
+              />
             </div>
 
             <div className="space-y-1">
@@ -295,6 +288,26 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
                 <option value="ended">⏹️ Ended / Replay</option>
               </select>
             </div>
+          </div>
+
+          {/* Schedule Confirmation & Clear Display Box */}
+          <div className="p-3 bg-gradient-to-r from-red-50 to-amber-50/70 border border-red-200/80 rounded-2xl flex items-center justify-between text-xs">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-8 h-8 rounded-xl bg-red-600/15 text-red-700 flex items-center justify-center shrink-0 border border-red-200">
+                <Radio className="w-4 h-4 text-red-600" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-red-800 uppercase tracking-wider block">
+                  Broadcast Schedule Confirmation
+                </span>
+                <span className="font-semibold text-slate-900 text-xs">
+                  {date ? new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'Date not set'} • {time || '06:00 PM – 07:30 PM IST'}
+                </span>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white text-slate-800 border border-slate-200 shadow-2xs">
+              {liveStatus === 'live' ? '🔴 Live' : liveStatus === 'upcoming' ? '⏳ Scheduled' : liveStatus === 'ended' ? '⏹️ Ended' : 'Auto Status'}
+            </span>
           </div>
 
           {/* Custom Thumbnail (Optional) */}

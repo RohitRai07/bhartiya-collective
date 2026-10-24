@@ -9,34 +9,42 @@ export type LiveStreamStatus = 'upcoming' | 'live' | 'ended';
  * Extract an 11-character YouTube video / stream ID from various URL formats
  * Handles:
  * - https://www.youtube.com/live/<id>
- * - https://youtube.com/live/<id>
+ * - https://youtube.com/live/<id>?si=...
+ * - https://m.youtube.com/live/<id>
  * - https://www.youtube.com/watch?v=<id>
+ * - https://www.youtube.com/watch?feature=shared&v=<id>
  * - https://youtu.be/<id>
  * - https://www.youtube.com/embed/<id>
+ * - https://www.youtube.com/shorts/<id>
+ * - https://www.youtube.com/v/<id>
  * - Raw 11-character ID
  */
 export function extractYouTubeId(url: string): string {
   if (!url) return '';
   const cleanUrl = url.trim();
 
-  // Match youtube.com/live/<id>
-  const liveMatch = cleanUrl.match(/youtube\.com\/live\/([a-zA-Z0-9_-]{11})/);
+  // Match youtube.com/live/<id> (handles www., m., or bare domain, plus query params)
+  const liveMatch = cleanUrl.match(/(?:youtube\.com|youtube-nocookie\.com)\/live\/([a-zA-Z0-9_-]{11})/i);
   if (liveMatch && liveMatch[1]) return liveMatch[1];
 
   // Match youtu.be/<id>
-  const shortMatch = cleanUrl.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  const shortMatch = cleanUrl.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/i);
   if (shortMatch && shortMatch[1]) return shortMatch[1];
 
-  // Match youtube.com/watch?v=<id>
-  const watchMatch = cleanUrl.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  // Match youtube.com/watch?v=<id> or with other params e.g. ?feature=share&v=<id>
+  const watchMatch = cleanUrl.match(/[?&]v=([a-zA-Z0-9_-]{11})/i);
   if (watchMatch && watchMatch[1]) return watchMatch[1];
 
   // Match youtube.com/embed/<id>
-  const embedMatch = cleanUrl.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+  const embedMatch = cleanUrl.match(/(?:youtube\.com|youtube-nocookie\.com)\/embed\/([a-zA-Z0-9_-]{11})/i);
   if (embedMatch && embedMatch[1]) return embedMatch[1];
 
+  // Match youtube.com/shorts/<id>
+  const shortsMatch = cleanUrl.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/i);
+  if (shortsMatch && shortsMatch[1]) return shortsMatch[1];
+
   // Match youtube.com/v/<id>
-  const vMatch = cleanUrl.match(/youtube\.com\/v\/([a-zA-Z0-9_-]{11})/);
+  const vMatch = cleanUrl.match(/youtube\.com\/v\/([a-zA-Z0-9_-]{11})/i);
   if (vMatch && vMatch[1]) return vMatch[1];
 
   // Match raw 11 char ID
@@ -54,11 +62,18 @@ export function getYouTubeThumbnail(youtubeId: string): string {
 }
 
 /**
- * Return embed player URL with safe parameters
+ * Return embed player URL with standard parameters for live streams and videos
+ * Uses enablejsapi=1, playsinline=1, rel=0, and origin for maximum browser compatibility.
  */
 export function getYouTubeEmbedUrl(youtubeId: string, autoplay: boolean = true): string {
   if (!youtubeId) return '';
-  return `https://www.youtube.com/embed/${youtubeId}?autoplay=${autoplay ? 1 : 0}&rel=0`;
+  
+  const origin = typeof window !== 'undefined' && window.location.origin 
+    ? `&origin=${encodeURIComponent(window.location.origin)}` 
+    : '';
+
+  // Use standard www.youtube.com embed with playsinline and JS API enabled
+  return `https://www.youtube.com/embed/${youtubeId}?autoplay=${autoplay ? 1 : 0}&playsinline=1&rel=0&enablejsapi=1&modestbranding=1${origin}`;
 }
 
 /**
