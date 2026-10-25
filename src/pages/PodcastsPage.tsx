@@ -62,8 +62,17 @@ export const PodcastsPage: React.FC = () => {
       </div>
 
       {/* Podcast Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {podcasts.map((episode) => (
+      {podcasts.length === 0 ? (
+        <div className="text-center py-20 px-4 bg-slate-50 rounded-3xl border border-dashed border-slate-200 max-w-2xl mx-auto space-y-3">
+          <Tv className="w-10 h-10 text-slate-300 mx-auto" />
+          <h3 className="font-serif text-xl font-bold text-slate-800">New Episodes Coming Soon</h3>
+          <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+            We are curating upcoming broadcast dialogues and discussions. Please check back soon.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {podcasts.map((episode) => (
           <div
             key={episode.id}
             className="bg-white rounded-3xl overflow-hidden border border-slate-200 hover:border-amber-400 hover:shadow-lg transition-all flex flex-col justify-between group"
@@ -159,7 +168,8 @@ export const PodcastsPage: React.FC = () => {
 
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Interactive Video Playback Modal */}
       {activeVideo && (

@@ -19,7 +19,7 @@ const SEED_PODCASTS: PodcastEpisode[] = [
     date: '2026-09-15',
     description: 'An exhaustive exploration of Article 44, gender justice under personal laws, and synthesizing civilizational equity with modern constitutional democracy.',
     featured: true,
-    status: 'published',
+    status: 'draft',
   },
   {
     id: 'pod-2',
@@ -34,7 +34,7 @@ const SEED_PODCASTS: PodcastEpisode[] = [
     date: '2026-09-02',
     description: 'Examining the epistemological foundations of Indian jurisprudence, Pramana Shastra in statutory interpretation, and the evolution of the Bharatiya Nyaya Sanhita.',
     featured: true,
-    status: 'published',
+    status: 'draft',
   },
   {
     id: 'pod-3',
@@ -49,7 +49,7 @@ const SEED_PODCASTS: PodcastEpisode[] = [
     date: '2026-08-20',
     description: 'Applying Kautilyan statecraft, Mandala theory, and the maritime heritage of the Chola empire to contemporary Indo-Pacific strategic dilemmas.',
     featured: false,
-    status: 'published',
+    status: 'draft',
   }
 ];
 
@@ -64,7 +64,20 @@ class PodcastService {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_PODCASTS));
         return SEED_PODCASTS;
       }
-      return JSON.parse(raw);
+      const parsed: PodcastEpisode[] = JSON.parse(raw);
+      // Synchronize default seed episodes to draft if they were default published
+      let changed = false;
+      const updated = parsed.map(p => {
+        if (p.id.startsWith('pod-') && p.status === 'published' && (p.youtubeUrl?.includes('dQw4w9WgXcQ') || p.youtubeUrl?.includes('kJQP7kiw5Fk') || p.youtubeUrl?.includes('3JZ_D3ELwOQ'))) {
+          changed = true;
+          return { ...p, status: 'draft' as const };
+        }
+        return p;
+      });
+      if (changed) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      }
+      return updated;
     } catch {
       return this.memoryStore;
     }

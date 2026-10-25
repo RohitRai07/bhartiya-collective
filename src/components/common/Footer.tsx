@@ -274,16 +274,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                     </button>
                   </li>
                 ))}
-              <li className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => onNavigate('/admin')}
-                  className="inline-flex items-center space-x-1.5 text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
-                >
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Admin Portal</span>
-                </button>
-              </li>
+              {features.adminPanel && (
+                <li className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('/admin')}
+                    className="inline-flex items-center space-x-1.5 text-amber-400 hover:text-amber-300 font-semibold cursor-pointer"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Admin Portal</span>
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -296,14 +298,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </p>
 
           <div className="flex items-center space-x-4">
-            <button
-              type="button"
-              onClick={() => onNavigate('/admin')}
-              className="text-slate-500 hover:text-slate-400 text-[11px] cursor-pointer"
-            >
-              Admin Access
-            </button>
-            <span className="text-slate-700">|</span>
+            {features.adminPanel && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('/admin')}
+                  className="text-slate-500 hover:text-slate-400 text-[11px] cursor-pointer"
+                >
+                  Admin Access
+                </button>
+                <span className="text-slate-700">|</span>
+              </>
+            )}
             <span className="text-slate-400">Non-Partisan & Open-Access</span>
           </div>
         </div>
