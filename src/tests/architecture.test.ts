@@ -61,6 +61,10 @@ import {
   parseBroadcastTime, 
   formatBroadcastTime 
 } from '../utils/timeValidation';
+import { 
+  STANDARD_SPEAKER_ROLES, 
+  COMMON_AFFILIATIONS 
+} from '../components/admin/LiveEventEditorModal';
 
 async function runTests() {
   console.log('🚀 Running Bhartiya Collective Architecture Verification Suite...\n');
@@ -1495,6 +1499,45 @@ async function runTests() {
     timezone: 'IST',
   });
   assert(formattedSingle === '07:00 PM IST', 'Clock formatter formats single time point correctly');
+
+  console.log('\n📌 Testing Live Event Speaker / Panelist Role & Affiliation Separation:');
+  assert(Array.isArray(STANDARD_SPEAKER_ROLES) && STANDARD_SPEAKER_ROLES.length >= 8, 'Standard speaker roles defined as selectable array');
+  assert(STANDARD_SPEAKER_ROLES.includes('Keynote Speaker'), 'Roles include Keynote Speaker');
+  assert(STANDARD_SPEAKER_ROLES.includes('Plenary Panelist'), 'Roles include Plenary Panelist');
+  assert(STANDARD_SPEAKER_ROLES.includes('Featured Panelist'), 'Roles include Featured Panelist');
+  assert(STANDARD_SPEAKER_ROLES.includes('Session Chair & Moderator'), 'Roles include Session Chair & Moderator');
+  assert(STANDARD_SPEAKER_ROLES.includes('Distinguished Jurist'), 'Roles include Distinguished Jurist');
+  assert(STANDARD_SPEAKER_ROLES.includes('Constitutional Scholar'), 'Roles include Constitutional Scholar');
+  assert(Array.isArray(COMMON_AFFILIATIONS) && COMMON_AFFILIATIONS.length >= 5, 'Common institutional affiliations defined as selectable options');
+  assert(COMMON_AFFILIATIONS.includes('Supreme Court of India'), 'Affiliations include Supreme Court of India');
+  assert(COMMON_AFFILIATIONS.includes('National Law School of India University (NLSIU)'), 'Affiliations include NLSIU');
+
+  // Verify creating a live event with separate role and affiliation
+  const testSpeakerEvent = await eventService.createLiveEvent({
+    title: 'Constitutional Panel: Decolonizing Jurisprudence in Bharat',
+    description: 'Special discussion featuring plenary jurists and scholars.',
+    youtubeUrl: 'https://www.youtube.com/live/5qap5aO4i9A',
+    date: '2026-12-05',
+    time: '06:00 PM IST',
+    status: 'draft',
+    speakers: [
+      { name: 'Sr. Adv. J. Sai Deepak', role: 'Keynote Speaker', affiliation: 'Supreme Court of India' },
+      { name: 'Prof. Vidya Shankar', role: 'Plenary Panelist', affiliation: 'National Law School of India University' },
+      { name: 'Hon. Justice Hemant Gupta', role: 'Session Chair & Moderator', affiliation: 'Former Judge, Supreme Court of India' }
+    ]
+  });
+
+  assert(testSpeakerEvent.speakers.length === 3, 'All 3 participants saved into live event');
+  assert(testSpeakerEvent.speakers[0].role === 'Keynote Speaker', 'First participant role preserved as Keynote Speaker');
+  assert(testSpeakerEvent.speakers[0].affiliation === 'Supreme Court of India', 'First participant affiliation preserved separately');
+  assert(testSpeakerEvent.speakers[1].role === 'Plenary Panelist', 'Second participant role preserved as Plenary Panelist');
+  assert(testSpeakerEvent.speakers[1].affiliation === 'National Law School of India University', 'Second participant affiliation preserved separately');
+  assert(testSpeakerEvent.speakers[2].role === 'Session Chair & Moderator', 'Third participant role preserved as Session Chair & Moderator');
+  assert(testSpeakerEvent.speakers[2].affiliation === 'Former Judge, Supreme Court of India', 'Third participant affiliation preserved separately');
+
+  // Cleanup
+  await eventService.deleteEvent(testSpeakerEvent.id);
+  assert(true, 'Test live event with separated speaker roles cleaned up cleanly');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

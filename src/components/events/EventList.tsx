@@ -241,9 +241,10 @@ export const EventList: React.FC<EventListProps> = ({ onRegisterInterest }) => {
                       </div>
                       <div className="space-y-1">
                         {evt.speakers.slice(0, 2).map((spk, idx) => (
-                          <div key={idx} className="text-xs truncate">
+                          <div key={idx} className="text-xs truncate flex items-center gap-1">
                             <span className="font-semibold text-slate-800">{spk.name}</span>
-                            {spk.affiliation && <span className="text-slate-400"> ({spk.affiliation})</span>}
+                            {spk.role && <span className="text-amber-800 font-medium">({spk.role})</span>}
+                            {spk.affiliation && <span className="text-slate-400">• {spk.affiliation}</span>}
                           </div>
                         ))}
                       </div>

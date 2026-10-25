@@ -301,9 +301,20 @@ export const LiveEventWatchModal: React.FC<LiveEventWatchModalProps> = ({
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {event.speakers.map((spk, idx) => (
-                  <div key={idx} className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50">
+                  <div key={idx} className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 flex flex-col justify-between">
                     <div className="font-bold text-white text-xs">{spk.name}</div>
-                    <div className="text-[11px] text-slate-400">{spk.role || spk.affiliation}</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                      {spk.role && (
+                        <span className="px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 font-semibold text-[10px] border border-amber-400/25">
+                          {spk.role}
+                        </span>
+                      )}
+                      {spk.affiliation && (
+                        <span className="text-slate-300 text-[11px]">
+                          {spk.affiliation}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
