@@ -24,6 +24,7 @@ export const BHARAT_CENTRES: BharatCentre[] = [
     keyThemes: ['Pro-Bono Legal Assistance', 'Fundamental Rights', 'Prisoner Rehabilitation', 'Tribal & Marginalized Legal Defense'],
     focusAreas: ['Access to Justice', 'Statutory Redressal', 'Public Interest Litigation (PIL)', 'Grassroots Legal Clinics'],
     icon: 'Scale',
+    status: 'draft',
   },
   {
     id: 'centre-labour-rights',
@@ -36,6 +37,7 @@ export const BHARAT_CENTRES: BharatCentre[] = [
     keyThemes: ['Gig Economy Protections', 'Unorganized Workforce Welfare', 'Shreni Guild Economics', 'Workplace Safety'],
     focusAreas: ['Social Security Code Implementation', 'Occupational Safety Audits', 'Artisanal Livelihood Protection'],
     icon: 'Users',
+    status: 'draft',
   },
   {
     id: 'centre-public-policy',
@@ -48,6 +50,7 @@ export const BHARAT_CENTRES: BharatCentre[] = [
     keyThemes: ['Decentralized Governance', 'Fiscal Federalism', 'Public Administration Reform', 'Civil Service Capability Building'],
     focusAreas: ['Panchayati Raj Institutional Strength', 'Municipal Finance', 'Participatory Policymaking'],
     icon: 'Landmark',
+    status: 'draft',
   },
   {
     id: 'centre-women-rights',
@@ -60,6 +63,7 @@ export const BHARAT_CENTRES: BharatCentre[] = [
     keyThemes: ['Gender Justice in Succession Laws', 'Anti-Harassment Enforcement', 'Maternal Health Policies', 'Women in Judiciary'],
     focusAreas: ['Uniform Civil Code Perspectives on Gender', 'Self-Help Group (SHG) Networks', 'Family Welfare Mediation'],
     icon: 'Heart',
+    status: 'draft',
   },
   {
     id: 'centre-ipr-studies',
@@ -72,6 +76,7 @@ export const BHARAT_CENTRES: BharatCentre[] = [
     keyThemes: ['Traditional Knowledge Digital Library (TKDL)', 'Geographical Indications (GI)', 'Pharmaceutical Patents', 'Artisanal Copyrights'],
     focusAreas: ['Indigenous Seed Sovereignty', 'Ayurvedic Formulations IP', 'Tech Patent Defense'],
     icon: 'Shield',
+    status: 'draft',
   },
   {
     id: 'centre-engineering-ai',
@@ -84,5 +89,6 @@ export const BHARAT_CENTRES: BharatCentre[] = [
     keyThemes: ['Indic LLMs & Linguistic Equity', 'Ethical AI Regulations', 'Digital Public Infrastructure (DPI)', 'Cyber Sovereignty'],
     focusAreas: ['Data Protection (DPDP Act)', 'Algorithmic Fairness', 'Critical National Infrastructure Security'],
     icon: 'Compass',
+    status: 'draft',
   },
 ];

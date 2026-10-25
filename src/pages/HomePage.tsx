@@ -4,6 +4,7 @@ import { featureConfig } from '../config/featureConfig';
 import { FlagshipBanner } from '../components/common/FlagshipBanner';
 import { EventList } from '../components/events/EventList';
 import { BHARAT_CENTRES } from '../data/centresData';
+import { centreService } from '../services/centreService';
 import { 
   ArrowRight, 
   Scroll, 
@@ -30,13 +31,22 @@ const CENTRE_ICON_MAP: Record<string, React.ReactNode> = {
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   const [features, setFeatures] = useState(featureConfig.get());
+  const [publishedCentres, setPublishedCentres] = useState(() => centreService.getPublished());
 
   useEffect(() => {
     const handleFeatureChange = () => {
       setFeatures(featureConfig.get());
+      setPublishedCentres(centreService.getPublished());
     };
+    const handleContentChange = () => {
+      setPublishedCentres(centreService.getPublished());
+    };
+    window.addEventListener('bharat:content-updated', handleContentChange);
     window.addEventListener('bhartiya:feature-change', handleFeatureChange);
-    return () => window.removeEventListener('bhartiya:feature-change', handleFeatureChange);
+    return () => {
+      window.removeEventListener('bhartiya:feature-change', handleFeatureChange);
+      window.removeEventListener('bharat:content-updated', handleContentChange);
+    };
   }, []);
 
   return (
@@ -134,9 +144,18 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             </button>
           </div>
 
-          {/* 6 Specialized Centres Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {BHARAT_CENTRES.map((centre) => (
+          {/* 6 Specialized Centres Grid or Coming Soon */}
+          {publishedCentres.length === 0 ? (
+            <div className="text-center py-16 px-4 bg-white rounded-3xl border border-dashed border-slate-200 max-w-2xl mx-auto space-y-3">
+              <Compass className="w-10 h-10 text-slate-300 mx-auto" />
+              <h3 className="font-serif text-xl font-bold text-slate-800">Centres & Wings Coming Soon</h3>
+              <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+                We are curating and formalizing our thematic centres of excellence and frontline policy wings. Details will be announced soon.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {publishedCentres.map((centre) => (
               <div
                 key={centre.id}
                 onClick={() => onNavigate(`/centres`)}
@@ -175,7 +194,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 </div>
               </div>
             ))}
-          </div>
+            </div>
+          )}
         </section>
       )}
 

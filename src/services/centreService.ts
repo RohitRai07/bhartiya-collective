@@ -3,7 +3,7 @@ import { BHARAT_CENTRES, BharatCentre } from '../data/centresData';
 const STORAGE_KEY = 'bharat_collective_centres_data';
 
 class CentreService {
-  private memoryStore: BharatCentre[] = BHARAT_CENTRES.map(c => ({ ...c, status: c.status || 'published' }));
+  private memoryStore: BharatCentre[] = BHARAT_CENTRES.map(c => ({ ...c, status: c.status || 'draft' }));
 
   private getStore(): BharatCentre[] {
     if (typeof window === 'undefined') {
@@ -13,15 +13,31 @@ class CentreService {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed: BharatCentre[] = JSON.parse(stored);
+        let changed = false;
+        const updated = parsed.map(c => {
+          if (c.id.startsWith('centre-') && (!c.status || c.status === 'published') && BHARAT_CENTRES.some(b => b.id === c.id)) {
+            changed = true;
+            return { ...c, status: 'draft' as const };
+          }
+          return c;
+        });
+        if (changed) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        }
+        return updated;
       }
       // Initialize with default seeded centres
-      const seeded = BHARAT_CENTRES.map(c => ({ ...c, status: c.status || 'published' }));
+      const seeded = BHARAT_CENTRES.map(c => ({ ...c, status: c.status || 'draft' }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
       return seeded;
     } catch {
       return this.memoryStore;
     }
+  }
+
+  public getPublished(): BharatCentre[] {
+    return this.getStore().filter(c => c.status !== 'draft');
   }
 
   private setStore(centres: BharatCentre[]): void {

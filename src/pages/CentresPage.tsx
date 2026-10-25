@@ -75,36 +75,47 @@ export const CentresPage: React.FC<CentresPageProps> = ({ onNavigate, selectedCe
         </p>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar pb-2">
-        <button
-          onClick={() => setActiveCentre('all')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-            activeCentre === 'all'
-              ? 'bg-amber-800 text-white shadow-sm'
-              : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
-          }`}
-        >
-          All ({centresList.length}) Centres
-        </button>
-        {centresList.map(c => (
+      {/* Filter Tabs (when centres are published) */}
+      {centresList.length > 0 && (
+        <div className="flex items-center justify-center gap-2 overflow-x-auto no-scrollbar pb-2">
           <button
-            key={c.id}
-            onClick={() => setActiveCentre(c.id)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-              activeCentre === c.id
-                ? 'bg-amber-800 text-white shadow-sm font-bold'
+            onClick={() => setActiveCentre('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              activeCentre === 'all'
+                ? 'bg-amber-800 text-white shadow-sm'
                 : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
             }`}
           >
-            {c.shortName}
+            All ({centresList.length}) Centres
           </button>
-        ))}
-      </div>
+          {centresList.map(c => (
+            <button
+              key={c.id}
+              onClick={() => setActiveCentre(c.id)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                activeCentre === c.id
+                  ? 'bg-amber-800 text-white shadow-sm font-bold'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
+              }`}
+            >
+              {c.shortName}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* Centres Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {displayedCentres.map(centre => (
+      {/* Centres Grid or Coming Soon */}
+      {centresList.length === 0 ? (
+        <div className="text-center py-20 px-4 bg-slate-50 rounded-3xl border border-dashed border-slate-200 max-w-2xl mx-auto space-y-3">
+          <Compass className="w-10 h-10 text-slate-300 mx-auto" />
+          <h3 className="font-serif text-xl font-bold text-slate-800">Centres & Wings Coming Soon</h3>
+          <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+            We are curating and formalizing our thematic centres of excellence and frontline policy wings. Details will be announced soon.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {displayedCentres.map(centre => (
           <div
             key={centre.id}
             id={centre.slug}
@@ -179,7 +190,8 @@ export const CentresPage: React.FC<CentresPageProps> = ({ onNavigate, selectedCe
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
