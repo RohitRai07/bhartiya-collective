@@ -111,7 +111,7 @@ export const searchService = {
 
     // 3. Publications
     try {
-      const pubs = await publicationService.getPublications();
+      const pubs = await publicationService.getPublications({ includeDrafts: !!options?.includeDrafts });
       for (const pub of pubs) {
         if (
           pub.title.toLowerCase().includes(q) ||

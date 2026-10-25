@@ -17,15 +17,26 @@ function loadStoredPublications(): Publication[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      // Initialize with existing website content
       const initial = mockPublications.map(p => ({
         ...p,
-        status: 'published' as const,
+        status: 'draft' as const,
       }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       return initial;
     }
-    return JSON.parse(raw);
+    const parsed: Publication[] = JSON.parse(raw);
+    let changed = false;
+    const updated = parsed.map(p => {
+      if (p.id.startsWith('pub-') && p.status !== 'draft') {
+        changed = true;
+        return { ...p, status: 'draft' as const };
+      }
+      return p;
+    });
+    if (changed) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
+    return updated;
   } catch {
     return mockPublications;
   }
@@ -56,7 +67,7 @@ export const publicationService = {
     let results = loadStoredPublications();
 
     if (!params?.includeDrafts) {
-      results = results.filter(p => !p.status || p.status === 'published');
+      results = results.filter(p => p.status === 'published');
     }
 
     if (params?.category) {

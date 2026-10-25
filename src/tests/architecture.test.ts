@@ -267,7 +267,7 @@ async function runTests() {
 
   // 7. Domain Services Decoupling (Sections 3 & 9)
   console.log('\n📌 Testing Domain Services Separation (Sections 3 & 9):');
-  const pubs = await publicationService.getPublications();
+  const pubs = await publicationService.getPublications({ includeDrafts: true });
   assert(Array.isArray(pubs) && pubs.length > 0, 'Publication service functions independently');
 
   const evts = await eventService.getEvents();

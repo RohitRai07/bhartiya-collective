@@ -13,6 +13,7 @@ export const mockPublications: Publication[] = [
     isbn: '978-81-945678-1-2',
     tags: ['Governance', 'Statecraft', 'Dharmic Jurisprudence', 'Public Administration'],
     featured: true,
+    status: 'draft',
   },
   {
     id: 'pub-002',
@@ -25,6 +26,7 @@ export const mockPublications: Publication[] = [
     pages: 64,
     tags: ['Epistemology', 'Cognitive Science', 'NEP 2020', 'Pramana Theory'],
     featured: true,
+    status: 'draft',
   },
   {
     id: 'pub-003',
@@ -37,6 +39,7 @@ export const mockPublications: Publication[] = [
     pages: 82,
     tags: ['Ecology', 'Water Systems', 'Decentralization', 'Sustainable Development'],
     featured: false,
+    status: 'draft',
   },
   {
     id: 'pub-004',
@@ -49,5 +52,6 @@ export const mockPublications: Publication[] = [
     pages: 54,
     tags: ['Geopolitics', 'Mandala Theory', 'Foreign Policy', 'Indian Ocean'],
     featured: true,
+    status: 'draft',
   },
 ];

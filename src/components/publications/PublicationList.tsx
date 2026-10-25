@@ -134,10 +134,16 @@ export const PublicationList: React.FC = () => {
           Loading publications...
         </div>
       ) : publications.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-8">
-          <FileText className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-          <p className="text-sm font-semibold text-slate-700">No publications matched your criteria.</p>
-          <p className="text-xs text-slate-500 mt-1">Try resetting the filter or search keyword.</p>
+        <div className="text-center py-20 px-4 bg-slate-50 rounded-3xl border border-dashed border-slate-200 max-w-2xl mx-auto space-y-3">
+          <FileText className="w-10 h-10 text-slate-300 mx-auto" />
+          <h3 className="font-serif text-xl font-bold text-slate-800">
+            {searchQuery || selectedCategory !== 'All' ? 'No Publications Matched' : 'New Publications Coming Soon'}
+          </h3>
+          <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+            {searchQuery || selectedCategory !== 'All' 
+              ? 'Try resetting the category filter or search keyword.' 
+              : 'Our upcoming peer-reviewed monographs, policy papers, and treatises are currently under editorial review. Please check back soon.'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
