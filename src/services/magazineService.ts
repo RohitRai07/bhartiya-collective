@@ -29,7 +29,7 @@ const SEED_MAGAZINES: MagazineIssue[] = [
       'Book Reviews: Ancient Indian Statecraft Revisited'
     ],
     downloadCount: 342,
-    status: 'published',
+    status: 'draft',
   },
   {
     id: 'mag-2',
@@ -54,7 +54,7 @@ const SEED_MAGAZINES: MagazineIssue[] = [
       'Judicial Perspectives on Civil Rights Safeguards'
     ],
     downloadCount: 518,
-    status: 'published',
+    status: 'draft',
   }
 ];
 

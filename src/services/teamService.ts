@@ -17,7 +17,7 @@ const SEED_NATIONAL_TEAM: NationalTeamMember[] = [
     name: 'Sr. Adv. J. Sai Deepak',
     affiliation: 'Supreme Court of India',
     desc: 'Oversees the Center for Human Rights & Legal Aid, directing constitutional litigations, civilizational jurisprudence analysis, and model legislative inputs.',
-    status: 'published',
+    status: 'draft',
     order: 1,
   },
   {
@@ -26,7 +26,7 @@ const SEED_NATIONAL_TEAM: NationalTeamMember[] = [
     name: 'Prof. Ananya Someshwar',
     affiliation: 'Department of Public Policy & Statecraft',
     desc: 'Leads visiting fellowship admissions, peer-reviewed monograph editorial pipelines, and curricular synthesis for Indian university networks.',
-    status: 'published',
+    status: 'draft',
     order: 2,
   },
   {
@@ -35,7 +35,7 @@ const SEED_NATIONAL_TEAM: NationalTeamMember[] = [
     name: 'Dr. Meenakshi Sundaram',
     affiliation: 'Center for Public Policy / Studies',
     desc: 'Directs the #BharatDialogue Conclaves, coordinating roundtables between senior advocates, high court jurists, and policy practitioners.',
-    status: 'published',
+    status: 'draft',
     order: 3,
   },
 ];
@@ -47,7 +47,7 @@ const SEED_STATE_CHAPTERS: StateChapter[] = [
     convener: 'Dr. Devendra Pandey',
     city: 'Lucknow / Varanasi',
     focus: 'Civil Courts Legal Aid & Traditional Knowledge',
-    status: 'published',
+    status: 'draft',
     order: 1,
   },
   {
@@ -56,7 +56,7 @@ const SEED_STATE_CHAPTERS: StateChapter[] = [
     convener: 'Adv. Siddhartha Dave',
     city: 'New Delhi / Ghaziabad',
     focus: 'Supreme Court & High Court Advocacy',
-    status: 'published',
+    status: 'draft',
     order: 2,
   },
   {
@@ -65,7 +65,7 @@ const SEED_STATE_CHAPTERS: StateChapter[] = [
     convener: 'Dr. Arvind Deshmukh',
     city: 'Mumbai / Pune',
     focus: 'Labour Rights & Industrial Policy',
-    status: 'published',
+    status: 'draft',
     order: 3,
   },
   {
@@ -74,7 +74,7 @@ const SEED_STATE_CHAPTERS: StateChapter[] = [
     convener: 'Dr. Ramalingam Iyer',
     city: 'Bengaluru',
     focus: 'IPR, Tech Policy & AI Governance',
-    status: 'published',
+    status: 'draft',
     order: 4,
   },
   {
@@ -83,7 +83,7 @@ const SEED_STATE_CHAPTERS: StateChapter[] = [
     convener: 'Prof. Alok Ranjan',
     city: 'Patna',
     focus: 'Panchayat Governance & Agrarian Law',
-    status: 'published',
+    status: 'draft',
     order: 5,
   },
   {
@@ -92,7 +92,7 @@ const SEED_STATE_CHAPTERS: StateChapter[] = [
     convener: 'Adv. Niharika Patel',
     city: 'Ahmedabad',
     focus: 'Artisanal Guilds & Micro-Enterprise',
-    status: 'published',
+    status: 'draft',
     order: 6,
   },
   {
@@ -101,7 +101,7 @@ const SEED_STATE_CHAPTERS: StateChapter[] = [
     convener: 'Dr. Vikramaditya Chouhan',
     city: 'Bhopal / Indore',
     focus: 'Forest Rights & Tribal Legal Defense',
-    status: 'published',
+    status: 'draft',
     order: 7,
   },
   {
@@ -110,7 +110,7 @@ const SEED_STATE_CHAPTERS: StateChapter[] = [
     convener: 'Adv. Mahendra Singh Shekhawat',
     city: 'Jaipur / Jodhpur',
     focus: 'Ecological Heritage & Heritage Law',
-    status: 'published',
+    status: 'draft',
     order: 8,
   },
 ];

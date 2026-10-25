@@ -273,13 +273,14 @@ async function runTests() {
   const evts = await eventService.getEvents();
   assert(Array.isArray(evts) && evts.length > 0, 'Event service functions independently');
 
-  const domains = await researchService.getDomains();
+  const domains = await researchService.getDomains(true);
   assert(Array.isArray(domains) && domains.length > 0, 'Research service functions independently');
   if (domains.length > 0) {
+    const isInitDraft = domains[0].status === 'draft';
     const toggled = await researchService.togglePublish(domains[0].id);
-    assert(toggled.status === 'draft', 'Research domain status toggles from published to draft');
+    assert(toggled.status === (isInitDraft ? 'published' : 'draft'), 'Research domain status toggles from initial state');
     const restored = await researchService.togglePublish(domains[0].id);
-    assert(restored.status === 'published', 'Research domain status toggles back to published');
+    assert(restored.status === (isInitDraft ? 'draft' : 'published'), 'Research domain status toggles back to initial state');
   }
 
   // 8. Admin Credentials & Two-Factor Authentication (2FA) Production Security
@@ -653,10 +654,11 @@ async function runTests() {
   assert(firstLeader.name.length > 0 && firstLeader.role.length > 0, 'National leader contains name and designation');
   
   // Test publish/unpublish toggle
+  const initialLeaderStatus = firstLeader.status;
   const toggledLeader = await teamService.toggleNationalMemberPublish(firstLeader.id);
-  assert(toggledLeader?.status === 'draft', 'National leader toggles from published to draft');
+  assert(toggledLeader?.status !== initialLeaderStatus, 'National leader toggles from initial state');
   const restoredLeader = await teamService.toggleNationalMemberPublish(firstLeader.id);
-  assert(restoredLeader?.status === 'published', 'National leader toggles back to published');
+  assert(restoredLeader?.status === initialLeaderStatus, 'National leader toggles back to initial state');
 
   // Test create national member
   const createdLeader = await teamService.createNationalMember({
@@ -678,10 +680,11 @@ async function runTests() {
   assert(firstChapter.state.length > 0 && firstChapter.convener.length > 0, 'State chapter contains state name and convener');
 
   // Test publish/unpublish toggle
+  const initialChapterStatus = firstChapter.status;
   const toggledChapter = await teamService.toggleStateChapterPublish(firstChapter.id);
-  assert(toggledChapter?.status === 'draft', 'State chapter toggles from published to draft');
+  assert(toggledChapter?.status !== initialChapterStatus, 'State chapter toggles from initial state');
   const restoredChapter = await teamService.toggleStateChapterPublish(firstChapter.id);
-  assert(restoredChapter?.status === 'published', 'State chapter toggles back to published');
+  assert(restoredChapter?.status === initialChapterStatus, 'State chapter toggles back to initial state');
 
   // Test create state chapter
   const createdChapter = await teamService.createStateChapter({

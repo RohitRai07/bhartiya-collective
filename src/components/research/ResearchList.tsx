@@ -22,6 +22,18 @@ export const ResearchList: React.FC = () => {
     return () => window.removeEventListener('bharat:content-updated', handleUpdate);
   }, []);
 
+  if (domains.length === 0) {
+    return (
+      <div className="bg-white rounded-3xl p-12 border border-slate-200 text-center max-w-xl mx-auto shadow-xs space-y-3">
+        <Compass className="w-10 h-10 text-amber-700/60 mx-auto" />
+        <h3 className="font-serif text-xl font-bold text-slate-800">Research Domains & Thematic Clusters Coming Soon</h3>
+        <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+          Our epistemic research programmes and thematic clusters are being structured. Detailed curricula, projects, and working papers will be announced shortly.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {domains.map((domain) => (

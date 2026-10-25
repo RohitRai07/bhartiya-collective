@@ -222,7 +222,7 @@ export const searchService = {
 
     // 8. Scholars & Council
     try {
-      const scholars = await expertService.getExperts();
+      const scholars = await expertService.getExperts({ includeArchived: true });
       for (const s of scholars) {
         if (
           s.name.toLowerCase().includes(q) ||
@@ -246,7 +246,7 @@ export const searchService = {
     // 9. National Team
     try {
       if (featureConfig.isEnabled('nationalTeam')) {
-        const team = await teamService.getNationalTeam();
+        const team = await teamService.getNationalTeam({ includeDrafts: true });
         for (const m of team) {
           if (
             m.name.toLowerCase().includes(q) ||
@@ -270,7 +270,7 @@ export const searchService = {
     // 10. State Chapters
     try {
       if (featureConfig.isEnabled('stateTeam')) {
-        const chapters = await teamService.getStateChapters();
+        const chapters = await teamService.getStateChapters({ includeDrafts: true });
         for (const c of chapters) {
           if (
             c.state.toLowerCase().includes(q) ||

@@ -12,7 +12,7 @@ import { mockResearchDomains } from '../data/mockResearch';
 
 const STORAGE_KEY = 'bharat_collective_research_domains';
 
-let memoryDomains: ResearchDomain[] = mockResearchDomains.map(d => ({ ...d, status: 'published' as const }));
+let memoryDomains: ResearchDomain[] = mockResearchDomains.map(d => ({ ...d, status: 'draft' as const }));
 
 function loadStoredDomains(): ResearchDomain[] {
   if (typeof window === 'undefined') return memoryDomains;

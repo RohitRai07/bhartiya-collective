@@ -12,6 +12,7 @@ export const mockNews: NewsArticle[] = [
     category: 'Discourse',
     publishedDate: '2026-09-12',
     readTime: '4 min read',
+    status: 'draft',
   },
   {
     id: 'news-2',
@@ -24,6 +25,7 @@ export const mockNews: NewsArticle[] = [
     category: 'Announcement',
     publishedDate: '2026-08-30',
     readTime: '3 min read',
+    status: 'draft',
   },
   {
     id: 'news-3',
@@ -36,5 +38,6 @@ export const mockNews: NewsArticle[] = [
     category: 'Perspective',
     publishedDate: '2026-08-14',
     readTime: '7 min read',
+    status: 'draft',
   }
 ];

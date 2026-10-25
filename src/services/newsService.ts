@@ -20,7 +20,7 @@ function loadStoredNews(): NewsArticle[] {
     if (!raw) {
       const initial = mockNews.map(n => ({
         ...n,
-        status: 'published' as const,
+        status: 'draft' as const,
       }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       return initial;

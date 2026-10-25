@@ -10,6 +10,7 @@ export const mockExperts: ScholarExpert[] = [
     focusAreas: ['Rajadharma', 'Public Ethics', 'Constitutional Law'],
     photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
     publicationsCount: 38,
+    status: 'archived',
   },
   {
     id: 'exp-2',
@@ -20,6 +21,7 @@ export const mockExperts: ScholarExpert[] = [
     focusAreas: ['Pramana Shastra', 'Computational Linguistics', 'Philosophy of Mind'],
     photoUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80',
     publicationsCount: 45,
+    status: 'archived',
   },
   {
     id: 'exp-3',
@@ -30,6 +32,7 @@ export const mockExperts: ScholarExpert[] = [
     focusAreas: ['Indian Ocean Strategy', 'Mandala Geopolitics', 'Maritime History'],
     photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
     publicationsCount: 29,
+    status: 'archived',
   },
   {
     id: 'exp-4',
@@ -40,5 +43,6 @@ export const mockExperts: ScholarExpert[] = [
     focusAreas: ['Traditional Irrigation', 'Bio-diversity Law', 'Gram Swaraj'],
     photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
     publicationsCount: 24,
+    status: 'archived',
   },
 ];

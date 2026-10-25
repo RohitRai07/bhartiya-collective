@@ -151,75 +151,85 @@ export const MagazinePage: React.FC = () => {
       </div>
 
       {/* Issues Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {issues.map((issue) => (
-          <div
-            key={issue.id}
-            className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 hover:border-amber-400 hover:shadow-lg transition-all flex flex-col justify-between"
-          >
-            <div className="space-y-6">
-              
-              {/* Top Row: Cover Thumbnail + Main Header */}
-              <div className="flex flex-col sm:flex-row gap-5 items-start">
-                <div className="w-full sm:w-36 h-48 rounded-2xl overflow-hidden bg-slate-900 flex-shrink-0 shadow-md border border-amber-900/10">
-                  <img
-                    src={issue.coverImageUrl || '/images/bharat-dialogue-ucc-banner.jpg'}
-                    alt={issue.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="space-y-2 flex-grow">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60 uppercase">
-                      {issue.issueNumber}
-                    </span>
-                    <span className="text-xs text-slate-500 font-medium">{issue.publicationDate}</span>
+      {issues.length === 0 ? (
+        <div className="bg-white rounded-3xl p-12 border border-slate-200 text-center max-w-xl mx-auto shadow-xs space-y-3">
+          <BookOpen className="w-10 h-10 text-amber-700/60 mx-auto" />
+          <h3 className="font-serif text-xl font-bold text-slate-800">New Issues Coming Soon</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+            Our upcoming quarterly volumes covering constitutional synthesis, judicial commentaries, and Indic policy frameworks are currently in editorial peer review.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {issues.map((issue) => (
+            <div
+              key={issue.id}
+              className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 hover:border-amber-400 hover:shadow-lg transition-all flex flex-col justify-between"
+            >
+              <div className="space-y-6">
+                
+                {/* Top Row: Cover Thumbnail + Main Header */}
+                <div className="flex flex-col sm:flex-row gap-5 items-start">
+                  <div className="w-full sm:w-36 h-48 rounded-2xl overflow-hidden bg-slate-900 flex-shrink-0 shadow-md border border-amber-900/10">
+                    <img
+                      src={issue.coverImageUrl || '/images/bharat-dialogue-ucc-banner.jpg'}
+                      alt={issue.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <h3 className="font-serif text-2xl font-bold text-slate-900 leading-snug">
-                    {issue.title}
-                  </h3>
-                  <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
-                    {issue.description}
-                  </p>
+                  <div className="space-y-2 flex-grow">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60 uppercase">
+                        {issue.issueNumber}
+                      </span>
+                      <span className="text-xs text-slate-500 font-medium">{issue.publicationDate}</span>
+                    </div>
+                    <h3 className="font-serif text-2xl font-bold text-slate-900 leading-snug">
+                      {issue.title}
+                    </h3>
+                    <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                      {issue.description}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Focus Topics */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                    Featured Treatises & Inquiries
+                  </span>
+                  <ul className="space-y-1.5">
+                    {(issue.tableOfContents || (issue as any).featuredArticles || []).map((art: string, idx: number) => (
+                      <li key={idx} className="text-xs text-slate-700 flex items-start space-x-2">
+                        <span className="text-amber-600 font-bold">•</span>
+                        <span>{art}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
               </div>
 
-              {/* Focus Topics */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                  Featured Treatises & Inquiries
-                </span>
-                <ul className="space-y-1.5">
-                  {(issue.tableOfContents || (issue as any).featuredArticles || []).map((art: string, idx: number) => (
-                    <li key={idx} className="text-xs text-slate-700 flex items-start space-x-2">
-                      <span className="text-amber-600 font-bold">•</span>
-                      <span>{art}</span>
-                    </li>
-                  ))}
-                </ul>
+              {/* Price & Action */}
+              <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-6">
+                <div>
+                  <span className="text-xs text-slate-500">Nominal Reader Cost:</span>
+                  <span className="font-serif text-2xl font-bold text-slate-900 ml-2">₹{issue.price}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleStartPurchase(issue)}
+                  className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white shadow-xs transition-colors flex items-center space-x-2 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Edition (₹{issue.price})</span>
+                </button>
               </div>
 
             </div>
-
-            {/* Price & Action */}
-            <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-6">
-              <div>
-                <span className="text-xs text-slate-500">Nominal Reader Cost:</span>
-                <span className="font-serif text-2xl font-bold text-slate-900 ml-2">₹{issue.price}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleStartPurchase(issue)}
-                className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white shadow-xs transition-colors flex items-center space-x-2 cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Download Edition (₹{issue.price})</span>
-              </button>
-            </div>
-
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Payment & Download Checkout Modal */}
       {purchasingIssue && (

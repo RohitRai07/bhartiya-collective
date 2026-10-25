@@ -21,7 +21,7 @@ function loadStoredExperts(): ScholarExpert[] {
       const initial = mockExperts.map((exp, idx) => ({
         ...exp,
         councilRole: (idx % 2 === 0 ? 'advisory_council' : 'senior_fellow') as ExpertRole,
-        status: 'active' as const,
+        status: 'archived' as const,
       }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       return initial;
