@@ -58,6 +58,13 @@ export const newsService = {
   },
 
   /**
+   * Alias for getNews
+   */
+  async getArticles(includeDrafts: boolean = false): Promise<NewsArticle[]> {
+    return this.getNews(includeDrafts);
+  },
+
+  /**
    * Fetch article by slug
    */
   async getArticleBySlug(slug: string): Promise<NewsArticle | null> {

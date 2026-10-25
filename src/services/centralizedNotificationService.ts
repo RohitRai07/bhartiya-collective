@@ -539,7 +539,7 @@ export class CentralizedNotificationService {
 
     // 5. Media & News Articles
     try {
-      const articles = await newsService.getArticles(false);
+      const articles = await (newsService.getArticles ? newsService.getArticles(false) : newsService.getNews(false));
       for (const n of articles) {
         if (n.status === 'draft') continue;
         const logs = notificationService.getLogsForContent('news', n.id, n.title);

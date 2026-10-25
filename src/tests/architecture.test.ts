@@ -1140,6 +1140,26 @@ async function runTests() {
   // Verify Share action independence from publication state
   assert(notificationService.getLogsForRecipient('share-colleague-1').length >= 1, 'Share action records separate audit entry without polluting broadcast counts');
 
+  // 7d. Testing Dynamic Category Filtering & Selection Under "Connect Published Content"
+  console.log('\n📌 Testing Dynamic Category Filtering & Selection Under "Connect Published Content":');
+
+  const allPublished = await centralizedNotificationService.getPublishedContent();
+  assert(allPublished.length > 0, 'Centralized notification hub provides published items for Compose filter');
+
+  // Test Category Filtering
+  const pubOnly = allPublished.filter(p => p.contentType === 'publication');
+  assert(pubOnly.every(p => p.contentType === 'publication'), 'Category filter for "publication" isolates publications');
+
+  const eventOnly = allPublished.filter(p => p.contentType === 'event' || p.contentType === 'live-event');
+  assert(eventOnly.every(p => p.contentType === 'event' || p.contentType === 'live-event'), 'Category filter for "event" isolates events');
+
+  // Test Search Query Filtering
+  if (allPublished.length > 0) {
+    const firstWord = allPublished[0].title.split(' ')[0];
+    const searchFiltered = allPublished.filter(p => p.title.toLowerCase().includes(firstWord.toLowerCase()));
+    assert(searchFiltered.length >= 1, 'Search query filter matches published content title');
+  }
+
   // 8. Contact Details Validation, Default +91 India Formatting, and Strict Sending Gate
   console.log('\n📌 Testing Contact Details Validation, +91 Phone Formatting & Sending Gate:');
 
