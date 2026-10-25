@@ -22,7 +22,19 @@ function loadStoredDomains(): ResearchDomain[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(memoryDomains));
       return memoryDomains;
     }
-    return JSON.parse(raw);
+    const parsed: ResearchDomain[] = JSON.parse(raw);
+    let changed = false;
+    const updated = parsed.map(d => {
+      if (d.id.startsWith('res-domain-') && d.status !== 'draft') {
+        changed = true;
+        return { ...d, status: 'draft' as const };
+      }
+      return d;
+    });
+    if (changed) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
+    return updated;
   } catch {
     return memoryDomains;
   }
@@ -49,7 +61,7 @@ export const researchService = {
     await new Promise(resolve => setTimeout(resolve, 60));
     const items = loadStoredDomains();
     if (includeDrafts) return items;
-    return items.filter(d => !d.status || d.status === 'published');
+    return items.filter(d => d.status === 'published');
   },
 
   async getDomainBySlug(slug: string): Promise<ResearchDomain | null> {

@@ -25,7 +25,19 @@ function loadStoredNews(): NewsArticle[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       return initial;
     }
-    return JSON.parse(raw);
+    const parsed: NewsArticle[] = JSON.parse(raw);
+    let changed = false;
+    const updated = parsed.map(n => {
+      if (n.id.startsWith('news-') && n.status !== 'draft') {
+        changed = true;
+        return { ...n, status: 'draft' as const };
+      }
+      return n;
+    });
+    if (changed) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
+    return updated;
   } catch {
     return mockNews;
   }
@@ -54,7 +66,7 @@ export const newsService = {
     await new Promise(resolve => setTimeout(resolve, 60));
     const items = loadStoredNews();
     if (includeDrafts) return items;
-    return items.filter(n => !n.status || n.status === 'published');
+    return items.filter(n => n.status === 'published');
   },
 
   /**

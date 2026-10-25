@@ -6,7 +6,7 @@ import { teamService } from '../services/teamService';
 import { taxonomyService } from '../services/taxonomyService';
 import { ScholarExpert } from '../types/expert';
 import { NationalTeamMember, StateChapter } from '../types/team';
-import { Shield, MapPin } from 'lucide-react';
+import { Shield, MapPin, Users } from 'lucide-react';
 
 export const AboutPage: React.FC = () => {
   const [experts, setExperts] = useState<ScholarExpert[]>([]);
@@ -120,7 +120,7 @@ export const AboutPage: React.FC = () => {
       </div>
 
       {/* SECTION 1: Who is Who (Toggleable via featureConfig) */}
-      {featureConfig.isEnabled('experts') && filteredExperts.length > 0 && (
+      {featureConfig.isEnabled('experts') && (
         <section id="who-is-who" className="space-y-8 scroll-mt-28">
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
@@ -134,71 +134,83 @@ export const AboutPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Role Filter Pills */}
-          <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-            {roles.map((r) => (
-              <button
-                key={r.value}
-                onClick={() => setSelectedRole(r.value)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
-                  selectedRole === r.value
-                    ? 'bg-amber-800 text-white shadow-xs font-bold'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
-                }`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredExperts.map((expert) => (
-              <div
-                key={expert.id}
-                className="bg-white rounded-2xl p-6 border border-slate-200 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xs"
-              >
-                <div>
-                  <img
-                    src={expert.photoUrl}
-                    alt={expert.name}
-                    className="w-20 h-20 rounded-full object-cover mb-3 border-2 border-amber-200 mx-auto"
-                  />
-                  {expert.councilRole && (
-                    <div className="text-center mb-2">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                        {expert.councilRole.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                  )}
-                  <h3 className="font-serif text-base font-bold text-slate-900 text-center">
-                    {expert.name}
-                  </h3>
-                  <p className="text-[11px] font-semibold text-amber-800 text-center mb-1">
-                    {expert.designation}
-                  </p>
-                  <p className="text-[10px] text-slate-400 text-center mb-3">
-                    {expert.institution}
-                  </p>
-                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-4">
-                    {expert.biography}
-                  </p>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-1">
-                  {(expert.focusAreas || []).map((f, i) => (
-                    <span key={i} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                      {f}
-                    </span>
-                  ))}
-                </div>
+          {filteredExperts.length === 0 ? (
+            <div className="text-center py-20 px-4 bg-slate-50 rounded-3xl border border-dashed border-slate-200 max-w-2xl mx-auto space-y-3">
+              <Users className="w-10 h-10 text-slate-300 mx-auto" />
+              <h3 className="font-serif text-xl font-bold text-slate-800">Council & Fellow Profiles Coming Soon</h3>
+              <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+                Governing council profiles and fellow scholar appointments are currently being updated. Please check back soon.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Role Filter Pills */}
+              <div className="flex items-center justify-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                {roles.map((r) => (
+                  <button
+                    key={r.value}
+                    onClick={() => setSelectedRole(r.value)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+                      selectedRole === r.value
+                        ? 'bg-amber-800 text-white shadow-xs font-bold'
+                        : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {filteredExperts.map((expert) => (
+                  <div
+                    key={expert.id}
+                    className="bg-white rounded-2xl p-6 border border-slate-200 flex flex-col justify-between hover:border-amber-400 transition-all shadow-xs"
+                  >
+                    <div>
+                      <img
+                        src={expert.photoUrl}
+                        alt={expert.name}
+                        className="w-20 h-20 rounded-full object-cover mb-3 border-2 border-amber-200 mx-auto"
+                      />
+                      {expert.councilRole && (
+                        <div className="text-center mb-2">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                            {expert.councilRole.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      )}
+                      <h3 className="font-serif text-base font-bold text-slate-900 text-center">
+                        {expert.name}
+                      </h3>
+                      <p className="text-[11px] font-semibold text-amber-800 text-center mb-1">
+                        {expert.designation}
+                      </p>
+                      <p className="text-[10px] text-slate-400 text-center mb-3">
+                        {expert.institution}
+                      </p>
+                      <p className="text-xs text-slate-600 leading-relaxed line-clamp-4">
+                        {expert.biography}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-1">
+                      {(expert.focusAreas || []).map((f, i) => (
+                        <span key={i} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                          {f}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </section>
       )}
 
       {/* SECTION 2: National Team (Toggleable via featureConfig) */}
-      {featureConfig.isEnabled('nationalTeam') && nationalTeam.length > 0 && (
+      {featureConfig.isEnabled('nationalTeam') && (
         <section id="national-team" className="space-y-8 scroll-mt-28">
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
@@ -212,25 +224,35 @@ export const AboutPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {nationalTeam.map((item) => (
-              <div key={item.id} className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-3 flex flex-col justify-between">
-                <div className="space-y-3">
-                  <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60 inline-block">
-                    {item.role}
-                  </span>
-                  <h3 className="font-serif text-lg font-bold text-slate-900">{item.name}</h3>
-                  <p className="text-xs font-semibold text-slate-500">{item.affiliation}</p>
-                  <p className="text-xs text-slate-600 leading-relaxed">{item.desc}</p>
+          {nationalTeam.length === 0 ? (
+            <div className="text-center py-20 px-4 bg-slate-50 rounded-3xl border border-dashed border-slate-200 max-w-2xl mx-auto space-y-3">
+              <Users className="w-10 h-10 text-slate-300 mx-auto" />
+              <h3 className="font-serif text-xl font-bold text-slate-800">Executive Leadership Coming Soon</h3>
+              <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+                National executive team appointments and committee designations are currently being finalized. Please check back soon.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {nationalTeam.map((item) => (
+                <div key={item.id} className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-3 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60 inline-block">
+                      {item.role}
+                    </span>
+                    <h3 className="font-serif text-lg font-bold text-slate-900">{item.name}</h3>
+                    <p className="text-xs font-semibold text-slate-500">{item.affiliation}</p>
+                    <p className="text-xs text-slate-600 leading-relaxed">{item.desc}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
       {/* SECTION 3: State Team (Toggleable via featureConfig) */}
-      {featureConfig.isEnabled('stateTeam') && stateChapters.length > 0 && (
+      {featureConfig.isEnabled('stateTeam') && (
         <section id="state-team" className="space-y-8 scroll-mt-28">
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
@@ -244,19 +266,29 @@ export const AboutPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {stateChapters.map((item) => (
-              <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
-                <div className="flex items-center space-x-1.5 text-xs text-amber-800 font-bold">
-                  <MapPin className="w-3.5 h-3.5 text-amber-600" />
-                  <span>{item.state}</span>
+          {stateChapters.length === 0 ? (
+            <div className="text-center py-20 px-4 bg-slate-50 rounded-3xl border border-dashed border-slate-200 max-w-2xl mx-auto space-y-3">
+              <MapPin className="w-10 h-10 text-slate-300 mx-auto" />
+              <h3 className="font-serif text-xl font-bold text-slate-800">State Chapters Coming Soon</h3>
+              <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+                Regional coordinators and state chapter conveners are currently being organized across states. Details will be announced soon.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {stateChapters.map((item) => (
+                <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                  <div className="flex items-center space-x-1.5 text-xs text-amber-800 font-bold">
+                    <MapPin className="w-3.5 h-3.5 text-amber-600" />
+                    <span>{item.state}</span>
+                  </div>
+                  <h4 className="font-serif font-bold text-slate-900 text-sm">{item.convener}</h4>
+                  <p className="text-[11px] text-slate-500 font-medium">Base: {item.city}</p>
+                  <p className="text-[11px] text-slate-600 pt-1 border-t border-slate-100">{item.focus}</p>
                 </div>
-                <h4 className="font-serif font-bold text-slate-900 text-sm">{item.convener}</h4>
-                <p className="text-[11px] text-slate-500 font-medium">Base: {item.city}</p>
-                <p className="text-[11px] text-slate-600 pt-1 border-t border-slate-100">{item.focus}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 

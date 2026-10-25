@@ -52,7 +52,7 @@ export const searchService = {
   /**
    * Search across all public resources
    */
-  async search(query: string): Promise<SearchResultItem[]> {
+  async search(query: string, options?: { includeDrafts?: boolean }): Promise<SearchResultItem[]> {
     const q = query.trim().toLowerCase();
     if (!q) return [];
 
@@ -222,7 +222,7 @@ export const searchService = {
 
     // 8. Scholars & Council
     try {
-      const scholars = await expertService.getExperts({ includeArchived: true });
+      const scholars = await expertService.getExperts({ includeArchived: !!options?.includeDrafts });
       for (const s of scholars) {
         if (
           s.name.toLowerCase().includes(q) ||
@@ -246,7 +246,7 @@ export const searchService = {
     // 9. National Team
     try {
       if (featureConfig.isEnabled('nationalTeam')) {
-        const team = await teamService.getNationalTeam({ includeDrafts: true });
+        const team = await teamService.getNationalTeam({ includeDrafts: !!options?.includeDrafts });
         for (const m of team) {
           if (
             m.name.toLowerCase().includes(q) ||
@@ -270,7 +270,7 @@ export const searchService = {
     // 10. State Chapters
     try {
       if (featureConfig.isEnabled('stateTeam')) {
-        const chapters = await teamService.getStateChapters({ includeDrafts: true });
+        const chapters = await teamService.getStateChapters({ includeDrafts: !!options?.includeDrafts });
         for (const c of chapters) {
           if (
             c.state.toLowerCase().includes(q) ||

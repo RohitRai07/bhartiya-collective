@@ -58,10 +58,10 @@ export const NewsList: React.FC = () => {
       )}
 
       {filteredArticles.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 border border-slate-200 text-center max-w-xl mx-auto shadow-xs space-y-3">
-          <Newspaper className="w-10 h-10 text-amber-700/60 mx-auto" />
+        <div className="text-center py-20 px-4 bg-slate-50 rounded-3xl border border-dashed border-slate-200 max-w-2xl mx-auto space-y-3">
+          <Newspaper className="w-10 h-10 text-slate-300 mx-auto" />
           <h3 className="font-serif text-xl font-bold text-slate-800">New Perspectives & Communiques Coming Soon</h3>
-          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+          <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
             Our editorial desk and visiting scholars are drafting upcoming policy briefs, commentary, and conference communiques. Please check back shortly.
           </p>
         </div>

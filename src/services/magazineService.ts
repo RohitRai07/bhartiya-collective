@@ -69,7 +69,19 @@ class MagazineService {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_MAGAZINES));
         return SEED_MAGAZINES;
       }
-      return JSON.parse(raw);
+      const parsed: MagazineIssue[] = JSON.parse(raw);
+      let changed = false;
+      const updated = parsed.map(m => {
+        if (m.id.startsWith('mag-') && m.status !== 'draft') {
+          changed = true;
+          return { ...m, status: 'draft' as const };
+        }
+        return m;
+      });
+      if (changed) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      }
+      return updated;
     } catch {
       return this.memoryStore;
     }
@@ -90,13 +102,13 @@ class MagazineService {
   async getIssues(includeDrafts: boolean = false): Promise<MagazineIssue[]> {
     const all = this.getStore();
     if (includeDrafts) return all;
-    return all.filter(m => !m.status || m.status === 'published');
+    return all.filter(m => m.status === 'published');
   }
 
   getAll(includeDrafts: boolean = true): MagazineIssue[] {
     const all = this.getStore();
     if (includeDrafts) return all;
-    return all.filter(m => !m.status || m.status === 'published');
+    return all.filter(m => m.status === 'published');
   }
 
   togglePublish(id: string): MagazineIssue | null {

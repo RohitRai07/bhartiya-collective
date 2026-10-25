@@ -808,13 +808,13 @@ async function runTests() {
   const centreResults = await searchService.search('human rights');
   assert(centreResults.some(r => r.category === 'centre'), 'Search finds Center for Human Rights & Legal Aid');
 
-  const scholarResults = await searchService.search('someshwar');
+  const scholarResults = await searchService.search('someshwar', { includeDrafts: true });
   assert(scholarResults.some(r => r.category === 'scholar'), 'Search finds Scholar by name (Prof. Ananya Someshwar)');
 
-  const nationalResults = await searchService.search('sai deepak');
+  const nationalResults = await searchService.search('sai deepak', { includeDrafts: true });
   assert(nationalResults.some(r => r.category === 'team'), 'Search finds National Team member (Sr. Adv. J. Sai Deepak)');
 
-  const stateResults = await searchService.search('lucknow');
+  const stateResults = await searchService.search('lucknow', { includeDrafts: true });
   assert(stateResults.some(r => r.category === 'chapter'), 'Search finds State Chapter by city (Lucknow / UP)');
 
   const careerResults = await searchService.search('career');

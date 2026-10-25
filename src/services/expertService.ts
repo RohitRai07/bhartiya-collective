@@ -26,7 +26,19 @@ function loadStoredExperts(): ScholarExpert[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       return initial;
     }
-    return JSON.parse(raw);
+    const parsed: ScholarExpert[] = JSON.parse(raw);
+    let changed = false;
+    const updated = parsed.map(exp => {
+      if (exp.id.startsWith('exp-') && exp.status !== 'archived') {
+        changed = true;
+        return { ...exp, status: 'archived' as const };
+      }
+      return exp;
+    });
+    if (changed) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    }
+    return updated;
   } catch {
     return mockExperts;
   }
@@ -56,7 +68,7 @@ export const expertService = {
     let items = loadStoredExperts();
 
     if (!options?.includeArchived) {
-      items = items.filter(e => !e.status || e.status === 'active');
+      items = items.filter(e => e.status === 'active');
     }
 
     if (options?.role) {
