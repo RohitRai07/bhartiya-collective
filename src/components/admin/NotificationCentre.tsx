@@ -36,7 +36,9 @@ import {
   RecipientSourceModule, 
   NotificationChannel, 
   NotificationLog, 
-  NotificationRecipient 
+  NotificationRecipient,
+  PublishedContentItem,
+  PublishedContentType
 } from '../../types/notification';
 import { centralizedNotificationService, CentralizedNotificationStats } from '../../services/centralizedNotificationService';
 import { 
@@ -67,7 +69,7 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
   onNavigateToModule,
 }) => {
   // Navigation sub-tabs inside Notification Centre
-  const [subTab, setSubTab] = useState<'directory' | 'compose' | 'logs' | 'gateway'>('directory');
+  const [subTab, setSubTab] = useState<'directory' | 'published' | 'compose' | 'logs' | 'gateway'>('directory');
 
   // Direct Compose & Contact Details State
   const [composeTemplate, setComposeTemplate] = useState('CUSTOM');
@@ -94,6 +96,13 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
   const [statusFilter, setStatusFilter] = useState<'all' | 'notified' | 'unnotified' | 'failed'>('all');
   const [dateRange, setDateRange] = useState<'all' | '7d' | '30d' | '90d'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Published Content State & Filters
+  const [publishedItems, setPublishedItems] = useState<PublishedContentItem[]>([]);
+  const [publishedSearchQuery, setPublishedSearchQuery] = useState('');
+  const [publishedTypeFilter, setPublishedTypeFilter] = useState<'all' | string>('all');
+  const [publishedBroadcastFilter, setPublishedBroadcastFilter] = useState<'all' | 'broadcasted' | 'unbroadcasted'>('all');
+  const [selectedPublishedContentId, setSelectedPublishedContentId] = useState<string>('');
 
   // Selection for bulk messaging
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -122,12 +131,15 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
   const [testEmailLoading, setTestEmailLoading] = useState(false);
 
   // Load and synchronize data
-  const loadData = () => {
+  const loadData = async () => {
     try {
       const allRecipients = centralizedNotificationService.getAggregatedRecipients();
       setRecipients(allRecipients);
       const allLogs = notificationService.getLogsForRecipient(); // gets all logs
       setLogs(allLogs);
+
+      const pubItems = await centralizedNotificationService.getPublishedContent();
+      setPublishedItems(pubItems);
     } catch (e) {
       console.error('Failed to load notification centre data:', e);
     } finally {
@@ -184,6 +196,100 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
   const stats: CentralizedNotificationStats = useMemo(() => {
     return centralizedNotificationService.getStatistics(recipients);
   }, [recipients]);
+
+  // Compute filtered published content
+  const filteredPublishedItems = useMemo(() => {
+    return publishedItems.filter(item => {
+      // Type filter
+      if (publishedTypeFilter !== 'all' && item.contentType !== publishedTypeFilter) {
+        return false;
+      }
+      // Broadcast status filter
+      if (publishedBroadcastFilter === 'broadcasted' && item.notificationCount === 0) {
+        return false;
+      }
+      if (publishedBroadcastFilter === 'unbroadcasted' && item.notificationCount > 0) {
+        return false;
+      }
+      // Search query
+      if (publishedSearchQuery.trim()) {
+        const q = publishedSearchQuery.toLowerCase();
+        const matchTitle = item.title.toLowerCase().includes(q);
+        const matchType = item.contentTypeLabel.toLowerCase().includes(q);
+        const matchAuthor = (item.authorOrSpeaker || '').toLowerCase().includes(q);
+        const matchSummary = (item.summary || '').toLowerCase().includes(q);
+        if (!matchTitle && !matchType && !matchAuthor && !matchSummary) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [publishedItems, publishedTypeFilter, publishedBroadcastFilter, publishedSearchQuery]);
+
+  // Available published content types with counts
+  const availablePublishedTypes = useMemo(() => {
+    const map = new Map<string, { label: string; count: number }>();
+    for (const item of publishedItems) {
+      const existing = map.get(item.contentType);
+      if (existing) {
+        existing.count++;
+      } else {
+        map.set(item.contentType, { label: item.contentTypeLabel, count: 1 });
+      }
+    }
+    return Array.from(map.entries()).map(([type, data]) => ({
+      type,
+      label: data.label,
+      count: data.count,
+    }));
+  }, [publishedItems]);
+
+  // Open notification modal for a published content item
+  const handleOpenBroadcastPublished = (item: PublishedContentItem) => {
+    // Target subscribers or all directory recipients
+    const subscribers = recipients.filter(r => r.isSubscribed || r.sourceModule === 'newsletter');
+    const targetAudience = subscribers.length > 0 ? subscribers : recipients;
+    
+    setTargetRecipients(targetAudience.map(r => centralizedNotificationService.toNotificationRecipient(r)));
+    
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const fullPublicUrl = item.publicUrl.startsWith('http') ? item.publicUrl : `${baseUrl}${item.publicUrl}`;
+
+    setModalDefaultSubject(`New Publication: ${item.title} • Bharat Collective`);
+    setModalDefaultMessage(
+      `Namaste,\n\nWe are pleased to announce the official release of "${item.title}" (${item.contentTypeLabel}).\n\n` +
+      (item.authorOrSpeaker ? `Author / Speaker: ${item.authorOrSpeaker}\n` : '') +
+      (item.summary ? `${item.summary}\n\n` : '\n') +
+      `Access and explore the full content here:\n${fullPublicUrl}\n\n` +
+      `Warm regards,\nSecretariat • Bharat Collective Foundation`
+    );
+    setModalDefaultTemplate('NEWSLETTER_DIGEST');
+    setModalContextText(`Broadcast Announcement for Published Item: "${item.title}" (${item.contentTypeLabel})`);
+    setModalSourceModule(item.contentType);
+    setNotifyModalOpen(true);
+  };
+
+  // Populate Compose form when a published content item is selected
+  const handleSelectPublishedForCompose = (contentId: string) => {
+    setSelectedPublishedContentId(contentId);
+    if (!contentId) return;
+
+    const item = publishedItems.find(p => p.id === contentId);
+    if (!item) return;
+
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const fullPublicUrl = item.publicUrl.startsWith('http') ? item.publicUrl : `${baseUrl}${item.publicUrl}`;
+
+    setComposeSubject(`New Release: ${item.title} • Bharat Collective`);
+    setComposeMessage(
+      `Namaste,\n\nWe are pleased to announce the official release of "${item.title}" (${item.contentTypeLabel}).\n\n` +
+      (item.authorOrSpeaker ? `Author / Speaker: ${item.authorOrSpeaker}\n` : '') +
+      (item.summary ? `${item.summary}\n\n` : '\n') +
+      `Access and explore the full content here:\n${fullPublicUrl}\n\n` +
+      `Warm regards,\nSecretariat • Bharat Collective Foundation`
+    );
+    setComposeTemplate('NEWSLETTER_DIGEST');
+  };
 
   // Bulk selection handlers
   const handleToggleSelect = (key: string) => {
@@ -577,6 +683,18 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
           </button>
 
           <button
+            onClick={() => setSubTab('published')}
+            className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
+              subTab === 'published'
+                ? 'bg-amber-800 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>Published Content ({publishedItems.length})</span>
+          </button>
+
+          <button
             onClick={() => setSubTab('compose')}
             className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 whitespace-nowrap ${
               subTab === 'compose'
@@ -931,6 +1049,211 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
       )}
 
       {/* ============================================================== */}
+      {/* SUB-TAB: PUBLISHED CONTENT & CENTRAL BROADCAST */}
+      {/* ============================================================== */}
+      {subTab === 'published' && (
+        <div className="space-y-4">
+          
+          {/* Header & Description Banner */}
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 className="font-serif font-bold text-slate-900 text-base flex items-center space-x-2">
+                <Layers className="w-5 h-5 text-amber-700" />
+                <span>Published Website Content & Notification Hub</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+                All live content across Symposia & Events, Publications, Circulars, Research Domains, News, Podcasts, Magazines, and Centres. Send multi-channel broadcasts to subscribers and members centrally without re-publishing.
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0">
+              <span className="text-xs font-semibold px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-200 rounded-xl">
+                {publishedItems.length} Live Items Available
+              </span>
+            </div>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              {/* Search input */}
+              <div className="relative flex-1 w-full">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={publishedSearchQuery}
+                  onChange={e => setPublishedSearchQuery(e.target.value)}
+                  placeholder="Search published content by title, speaker, lead, summary..."
+                  className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                />
+                {publishedSearchQuery && (
+                  <button
+                    onClick={() => setPublishedSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Broadcast Status Filter */}
+              <div className="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl text-xs shrink-0">
+                <button
+                  onClick={() => setPublishedBroadcastFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                    publishedBroadcastFilter === 'all'
+                      ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  All ({publishedItems.length})
+                </button>
+                <button
+                  onClick={() => setPublishedBroadcastFilter('unbroadcasted')}
+                  className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                    publishedBroadcastFilter === 'unbroadcasted'
+                      ? 'bg-white text-amber-900 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Never Broadcast ({publishedItems.filter(p => p.notificationCount === 0).length})
+                </button>
+                <button
+                  onClick={() => setPublishedBroadcastFilter('broadcasted')}
+                  className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                    publishedBroadcastFilter === 'broadcasted'
+                      ? 'bg-white text-emerald-900 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Broadcasted ({publishedItems.filter(p => p.notificationCount > 0).length})
+                </button>
+              </div>
+            </div>
+
+            {/* Type Filter Pills */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 text-xs">
+              <span className="text-[10px] text-slate-400 font-bold uppercase px-1">Content Type:</span>
+              <button
+                onClick={() => setPublishedTypeFilter('all')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  publishedTypeFilter === 'all'
+                    ? 'bg-amber-800 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                All Modules ({publishedItems.length})
+              </button>
+              {availablePublishedTypes.map(t => (
+                <button
+                  key={t.type}
+                  onClick={() => setPublishedTypeFilter(t.type)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    publishedTypeFilter === t.type
+                      ? 'bg-amber-800 text-white'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  {t.label} ({t.count})
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* List of Published Content Items */}
+          <div className="space-y-3">
+            {filteredPublishedItems.length === 0 ? (
+              <div className="bg-white rounded-2xl p-12 text-center border border-slate-200 text-slate-500 space-y-2">
+                <AlertCircle className="w-8 h-8 mx-auto text-slate-400" />
+                <p className="font-semibold text-sm text-slate-700">No published content matching filters</p>
+                <p className="text-xs text-slate-400">
+                  {publishedSearchQuery ? 'Try clearing your search query or choosing another type.' : 'No eligible published items found across website modules.'}
+                </p>
+              </div>
+            ) : (
+              filteredPublishedItems.map(item => (
+                <div
+                  key={`${item.contentType}-${item.id}`}
+                  className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs hover:border-amber-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                >
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-200">
+                        {item.contentTypeLabel}
+                      </span>
+                      {item.publicationDate && (
+                        <span className="text-[11px] text-slate-500 flex items-center space-x-1">
+                          <Calendar className="w-3 h-3 text-slate-400" />
+                          <span>{item.publicationDate}</span>
+                        </span>
+                      )}
+                      {item.notificationCount > 0 ? (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center space-x-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span>Broadcasted {item.notificationCount}x</span>
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 flex items-center space-x-1">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          <span>Never Broadcast</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <h4 className="text-sm sm:text-base font-serif font-bold text-slate-900 hover:text-amber-800 transition-colors">
+                      {item.title}
+                    </h4>
+
+                    {item.authorOrSpeaker && (
+                      <p className="text-xs text-slate-600 font-medium">
+                        By / Featuring: <span className="text-slate-800">{item.authorOrSpeaker}</span>
+                      </p>
+                    )}
+
+                    {item.summary && (
+                      <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                        {item.summary}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 pt-1">
+                      <a
+                        href={item.publicUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center space-x-1 text-amber-700 hover:text-amber-800 font-semibold hover:underline"
+                      >
+                        <span>View Public Page ({item.publicUrl})</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+
+                      {item.lastNotifiedAt && (
+                        <span className="text-slate-400 text-[11px]">
+                          • Last broadcast: {new Date(item.lastNotifiedAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Broadcast Action Button */}
+                  <div className="flex md:flex-col items-center justify-end gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                    <button
+                      onClick={() => handleOpenBroadcastPublished(item)}
+                      className="w-full sm:w-auto px-4 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-semibold rounded-xl text-xs shadow-xs flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Broadcast Update</span>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+        </div>
+      )}
+
+      {/* ============================================================== */}
       {/* SUB-TAB: CONTACT DETAILS & DIRECT DISPATCH */}
       {/* ============================================================== */}
       {subTab === 'compose' && (
@@ -987,6 +1310,31 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
                 </select>
               </div>
             </div>
+
+            {/* Optional Published Content Auto-filler */}
+            {publishedItems.length > 0 && (
+              <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200/70 space-y-1.5">
+                <label className="block text-[11px] font-bold text-amber-950 flex items-center space-x-1.5">
+                  <Layers className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Connect Published Content to this Notification (Optional):</span>
+                </label>
+                <select
+                  value={selectedPublishedContentId}
+                  onChange={e => handleSelectPublishedForCompose(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-amber-200 bg-white text-xs font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500 cursor-pointer"
+                >
+                  <option value="">-- Compose Manually or Select Published Content --</option>
+                  {publishedItems.map(p => (
+                    <option key={p.id} value={p.id}>
+                      [{p.contentTypeLabel}] {p.title} {p.publicationDate ? `(${p.publicationDate})` : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-amber-800">
+                  Selecting a published item automatically fills the heading, summary, and public URL link into the notification.
+                </p>
+              </div>
+            )}
 
             <div className="space-y-3 text-xs">
               <div>

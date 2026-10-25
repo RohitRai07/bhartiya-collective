@@ -6,7 +6,7 @@ interface MagazineEditorModalProps {
   isOpen: boolean;
   initialData?: MagazineIssue | null;
   onClose: () => void;
-  onSave: (data: MagazineIssueInput, notifyUsers?: boolean) => Promise<void>;
+  onSave: (data: MagazineIssueInput) => Promise<void>;
 }
 
 export const MagazineEditorModal: React.FC<MagazineEditorModalProps> = ({
@@ -16,7 +16,6 @@ export const MagazineEditorModal: React.FC<MagazineEditorModalProps> = ({
   onSave,
 }) => {
   const isEditing = Boolean(initialData?.id);
-  const [notifyUsers, setNotifyUsers] = useState(false);
   const [formData, setFormData] = useState<MagazineIssueInput>({
     title: '',
     issueNumber: '',
@@ -68,7 +67,6 @@ export const MagazineEditorModal: React.FC<MagazineEditorModalProps> = ({
       setTocText('');
     }
     setError(null);
-    setNotifyUsers(false);
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
@@ -99,7 +97,7 @@ export const MagazineEditorModal: React.FC<MagazineEditorModalProps> = ({
       await onSave({
         ...formData,
         tableOfContents: parsedToc,
-      }, notifyUsers);
+      });
       onClose();
     } catch (err: any) {
       setError(err?.message || 'Failed to save magazine issue.');
@@ -305,26 +303,6 @@ export const MagazineEditorModal: React.FC<MagazineEditorModalProps> = ({
             <p className="text-[11px] text-slate-500 mt-1">
               These will be rendered as indexed essays and embedded inside the generated PDF edition.
             </p>
-          </div>
-
-          {/* Prompt to Notify Members & Subscribers */}
-          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 flex items-start space-x-2.5">
-            <input
-              type="checkbox"
-              id="notify-magazine-toggle"
-              checked={notifyUsers}
-              onChange={e => setNotifyUsers(e.target.checked)}
-              className="mt-0.5 rounded text-amber-600 focus:ring-amber-500"
-            />
-            <label htmlFor="notify-magazine-toggle" className="cursor-pointer text-xs text-amber-950">
-              <span className="font-bold block flex items-center space-x-1">
-                <BellRing className="w-3.5 h-3.5 text-amber-700" />
-                <span>Prompt to Notify Members & Subscribers</span>
-              </span>
-              <span className="text-[11px] text-amber-800">
-                Immediately launch the notification gateway after saving to broadcast this update via Email & WhatsApp.
-              </span>
-            </label>
           </div>
 
           {/* Modal Action Buttons */}

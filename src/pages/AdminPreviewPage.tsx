@@ -606,7 +606,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     setNotifyModalOpen(true);
   };
 
-const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers: boolean) => {
+const handleSaveContent = async (type: ContentEntityType, data: any) => {
     if (type === 'circular') {
       if (editingItem?.id) {
         await circularService.updateCircular(editingItem.id, data);
@@ -646,11 +646,6 @@ const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers
     }
 
     await loadAllData();
-
-    if (notifyUsers) {
-      const title = data.title || data.name || 'New Update';
-      openBroadcastNotification(title, type);
-    }
   };
 
   const handleDeleteContent = async (type: ContentEntityType, id: string) => {
@@ -718,7 +713,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers
     setCentres(centreService.getAll());
   };
 
-  const handleSaveCentre = async (data: Omit<BharatCentre, 'id'>, notifyUsers: boolean = false) => {
+  const handleSaveCentre = async (data: Omit<BharatCentre, 'id'>) => {
     if (editingCentre) {
       centreService.update(editingCentre.id, data);
     } else {
@@ -727,10 +722,6 @@ const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers
     setCentres(centreService.getAll());
     setCentreEditorOpen(false);
     setEditingCentre(null);
-
-    if (notifyUsers && data.status === 'published') {
-      openBroadcastNotification(data.name, 'centre');
-    }
   };
 
   const handleTogglePublishCentre = (id: string) => {
@@ -1028,7 +1019,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers
   };
 
   // Live Event Handlers
-  const handleSaveLiveEvent = async (data: Partial<EventItem>, publishStatus: 'published' | 'draft', notifyUsers: boolean = false) => {
+  const handleSaveLiveEvent = async (data: Partial<EventItem>, publishStatus: 'published' | 'draft') => {
     if (editingLiveEvent?.id) {
       await eventService.updateEvent(editingLiveEvent.id, {
         ...data,
@@ -1044,14 +1035,10 @@ const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers
     setEvents(refreshed);
     setLiveEventModalOpen(false);
     setEditingLiveEvent(null);
-
-    if (notifyUsers && publishStatus === 'published') {
-      openBroadcastNotification(data.title || 'Live Broadcast', 'live-event', data.youtubeUrl);
-    }
   };
 
   // Podcast Handlers
-  const handleSavePodcast = async (input: PodcastInput, notifyUsers: boolean = false) => {
+  const handleSavePodcast = async (input: PodcastInput) => {
     if (editingPodcast) {
       podcastService.update(editingPodcast.id, input);
     } else {
@@ -1060,10 +1047,6 @@ const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers
     setPodcasts(podcastService.getAll());
     setPodcastEditorOpen(false);
     setEditingPodcast(null);
-
-    if (notifyUsers && (input.status === 'published' || !input.status)) {
-      openBroadcastNotification(input.title, 'podcast', input.youtubeUrl);
-    }
   };
 
   const handleDeletePodcast = (id: string) => {
@@ -1074,7 +1057,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers
   };
 
   // Magazine Handlers
-  const handleSaveMagazine = async (input: MagazineIssueInput, notifyUsers: boolean = false) => {
+  const handleSaveMagazine = async (input: MagazineIssueInput) => {
     if (editingMagazine) {
       magazineService.update(editingMagazine.id, input);
     } else {
@@ -1083,10 +1066,6 @@ const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers
     setMagazines(magazineService.getAll());
     setMagazineEditorOpen(false);
     setEditingMagazine(null);
-
-    if (notifyUsers && (input.status === 'published' || !input.status)) {
-      openBroadcastNotification(input.title, 'magazine');
-    }
   };
 
   const handleDeleteMagazine = (id: string) => {

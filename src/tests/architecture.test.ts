@@ -979,6 +979,87 @@ async function runTests() {
   assert(retryResult.success === true, 'Notification retry mechanism completes successfully');
   assert(typeof retryResult.log?.retryCount === 'number' && retryResult.log.retryCount >= 1, 'Retry counter increments cleanly on the unified record');
 
+  // 7b. Centralized Published Website Content & Notification Hub
+  console.log('\n📌 Testing Centralized Published Website Content & Notification Hub:');
+
+  // Fetch all published content items
+  const publishedContent = await centralizedNotificationService.getPublishedContent();
+  assert(Array.isArray(publishedContent) && publishedContent.length > 0, 'Centralized notification hub fetches published website content');
+
+  // Verify diverse content types are aggregated
+  const contentTypes = new Set(publishedContent.map(p => p.contentType));
+  assert(
+    contentTypes.has('publication') || contentTypes.has('event') || contentTypes.has('podcast') || contentTypes.has('magazine'),
+    'Published content aggregates publications, events, podcasts, or magazines'
+  );
+
+  // Verify all returned content items have valid status (only published, never draft)
+  assert(publishedContent.every(p => p.status === 'published'), 'All items in Notification Centre published list have published status');
+
+  // Verify all published content items have valid public URLs
+  assert(
+    publishedContent.every(p => p.publicUrl && (p.publicUrl.startsWith('/') || p.publicUrl.startsWith('http'))),
+    'All published content items provide public URL'
+  );
+
+  // Verify draft exclusion: create a draft event and verify it does NOT appear in getPublishedContent
+  const testDraftEvent = await eventService.createEvent({
+    title: 'Private Closed Draft Consultation on Digital Governance',
+    date: '2026-11-20',
+    type: 'Symposium',
+    description: 'Internal policy formulation session.',
+    status: 'draft',
+  });
+  const afterDraftPubContent = await centralizedNotificationService.getPublishedContent();
+  const draftFound = afterDraftPubContent.find(p => p.id === testDraftEvent.id);
+  assert(!draftFound, 'Draft event is strictly excluded from Centralized Notification Centre published content');
+
+  // Unpublish live event test: toggle existing published event to draft and ensure it disappears from published content
+  const firstEvent = publishedContent.find(p => p.contentType === 'event' || p.contentType === 'live-event');
+  if (firstEvent) {
+    const origEvent = await eventService.getEventById(firstEvent.id);
+    if (origEvent) {
+      // Toggle to draft
+      await eventService.updateEvent(firstEvent.id, { status: 'draft' });
+      const pubContentAfterUnpublish = await centralizedNotificationService.getPublishedContent();
+      assert(!pubContentAfterUnpublish.some(p => p.id === firstEvent.id), 'Unpublished event is immediately removed from Notification Centre published content list');
+      // Restore to published
+      await eventService.updateEvent(firstEvent.id, { status: 'published' });
+      const pubContentAfterRestore = await centralizedNotificationService.getPublishedContent();
+      assert(pubContentAfterRestore.some(p => p.id === firstEvent.id), 'Restored published event re-appears in Notification Centre published content list');
+    }
+  }
+
+  // Cleanup test draft event
+  await eventService.deleteEvent(testDraftEvent.id);
+
+  // Broadcast Notification tracking on published content:
+  const targetContent = publishedContent[0];
+  const initialCount = targetContent.notificationCount;
+  
+  // Log a broadcast notification associated with this published content
+  await notificationService.sendNotification({
+    recipients: [{
+      id: 'test-subscriber-pub-1',
+      name: 'Dr. Anand Kumar',
+      email: 'anand.kumar@bihar.gov.in',
+      phone: '+91 94310 11223',
+      category: 'newsletter',
+      sourceModule: 'newsletter',
+    }],
+    channel: 'email',
+    sourceModule: targetContent.contentType,
+    subject: `Official Release: ${targetContent.title}`,
+    message: `We are pleased to announce the publication of ${targetContent.title}. Read at ${targetContent.publicUrl}`,
+    contentReference: targetContent.id,
+  });
+
+  const refreshedPublishedContent = await centralizedNotificationService.getPublishedContent();
+  const refreshedTarget = refreshedPublishedContent.find(p => p.id === targetContent.id);
+  assert(refreshedTarget !== undefined, 'Target published content found on reload');
+  assert(refreshedTarget.notificationCount >= initialCount + 1, 'Broadcast notification increments notificationCount on published content item');
+  assert(!!refreshedTarget.lastNotifiedAt, 'Broadcast notification sets lastNotifiedAt timestamp on published content item');
+
   // 8. Contact Details Validation, Default +91 India Formatting, and Strict Sending Gate
   console.log('\n📌 Testing Contact Details Validation, +91 Phone Formatting & Sending Gate:');
 

@@ -25,7 +25,7 @@ interface LiveEventEditorModalProps {
   isOpen: boolean;
   initialData?: EventItem | null;
   onClose: () => void;
-  onSave: (data: Partial<EventItem>, publishStatus: 'published' | 'draft', notifyUsers?: boolean) => Promise<void>;
+  onSave: (data: Partial<EventItem>, publishStatus: 'published' | 'draft') => Promise<void>;
 }
 
 export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
@@ -46,7 +46,6 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
   const [customThumbnail, setCustomThumbnail] = useState('');
   const [description, setDescription] = useState('');
   const [registrationOpen, setRegistrationOpen] = useState(true);
-  const [notifyUsers, setNotifyUsers] = useState(false);
   const [speakers, setSpeakers] = useState<EventSpeaker[]>([
     { name: '', affiliation: '', role: 'Keynote Speaker' }
   ]);
@@ -65,7 +64,6 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       setCustomThumbnail(initialData.bannerImage || initialData.customThumbnailUrl || '');
       setDescription(initialData.description || '');
       setRegistrationOpen(initialData.registrationOpen ?? true);
-      setNotifyUsers(false);
       setSpeakers(
         initialData.speakers && initialData.speakers.length > 0
           ? initialData.speakers
@@ -81,7 +79,6 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       setCustomThumbnail('');
       setDescription('');
       setRegistrationOpen(true);
-      setNotifyUsers(false);
       setSpeakers([{ name: '', affiliation: '', role: 'Keynote Speaker' }]);
     }
     setTimeError(null);
@@ -163,7 +160,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
         status: publishStatus,
       };
 
-      await onSave(payload, publishStatus, notifyUsers);
+      await onSave(payload, publishStatus);
       onClose();
     } catch (err: any) {
       setError(err?.message || 'Failed to save YouTube live event.');
@@ -440,26 +437,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
             </label>
           </div>
 
-          {/* Prompt to Notify Members & Subscribers */}
-          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 flex items-start space-x-2.5">
-            <input
-              type="checkbox"
-              id="notify-live-event-toggle"
-              checked={notifyUsers}
-              onChange={e => setNotifyUsers(e.target.checked)}
-              className="mt-0.5 rounded text-amber-600 focus:ring-amber-500"
-            />
-            <label htmlFor="notify-live-event-toggle" className="cursor-pointer text-xs text-amber-950">
-              <span className="font-bold block flex items-center space-x-1">
-                <BellRing className="w-3.5 h-3.5 text-amber-700" />
-                <span>Prompt to Notify Members & Subscribers</span>
-              </span>
-              <span className="text-[11px] text-amber-800">
-                Immediately launch the notification gateway after saving to broadcast this update via Email & WhatsApp.
-              </span>
-            </label>
           </div>
-        </div>
 
         {/* Modal Actions: Save Draft vs Publish */}
         <div className="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5">

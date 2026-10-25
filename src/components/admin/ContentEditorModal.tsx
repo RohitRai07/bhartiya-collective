@@ -26,7 +26,7 @@ interface ContentEditorModalProps {
   type: ContentEntityType;
   initialData?: any | null; // existing record if editing, null if creating
   onClose: () => void;
-  onSave: (type: ContentEntityType, data: any, notifyUsers: boolean) => Promise<void>;
+  onSave: (type: ContentEntityType, data: any) => Promise<void>;
 }
 
 export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
@@ -37,7 +37,7 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
   onSave,
 }) => {
   const isEditing = Boolean(initialData?.id);
-  const [notifyUsers, setNotifyUsers] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -219,7 +219,7 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
         payload.isAutoSynced = Boolean(payload.isAutoSynced);
       }
 
-      await onSave(type, payload, notifyUsers);
+      await onSave(type, payload);
       onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to save item. Please verify fields.');
@@ -974,26 +974,6 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
               />
             </>
           )}
-
-          {/* Broadcast / Notify Checkbox */}
-          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 flex items-start space-x-2.5">
-            <input
-              type="checkbox"
-              id="notify-users-toggle"
-              checked={notifyUsers}
-              onChange={e => setNotifyUsers(e.target.checked)}
-              className="mt-0.5 rounded text-amber-600 focus:ring-amber-500"
-            />
-            <label htmlFor="notify-users-toggle" className="cursor-pointer text-xs text-amber-950">
-              <span className="font-bold block flex items-center space-x-1">
-                <BellRing className="w-3.5 h-3.5 text-amber-700" />
-                <span>Prompt to Notify Members & Subscribers</span>
-              </span>
-              <span className="text-[11px] text-amber-800">
-                Immediately launch the notification gateway after saving to broadcast this update via Email & WhatsApp.
-              </span>
-            </label>
-          </div>
 
           {/* Actions */}
           <div className="pt-2 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">

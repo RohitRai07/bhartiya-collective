@@ -19,11 +19,21 @@ import { submissionService } from './submissionService';
 import { contactService } from './contactService';
 import { notificationService } from './notificationService';
 import { backendNotificationService } from './backendNotificationService';
+import { publicationService } from './publicationService';
+import { circularService } from './circularService';
+import { eventService } from './eventService';
+import { researchService } from './researchService';
+import { newsService } from './newsService';
+import { podcastService } from './podcastService';
+import { magazineService } from './magazineService';
+import { centreService } from './centreService';
+import { teamService } from './teamService';
 import { 
   AggregatedRecipient, 
   RecipientSourceModule, 
   NotificationChannel,
-  NotificationRecipient
+  NotificationRecipient,
+  PublishedContentItem
 } from '../types/notification';
 
 export interface RecipientFilterCriteria {
@@ -421,6 +431,233 @@ export class CentralizedNotificationService {
       templateId: options.templateId,
       dynamicData: options.dynamicData,
     });
+  }
+
+  /**
+   * Aggregate all eligible published content items across all modules:
+   * Publications, Events, Circulars, Research Domains, News, Podcasts, Magazines, Centres, Teams.
+   * Strictly filters out drafts, unpublished, or archived items.
+   */
+  public async getPublishedContent(): Promise<PublishedContentItem[]> {
+    const list: PublishedContentItem[] = [];
+
+    // 1. Publications
+    try {
+      const pubs = await publicationService.getPublications(false);
+      for (const p of pubs) {
+        if (p.status === 'draft') continue;
+        const logs = notificationService.getLogsForContent('publication', p.id, p.title);
+        list.push({
+          id: p.id,
+          title: p.title,
+          contentType: 'publication',
+          contentTypeLabel: 'Research Publication',
+          publicationDate: p.date || p.year?.toString() || '',
+          status: 'published',
+          publicUrl: '/publications',
+          authorOrSpeaker: p.author,
+          summary: p.abstract || p.summary || '',
+          notificationCount: logs.length,
+          lastNotifiedAt: logs[0]?.sentAt,
+        });
+      }
+    } catch (e) {
+      console.warn('Error fetching publications for notification centre:', e);
+    }
+
+    // 2. Symposia & Events
+    try {
+      const evts = await eventService.getEvents(false);
+      for (const e of evts) {
+        if (e.status === 'draft') continue;
+        const isLive = Boolean(e.isLive || e.youtubeUrl);
+        const logs = notificationService.getLogsForContent(isLive ? 'live-event' : 'event', e.id, e.title);
+        list.push({
+          id: e.id,
+          title: e.title,
+          contentType: isLive ? 'live-event' : 'event',
+          contentTypeLabel: isLive ? '🔴 Live Stream Broadcast' : 'Symposium & Dialogue',
+          publicationDate: e.date,
+          status: 'published',
+          publicUrl: e.youtubeUrl || '/events',
+          authorOrSpeaker: e.speakers?.map(s => s.name).join(', '),
+          summary: e.description,
+          notificationCount: logs.length,
+          lastNotifiedAt: logs[0]?.sentAt,
+        });
+      }
+    } catch (e) {
+      console.warn('Error fetching events for notification centre:', e);
+    }
+
+    // 3. Circulars & Legal Guidelines
+    try {
+      const circs = await circularService.getCirculars(false);
+      for (const c of circs) {
+        if (c.status === 'draft') continue;
+        const logs = notificationService.getLogsForContent('circular', c.id, c.title);
+        list.push({
+          id: c.id,
+          title: c.title,
+          contentType: 'circular',
+          contentTypeLabel: 'Circular & Advisory',
+          publicationDate: c.issueDate || c.date || '',
+          status: 'published',
+          publicUrl: '/circulars',
+          authorOrSpeaker: c.issuingAuthority || c.department,
+          summary: c.summary || c.subject,
+          notificationCount: logs.length,
+          lastNotifiedAt: logs[0]?.sentAt,
+        });
+      }
+    } catch (e) {
+      console.warn('Error fetching circulars for notification centre:', e);
+    }
+
+    // 4. Research Domains
+    try {
+      const domains = await researchService.getDomains(false);
+      for (const d of domains) {
+        if (d.status === 'draft') continue;
+        const logs = notificationService.getLogsForContent('research', d.id, d.name);
+        list.push({
+          id: d.id,
+          title: d.name,
+          contentType: 'research',
+          contentTypeLabel: 'Research Domain',
+          publicationDate: '',
+          status: 'published',
+          publicUrl: '/research',
+          summary: d.description,
+          notificationCount: logs.length,
+          lastNotifiedAt: logs[0]?.sentAt,
+        });
+      }
+    } catch (e) {
+      console.warn('Error fetching research domains for notification centre:', e);
+    }
+
+    // 5. Media & News Articles
+    try {
+      const articles = await newsService.getArticles(false);
+      for (const n of articles) {
+        if (n.status === 'draft') continue;
+        const logs = notificationService.getLogsForContent('news', n.id, n.title);
+        list.push({
+          id: n.id,
+          title: n.title,
+          contentType: 'news',
+          contentTypeLabel: 'Media & News Article',
+          publicationDate: n.publishedAt || n.date || '',
+          status: 'published',
+          publicUrl: n.url || '/news',
+          authorOrSpeaker: n.source,
+          summary: n.summary,
+          notificationCount: logs.length,
+          lastNotifiedAt: logs[0]?.sentAt,
+        });
+      }
+    } catch (e) {
+      console.warn('Error fetching news articles for notification centre:', e);
+    }
+
+    // 6. Podcast Episodes
+    try {
+      const podcasts = podcastService.getAll();
+      for (const pod of podcasts) {
+        if (pod.status === 'draft') continue;
+        const logs = notificationService.getLogsForContent('podcast', pod.id, pod.title);
+        list.push({
+          id: pod.id,
+          title: pod.title,
+          contentType: 'podcast',
+          contentTypeLabel: 'Podcast Episode',
+          publicationDate: pod.date,
+          status: 'published',
+          publicUrl: pod.youtubeUrl || '/podcasts',
+          authorOrSpeaker: `${pod.speaker}${pod.speakerRole ? ` (${pod.speakerRole})` : ''}`,
+          summary: pod.description,
+          notificationCount: logs.length,
+          lastNotifiedAt: logs[0]?.sentAt,
+        });
+      }
+    } catch (e) {
+      console.warn('Error fetching podcasts for notification centre:', e);
+    }
+
+    // 7. Magazine Issues
+    try {
+      const magazines = magazineService.getAll();
+      for (const mag of magazines) {
+        if (mag.status === 'draft') continue;
+        const logs = notificationService.getLogsForContent('magazine', mag.id, mag.title);
+        list.push({
+          id: mag.id,
+          title: `${mag.title} (${mag.issueNumber})`,
+          contentType: 'magazine',
+          contentTypeLabel: 'Magazine Edition',
+          publicationDate: mag.publicationDate,
+          status: 'published',
+          publicUrl: '/magazine',
+          authorOrSpeaker: mag.editorialLead,
+          summary: mag.description || mag.theme,
+          notificationCount: logs.length,
+          lastNotifiedAt: logs[0]?.sentAt,
+        });
+      }
+    } catch (e) {
+      console.warn('Error fetching magazines for notification centre:', e);
+    }
+
+    // 8. Research Centres
+    try {
+      const centres = centreService.getAll();
+      for (const c of centres) {
+        if (c.status === 'draft') continue;
+        const logs = notificationService.getLogsForContent('centre', c.id, c.name);
+        list.push({
+          id: c.id,
+          title: c.name,
+          contentType: 'centre',
+          contentTypeLabel: 'Centre of Excellence',
+          publicationDate: '',
+          status: 'published',
+          publicUrl: '/centres',
+          authorOrSpeaker: c.leadFellow,
+          summary: c.description,
+          notificationCount: logs.length,
+          lastNotifiedAt: logs[0]?.sentAt,
+        });
+      }
+    } catch (e) {
+      console.warn('Error fetching centres for notification centre:', e);
+    }
+
+    // 9. National Team
+    try {
+      const team = teamService.getNationalMembers();
+      for (const t of team) {
+        if (t.status === 'draft') continue;
+        const logs = notificationService.getLogsForContent('team', t.id, t.name);
+        list.push({
+          id: t.id,
+          title: `${t.name} • ${t.role}`,
+          contentType: 'team',
+          contentTypeLabel: 'National Leadership',
+          publicationDate: '',
+          status: 'published',
+          publicUrl: '/about',
+          authorOrSpeaker: t.affiliation,
+          summary: t.desc,
+          notificationCount: logs.length,
+          lastNotifiedAt: logs[0]?.sentAt,
+        });
+      }
+    } catch (e) {
+      console.warn('Error fetching national team for notification centre:', e);
+    }
+
+    return list;
   }
 }
 

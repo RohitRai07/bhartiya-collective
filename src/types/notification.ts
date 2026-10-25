@@ -120,3 +120,29 @@ export interface AggregatedRecipient {
   lastChannel?: NotificationChannel;
   lastStatus?: 'delivered' | 'simulated' | 'provider_pending' | 'failed';
 }
+
+export type PublishedContentType = 
+  | 'publication' 
+  | 'circular' 
+  | 'event' 
+  | 'live-event' 
+  | 'research' 
+  | 'news' 
+  | 'podcast' 
+  | 'magazine' 
+  | 'centre' 
+  | 'team';
+
+export interface PublishedContentItem {
+  id: string;
+  title: string;
+  contentType: PublishedContentType;
+  contentTypeLabel: string;
+  publicationDate: string;
+  status: 'published';
+  publicUrl: string;
+  authorOrSpeaker?: string;
+  summary?: string;
+  notificationCount: number;
+  lastNotifiedAt?: string;
+}

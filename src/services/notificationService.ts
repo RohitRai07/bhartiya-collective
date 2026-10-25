@@ -338,6 +338,31 @@ export const notificationService = {
   },
 
   /**
+   * Fetch notification history for a specific published content item
+   */
+  getLogsForContent(contentType?: string, contentId?: string, contentTitle?: string): NotificationLog[] {
+    const logs = loadStoredLogs();
+    const cleanTitle = contentTitle?.trim().toLowerCase();
+
+    return logs.filter(log => {
+      // 1. Direct match on contentReference if available
+      if ((log as any).contentReference) {
+        const ref = (log as any).contentReference;
+        if (contentId && ref.contentId === contentId) return true;
+        if (contentType && ref.contentType === contentType) {
+          if (cleanTitle && ref.contentTitle?.trim().toLowerCase() === cleanTitle) return true;
+        }
+      }
+      // 2. Fallback match by content title in subject or message
+      if (cleanTitle && cleanTitle.length > 5) {
+        if (log.subject?.toLowerCase().includes(cleanTitle)) return true;
+        if (log.messageSnippet?.toLowerCase().includes(cleanTitle) || log.fullMessage?.toLowerCase().includes(cleanTitle)) return true;
+      }
+      return false;
+    });
+  },
+
+  /**
    * Send notification to single or multiple recipients via Email, SMS, WhatsApp, or All channels
    */
   async sendNotification(payload: SendNotificationPayload): Promise<{
