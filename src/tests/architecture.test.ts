@@ -15,6 +15,7 @@ import {
   SUGGESTED_AMOUNTS, 
   MIN_DONATION_AMOUNT 
 } from '../services/donationService';
+import { createRazorpayOrder } from '../services/razorpayService';
 import { publicationService } from '../services/publicationService';
 import { eventService } from '../services/eventService';
 import { researchService } from '../services/researchService';
@@ -236,6 +237,27 @@ async function runTests() {
 
   const validPrefixedPhone = validateDonationPhone('+91 9876543210');
   assert(validPrefixedPhone.isValid === true && validPrefixedPhone.cleanPhone === '+91 9876543210', '+91 prefixed phone accepted and normalized');
+
+  // Razorpay Gateway Service & Order Workflow
+  console.log('\n📌 Testing Razorpay Gateway Service & Order Workflow:');
+  const rzpOrder = await createRazorpayOrder({
+    amount: 1000,
+    receiptId: 'rcpt_arch_test_1000',
+    purpose: 'donation',
+  });
+  assert(rzpOrder.success === true, 'Razorpay order creation succeeds');
+  assert(rzpOrder.amount === 100000, 'Calculates 100000 paise for ₹1,000');
+  assert(rzpOrder.currency === 'INR', 'Currency matches INR');
+  assert(typeof rzpOrder.orderId === 'string' && rzpOrder.orderId.length > 0, 'Order ID is generated');
+
+  // Magazine purchase order (₹100)
+  const magOrder = await createRazorpayOrder({
+    amount: 100,
+    receiptId: 'rcpt_mag_test_100',
+    purpose: 'magazine_download',
+  });
+  assert(magOrder.amount === 10000, 'Calculates 10000 paise for ₹100 magazine purchase');
+  assert(magOrder.success === true, 'Magazine order created successfully');
 
   // 7. Domain Services Decoupling (Sections 3 & 9)
   console.log('\n📌 Testing Domain Services Separation (Sections 3 & 9):');

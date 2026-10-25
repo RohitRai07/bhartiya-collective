@@ -3,13 +3,19 @@ import { magazineService } from '../services/magazineService';
 import { featureConfig } from '../config/featureConfig';
 import { MagazineIssue } from '../types/magazine';
 import { 
+  createRazorpayOrder, 
+  launchRazorpayCheckout, 
+  verifyRazorpayPayment 
+} from '../services/razorpayService';
+import { 
   BookOpen, 
   Download, 
   CheckCircle2, 
   ShieldCheck, 
   X, 
   Loader2, 
-  ArrowRight
+  ArrowRight,
+  AlertTriangle
 } from 'lucide-react';
 
 export const MagazinePage: React.FC = () => {
@@ -17,6 +23,7 @@ export const MagazinePage: React.FC = () => {
   const [purchasingIssue, setPurchasingIssue] = useState<MagazineIssue | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState<{ filename: string; sizeKb: number } | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [isMagazineActive, setIsMagazineActive] = useState(featureConfig.isEnabled('magazine'));
 
   useEffect(() => {
@@ -50,22 +57,69 @@ export const MagazinePage: React.FC = () => {
   const handleStartPurchase = (issue: MagazineIssue) => {
     setPurchasingIssue(issue);
     setDownloadSuccess(null);
+    setPaymentError(null);
   };
 
-  const handleCompletePurchaseAndDownload = () => {
+  const handleCompletePurchaseAndDownload = async () => {
     if (!purchasingIssue) return;
     setIsProcessing(true);
+    setPaymentError(null);
 
-    setTimeout(() => {
-      try {
-        const result = magazineService.downloadMagazinePdf(purchasingIssue);
-        setDownloadSuccess(result);
-      } catch (e) {
-        alert('Failed to generate PDF. Please try again.');
-      } finally {
-        setIsProcessing(false);
-      }
-    }, 600);
+    try {
+      // 1. Create order on backend
+      const order = await createRazorpayOrder({
+        amount: purchasingIssue.price,
+        purpose: 'magazine',
+        receiptId: `MAG-${purchasingIssue.id}-${Date.now()}`,
+        notes: {
+          issueId: purchasingIssue.id,
+          issueNumber: purchasingIssue.issueNumber,
+          issueTitle: purchasingIssue.title,
+        },
+      });
+
+      // 2. Launch Razorpay Standard Checkout
+      await launchRazorpayCheckout({
+        order,
+        description: `Bharat Review Magazine - ${purchasingIssue.issueNumber}`,
+        notes: {
+          issueId: purchasingIssue.id,
+          issueNumber: purchasingIssue.issueNumber,
+        },
+        onSuccess: async (rzpResponse) => {
+          // 3. Cryptographic signature verification
+          const verifyResult = await verifyRazorpayPayment({
+            razorpay_order_id: rzpResponse.razorpay_order_id,
+            razorpay_payment_id: rzpResponse.razorpay_payment_id,
+            razorpay_signature: rzpResponse.razorpay_signature,
+            amount: purchasingIssue.price,
+            purpose: 'magazine',
+          });
+
+          if (verifyResult.success) {
+            try {
+              const result = magazineService.downloadMagazinePdf(purchasingIssue);
+              setDownloadSuccess(result);
+            } catch {
+              setPaymentError('Payment verified, but failed to generate PDF. Please try again.');
+            }
+          } else {
+            setPaymentError(verifyResult.error || 'Payment signature verification failed.');
+          }
+          setIsProcessing(false);
+        },
+        onFailure: (err) => {
+          setIsProcessing(false);
+          setPaymentError(`Payment failed: ${err.error?.description || err.message || 'Transaction could not be completed.'}`);
+        },
+        onDismiss: () => {
+          setIsProcessing(false);
+        },
+      });
+    } catch (err: any) {
+      setIsProcessing(false);
+      setPaymentError(err.message || 'Unable to initialize Razorpay checkout.');
+    }
   };
 
   return (
@@ -98,51 +152,37 @@ export const MagazinePage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-5 items-start">
                 <div className="w-full sm:w-36 h-48 rounded-2xl overflow-hidden bg-slate-900 flex-shrink-0 shadow-md border border-amber-900/10">
                   <img
-                    src={issue.coverImageUrl}
+                    src={issue.coverImageUrl || '/images/bharat-dialogue-ucc-banner.jpg'}
                     alt={issue.title}
                     className="w-full h-full object-cover"
                   />
                 </div>
-
                 <div className="space-y-2 flex-grow">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200/60 uppercase">
                       {issue.issueNumber}
                     </span>
                     <span className="text-xs text-slate-500 font-medium">{issue.publicationDate}</span>
                   </div>
-
-                  <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
+                  <h3 className="font-serif text-2xl font-bold text-slate-900 leading-snug">
                     {issue.title}
                   </h3>
-
-                  <p className="text-xs font-semibold text-amber-900">
-                    Theme: {issue.theme}
+                  <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                    {issue.description}
                   </p>
-
-                  <div className="flex items-center space-x-3 text-xs text-slate-500 pt-1">
-                    <span>{issue.pageCount} Pages</span>
-                    <span>•</span>
-                    <span className="text-emerald-700 font-bold">Standard PDF Edition</span>
-                  </div>
                 </div>
               </div>
 
-              {/* Description */}
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                {issue.description}
-              </p>
-
-              {/* Table of Contents Highlight */}
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2">
+              {/* Focus Topics */}
+              <div className="space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                  Featured Essays & Case Notes
+                  Featured Treatises & Inquiries
                 </span>
-                <ul className="space-y-1.5 text-xs text-slate-700">
-                  {issue.tableOfContents.slice(0, 3).map((item, idx) => (
-                    <li key={idx} className="flex items-start space-x-2">
-                      <span className="text-amber-700 font-bold">•</span>
-                      <span className="line-clamp-1">{item}</span>
+                <ul className="space-y-1.5">
+                  {issue.featuredArticles.map((art, idx) => (
+                    <li key={idx} className="text-xs text-slate-700 flex items-start space-x-2">
+                      <span className="text-amber-600 font-bold">•</span>
+                      <span>{art}</span>
                     </li>
                   ))}
                 </ul>
@@ -150,20 +190,18 @@ export const MagazinePage: React.FC = () => {
 
             </div>
 
-            {/* Bottom Purchase Bar */}
-            <div className="pt-6 mt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center space-x-2">
+            {/* Price & Action */}
+            <div className="pt-6 border-t border-slate-100 flex items-center justify-between mt-6">
+              <div>
                 <span className="text-xs text-slate-500">Nominal Reader Cost:</span>
-                <span className="font-serif text-2xl font-bold text-slate-900">₹{issue.price}</span>
-                <span className="text-[10px] text-slate-400">(Inclusive of tax)</span>
+                <span className="font-serif text-2xl font-bold text-slate-900 ml-2">₹{issue.price}</span>
               </div>
-
               <button
                 type="button"
                 onClick={() => handleStartPurchase(issue)}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs sm:text-sm bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20 transition-all flex items-center justify-center space-x-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white shadow-xs transition-colors flex items-center space-x-2 cursor-pointer"
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-3.5 h-3.5" />
                 <span>Download Edition (₹{issue.price})</span>
               </button>
             </div>
@@ -213,6 +251,13 @@ export const MagazinePage: React.FC = () => {
               </div>
             </div>
 
+            {paymentError && (
+              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium flex items-start space-x-2 animate-in fade-in">
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <span>{paymentError}</span>
+              </div>
+            )}
+
             {downloadSuccess ? (
               <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-2 animate-in zoom-in-95 duration-200">
                 <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
@@ -227,7 +272,7 @@ export const MagazinePage: React.FC = () => {
                 </p>
                 <button
                   onClick={() => setPurchasingIssue(null)}
-                  className="mt-2 px-5 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white hover:bg-emerald-800"
+                  className="mt-2 px-5 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white hover:bg-emerald-800 cursor-pointer"
                 >
                   Done
                 </button>
@@ -237,7 +282,7 @@ export const MagazinePage: React.FC = () => {
                 <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start space-x-2">
                   <ShieldCheck className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
                   <span>
-                    Your nominal ₹100 contribution directly funds visiting fellowships, manuscript digitization, and independent legal research.
+                    Your nominal ₹100 contribution directly funds visiting fellowships, manuscript digitization, and independent legal research. Secured by Razorpay.
                   </span>
                 </div>
 
@@ -250,11 +295,11 @@ export const MagazinePage: React.FC = () => {
                   {isProcessing ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Optimizing & Generating PDF...</span>
+                      <span>Initiating Razorpay Checkout...</span>
                     </>
                   ) : (
                     <>
-                      <span>Pay ₹{purchasingIssue.price} & Download PDF</span>
+                      <span>Pay ₹{purchasingIssue.price} via Razorpay & Download PDF</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

@@ -21,6 +21,8 @@ const allowedOrigins = [
   'https://rohitrai07.github.io',
   'https://bharatcollective.org',
   'https://www.bharatcollective.org',
+  'https://bharatcollective.in',
+  'https://www.bharatcollective.in',
 ];
 
 app.use(cors({

@@ -6,6 +6,10 @@ import {
   SUGGESTED_AMOUNTS 
 } from '../../services/donationService';
 import { 
+  launchRazorpayCheckout, 
+  verifyRazorpayPayment 
+} from '../../services/razorpayService';
+import { 
   DonationData, 
   DonationFrequency, 
   DonationCause, 
@@ -16,7 +20,10 @@ import {
   CheckCircle2, 
   Lock, 
   Loader2, 
-  ArrowRight
+  ArrowRight,
+  ExternalLink,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
 const CAUSE_OPTIONS: { id: DonationCause; title: string; desc: string }[] = [
@@ -40,8 +47,9 @@ export const DonationSection: React.FC = () => {
   const [panNumber, setPanNumber] = useState('');
   const [isIndianTaxResident] = useState(true);
 
-  // Submission state
+  // Submission & Checkout state
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [statusNotice, setStatusNotice] = useState<string | null>(null);
   const [submissionResult, setSubmissionResult] = useState<DonationIntentResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -53,6 +61,7 @@ export const DonationSection: React.FC = () => {
     if (errorMessage === 'Minimum donation amount is ₹500.') {
       setErrorMessage(null);
     }
+    setStatusNotice(null);
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,6 +69,8 @@ export const DonationSection: React.FC = () => {
     if (errorMessage === 'Minimum donation amount is ₹500.') {
       setErrorMessage(null);
     }
+    setStatusNotice(null);
+
     if (val === '') {
       setAmountInput('');
       setSelectedPreset(null);
@@ -81,8 +92,9 @@ export const DonationSection: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setStatusNotice(null);
 
-    // Minimum donation & amount validation
+    // 1. Minimum donation & amount validation (server and client enforced)
     const amountVal = validateDonationAmount(amountInput);
     if (!amountVal.isValid) {
       setErrorMessage(amountVal.error || 'Minimum donation amount is ₹500.');
@@ -99,7 +111,7 @@ export const DonationSection: React.FC = () => {
       return;
     }
 
-    // Mandatory mobile number validation
+    // 2. Mandatory mobile number validation
     const phoneVal = validateDonationPhone(phone);
     if (!phoneVal.isValid) {
       setErrorMessage(phoneVal.error || 'Please enter a valid 10-digit Indian mobile number.');
@@ -120,12 +132,73 @@ export const DonationSection: React.FC = () => {
         isIndianTaxResident,
       };
 
-      // Call strictly decoupled service boundary
-      const result = await createDonation(payload);
-      setSubmissionResult(result);
+      // 3. Create server-side Razorpay order
+      const intentResponse = await createDonation(payload);
+
+      // 4. Launch Razorpay Standard Checkout
+      await launchRazorpayCheckout({
+        order: {
+          success: true,
+          orderId: intentResponse.paymentGatewayPayload?.orderId || `order_${Date.now()}`,
+          amount: Math.round(amountVal.amount! * 100), // in paise
+          currency: 'INR',
+          keyId: intentResponse.paymentGatewayPayload?.keyId || 'mock_key_id',
+          isMock: intentResponse.paymentGatewayPayload?.isMock,
+        },
+        description: `Patronage - ${selectedCause.replace(/_/g, ' ')}`,
+        prefill: {
+          name: donorName.trim(),
+          email: email.trim(),
+          contact: phoneVal.cleanPhone || phone.trim(),
+        },
+        notes: {
+          donorName: donorName.trim(),
+          email: email.trim(),
+          phone: phoneVal.cleanPhone || phone.trim(),
+          panNumber: panNumber.trim().toUpperCase(),
+          cause: selectedCause,
+          frequency,
+          receiptId: intentResponse.donationId,
+        },
+        onSuccess: async (rzpResponse) => {
+          // 5. Verify cryptographic signature on backend
+          const verifyResult = await verifyRazorpayPayment({
+            razorpay_order_id: rzpResponse.razorpay_order_id,
+            razorpay_payment_id: rzpResponse.razorpay_payment_id,
+            razorpay_signature: rzpResponse.razorpay_signature,
+            donorDetails: payload,
+            amount: amountVal.amount!,
+            purpose: 'donation',
+          });
+
+          if (verifyResult.success) {
+            setSubmissionResult({
+              ...intentResponse,
+              status: 'completed',
+              paymentDetails: {
+                paymentId: rzpResponse.razorpay_payment_id,
+                orderId: rzpResponse.razorpay_order_id,
+                signature: rzpResponse.razorpay_signature,
+                verified: true,
+              },
+            });
+          } else {
+            setErrorMessage(verifyResult.error || 'Payment signature verification failed. Please contact our finance secretariat.');
+          }
+          setIsSubmitting(false);
+        },
+        onFailure: (err) => {
+          setIsSubmitting(false);
+          setErrorMessage(`Payment could not be completed: ${err.error?.description || err.message || 'Transaction was declined.'}`);
+        },
+        onDismiss: () => {
+          setIsSubmitting(false);
+          setStatusNotice('Payment checkout window was closed. You can retry whenever you are ready.');
+        },
+      });
+
     } catch (err: any) {
-      setErrorMessage(err.message || 'Unable to record donation intent. Please try again.');
-    } finally {
+      setErrorMessage(err.message || 'Unable to initialize payment checkout. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -133,6 +206,7 @@ export const DonationSection: React.FC = () => {
   const handleReset = () => {
     setSubmissionResult(null);
     setErrorMessage(null);
+    setStatusNotice(null);
     setAmountInput('2500');
     setSelectedPreset(2500);
     setDonorName('');
@@ -145,36 +219,58 @@ export const DonationSection: React.FC = () => {
     <section className="relative overflow-hidden py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
 
-        {/* If donation intent is prepared (Clean Phase 1 Service Boundary) */}
+        {/* If donation is successfully completed and verified */}
         {submissionResult ? (
           <div className="bg-white rounded-2xl p-8 sm:p-10 border border-amber-900/10 shadow-lg text-center animate-in zoom-in-95 duration-300">
-            <div className="w-16 h-16 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="w-9 h-9" />
             </div>
 
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-semibold mb-3">
+              <ShieldCheck className="w-4 h-4 text-emerald-700" />
+              <span>Razorpay Verified Payment</span>
+            </div>
+
             <h3 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
-              Donation Intent Registered
+              Patronage Confirmed & Verified
             </h3>
 
             <p className="text-slate-600 text-sm max-w-lg mx-auto mb-6">
-              Thank you, <strong className="text-slate-800">{donorName}</strong>. Your commitment to fostering civilizational research has been recorded.
+              Thank you, <strong className="text-slate-800">{donorName || 'Patron'}</strong>. Your generous contribution has been securely processed and recorded via Razorpay.
             </p>
 
             <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-6 text-left max-w-lg mx-auto mb-6 space-y-3">
+              {/* Payment ID */}
+              {submissionResult.paymentDetails && (
+                <div className="flex justify-between items-center pb-2 border-b border-amber-200/60">
+                  <span className="text-xs font-semibold uppercase text-amber-900">Razorpay Payment ID</span>
+                  <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                    {submissionResult.paymentDetails.paymentId}
+                  </span>
+                </div>
+              )}
+
+              {/* Order ID */}
               <div className="flex justify-between items-center pb-2 border-b border-amber-200/60">
-                <span className="text-xs font-semibold uppercase text-amber-900">Intent Reference</span>
-                <span className="font-mono text-sm font-bold text-amber-950 bg-amber-200/60 px-2 py-0.5 rounded">
-                  {submissionResult.donationId}
+                <span className="text-xs font-semibold uppercase text-amber-900">Order Reference</span>
+                <span className="font-mono text-xs font-semibold text-amber-950 bg-amber-200/60 px-2 py-0.5 rounded">
+                  {submissionResult.paymentDetails?.orderId || submissionResult.donationId}
                 </span>
               </div>
+
+              {/* Amount */}
               <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-600">Pledged Amount:</span>
-                <span className="font-bold text-slate-900">₹{submissionResult.amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+                <span className="text-slate-600">Contribution Amount:</span>
+                <span className="font-bold text-slate-900 text-base">₹{submissionResult.amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
               </div>
+
+              {/* Frequency */}
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-600">Frequency:</span>
                 <span className="capitalize font-semibold text-slate-800">{frequency.replace('_', ' ')}</span>
               </div>
+
+              {/* Purpose */}
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-600">Contribution Purpose:</span>
                 <span className="font-medium text-slate-800">
@@ -183,14 +279,14 @@ export const DonationSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Official Confirmation Notice */}
+            {/* Official Confirmation & 80G Notice */}
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 max-w-lg mx-auto mb-8 text-left space-y-1">
               <div className="flex items-center space-x-1.5 font-semibold text-slate-800">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Official Patronage Confirmation</span>
+                <span>Official 80G Patronage Receipt</span>
               </div>
               <p>
-                Our finance secretariat has logged your intent and will reach out with the 80G tax-exemption receipt and contribution schedule.
+                A verified digital confirmation receipt has been generated. Our finance secretariat will email the tax-deductible 80G receipt to <strong>{email}</strong>.
               </p>
             </div>
 
@@ -330,9 +426,19 @@ export const DonationSection: React.FC = () => {
                 </div>
               </div>
 
+              {/* Status / Cancellation Notice */}
+              {statusNotice && (
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start space-x-2 animate-in fade-in">
+                  <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                  <span>{statusNotice}</span>
+                </div>
+              )}
+
+              {/* Error Message */}
               {errorMessage && (
-                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
-                  {errorMessage}
+                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium flex items-start space-x-2 animate-in fade-in">
+                  <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <span>{errorMessage}</span>
                 </div>
               )}
 
@@ -340,7 +446,7 @@ export const DonationSection: React.FC = () => {
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-100">
                 <div className="flex items-center space-x-2 text-xs text-slate-500">
                   <Lock className="w-4 h-4 text-emerald-600" />
-                  <span>Transparent Non-Profit Financial Stewardship</span>
+                  <span>256-Bit SSL Encrypted & Secured via Razorpay</span>
                 </div>
 
                 <button
@@ -351,12 +457,12 @@ export const DonationSection: React.FC = () => {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Recording Intent...</span>
+                      <span>Initiating Razorpay...</span>
                     </>
                   ) : (
                     <>
                       <span>
-                        Proceed to Support {parsedAmount >= 500 ? `(₹${parsedAmount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })})` : ''}
+                        Proceed to Pay {parsedAmount >= 500 ? `(₹${parsedAmount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })})` : ''}
                       </span>
                       <ArrowRight className="w-4 h-4" />
                     </>
