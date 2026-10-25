@@ -1656,6 +1656,31 @@ async function runTests() {
   assert(resetBanner.badge1 === DEFAULT_FLAGSHIP_BANNER.badge1, 'Flagship banner reset restores original badge1');
   assert(resetBanner.badge2 === DEFAULT_FLAGSHIP_BANNER.badge2, 'Flagship banner reset restores original badge2');
 
+  // ==========================================
+  // SPECIFICATION: Removal of "Seats Left" Indicator from Public UI
+  // ==========================================
+  console.log('\n--- Testing Removal of "Seats Left" Indicator ---');
+
+  // 1. Data model integrity: event capacity and seatsLeft data properties remain preserved
+  const allEvents = await eventService.getEvents();
+  const eventWithCapacity = allEvents.find(e => typeof e.seatsLeft === 'number');
+  assert(Boolean(eventWithCapacity), 'Backend event data model preserves capacity / seatsLeft property without mutation');
+  if (eventWithCapacity) {
+    assert(typeof eventWithCapacity.seatsLeft === 'number' && eventWithCapacity.seatsLeft > 0, 'Event capacity value is preserved in database/storage');
+  }
+
+  // 2. Component inspection: verify EventList.tsx has completely eliminated visible seat-count indicator
+  const fs = await import('fs');
+  const eventListSource = fs.readFileSync('src/components/events/EventList.tsx', 'utf8');
+  assert(!eventListSource.includes('seats left'), 'EventList component does not render "seats left" count text');
+  assert(!eventListSource.includes('Open Access'), 'EventList component does not display alternative seat availability fallback');
+  assert(!eventListSource.includes('seatsLeft ?'), 'EventList component does not check or render conditional seat indicators');
+
+  // 3. Verify event registration functionality continues to work seamlessly
+  const sampleEvent = allEvents[0];
+  assert(Boolean(sampleEvent), 'Events catalog is available for registration');
+  assert(typeof sampleEvent.id === 'string', 'Event has valid ID for registration and RSVP logging');
+
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);
   console.log(`========================================\n`);

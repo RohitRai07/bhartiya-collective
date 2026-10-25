@@ -290,11 +290,7 @@ export const EventList: React.FC<EventListProps> = ({ onRegisterInterest }) => {
                     </div>
                   </>
                 ) : (
-                  <>
-                    <span className="text-[11px] text-slate-500 font-medium">
-                      {evt.seatsLeft ? `${evt.seatsLeft} seats left` : 'Open Access'}
-                    </span>
-
+                  <div className="w-full flex items-center justify-end">
                     {isRegistered ? (
                       <span className="inline-flex items-center text-xs font-semibold text-emerald-700">
                         <CheckCircle2 className="w-4 h-4 mr-1 text-emerald-600" />
@@ -310,7 +306,7 @@ export const EventList: React.FC<EventListProps> = ({ onRegisterInterest }) => {
                         <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                       </button>
                     )}
-                  </>
+                  </div>
                 )}
               </div>
             </div>
