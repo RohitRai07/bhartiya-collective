@@ -54,6 +54,9 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
       } else if (type === 'event') {
         mapped.category = initialData.category || initialData.type || 'Symposium';
         mapped.venue = initialData.venue || initialData.location || '';
+        mapped.posterUrl = initialData.posterUrl || initialData.bannerImage || initialData.imageUrl || '';
+        mapped.bannerImage = mapped.posterUrl;
+        mapped.imageUrl = mapped.posterUrl;
       } else if (type === 'publication') {
         mapped.publicationDate = initialData.publicationDate || initialData.publishedDate || new Date().toISOString().split('T')[0];
       } else if (type === 'circular') {
@@ -196,6 +199,8 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
         payload.type = payload.category || payload.type || 'Symposium';
         payload.category = payload.type;
         payload.mode = payload.isOnline ? 'Hybrid' : 'In-Person';
+        payload.bannerImage = payload.posterUrl || payload.bannerImage || payload.imageUrl;
+        payload.posterUrl = payload.bannerImage;
         if (!payload.speakers) {
           payload.speakers = [{ name: 'Senior Council Jurist', affiliation: 'Bharat Collective', role: 'Keynote Speaker' }];
         }
@@ -723,11 +728,11 @@ export const ContentEditorModal: React.FC<ContentEditorModalProps> = ({
               </div>
 
               <ImageUploadWithUrl
-                label="Event Banner / Poster (Drag & Drop or URL)"
-                value={formData.imageUrl || formData.bannerImage || ''}
-                onChange={url => setFormData({ ...formData, imageUrl: url, bannerImage: url })}
+                label="Event Poster / Banner (Upload from Device or Web URL)"
+                value={formData.posterUrl || formData.imageUrl || formData.bannerImage || ''}
+                onChange={url => setFormData({ ...formData, posterUrl: url, imageUrl: url, bannerImage: url })}
                 aspectRatio="landscape"
-                helperText="Drag & drop symposium banner or paste event poster image URL"
+                helperText="Upload official event poster from your device (PNG, JPG, WebP) or paste an image URL. Shows on event cards & spotlight."
                 placeholder="https://..."
               />
 

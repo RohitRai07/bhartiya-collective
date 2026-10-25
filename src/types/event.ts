@@ -53,6 +53,7 @@ export interface EventItem {
   registrationOpen: boolean;
   seatsLeft?: number;
   bannerImage?: string;
+  posterUrl?: string;
   status?: ContentStatus;
 
   // YouTube Live Event additions
@@ -71,6 +72,7 @@ export interface LiveEventInput {
   time: string;
   location?: string;
   thumbnailUrl?: string;
+  posterUrl?: string;
   liveStatus?: LiveStreamStatus;
   status?: ContentStatus;
   speakers?: EventSpeaker[];

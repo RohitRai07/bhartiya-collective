@@ -28,6 +28,7 @@ import {
   TIME_FORMAT_ERROR 
 } from '../../utils/timeValidation';
 import { expertService } from '../../services/expertService';
+import { ImageUploadWithUrl } from './ImageUploadWithUrl';
 
 interface LiveEventEditorModalProps {
   isOpen: boolean;
@@ -81,7 +82,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       setTime(extractBroadcastTime(initialData.time, '06:30 PM'));
       setLocation(initialData.location || 'Online & YouTube Live Broadcast');
       setLiveStatus(initialData.liveStatus || 'auto');
-      setCustomThumbnail(initialData.bannerImage || initialData.customThumbnailUrl || '');
+      setCustomThumbnail(initialData.posterUrl || initialData.bannerImage || initialData.customThumbnailUrl || '');
       setDescription(initialData.description || '');
       setRegistrationOpen(initialData.registrationOpen ?? true);
       setSpeakers(
@@ -175,6 +176,7 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
         youtubeUrl: youtubeUrl.trim(),
         youtubeId: currentYtId,
         bannerImage: effectiveThumbnail,
+        posterUrl: effectiveThumbnail,
         customThumbnailUrl: customThumbnail.trim() || undefined,
         liveStatus: liveStatus === 'auto' ? undefined : liveStatus,
         status: publishStatus,
@@ -357,28 +359,28 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
             </span>
           </div>
 
-          {/* Custom Thumbnail (Optional) */}
-          <div className="space-y-1">
+          {/* Event Poster Upload / Stream Artwork */}
+          <div className="space-y-1.5 pt-1">
             <div className="flex items-center justify-between">
-              <label className="block font-semibold text-slate-900">
-                Custom Thumbnail / Banner URL (Optional)
+              <label className="block font-bold text-slate-900 text-xs">
+                Event Poster & Stream Artwork (Upload from Device or Web Link)
               </label>
               {autoYtThumbnail && (
                 <button
                   type="button"
                   onClick={() => setCustomThumbnail(autoYtThumbnail)}
-                  className="text-[11px] text-amber-800 hover:underline font-semibold cursor-pointer"
+                  className="text-[11px] text-amber-800 hover:text-amber-900 font-semibold cursor-pointer underline flex items-center space-x-1"
                 >
-                  Use YouTube Thumbnail
+                  <span>Use YouTube Auto-Thumbnail</span>
                 </button>
               )}
             </div>
-            <input
-              type="url"
-              placeholder="https://... (Leave blank to use YouTube auto-generated thumbnail)"
+            <ImageUploadWithUrl
+              label="Upload Event Poster"
               value={customThumbnail}
-              onChange={e => setCustomThumbnail(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white"
+              onChange={setCustomThumbnail}
+              aspectRatio="landscape"
+              helperText="Upload official event poster from your device (PNG, JPG, WebP) or paste an image URL. Preview is generated immediately."
             />
           </div>
 

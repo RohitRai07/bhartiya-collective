@@ -2523,16 +2523,32 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
                           return (
                             <tr key={e.id} className="hover:bg-slate-50 transition-colors">
                               <td className="p-3.5 max-w-sm">
-                                <div className="flex items-center space-x-2">
-                                  {isLive && (
-                                    <span className="px-2 py-0.5 rounded-md bg-red-100 text-red-700 text-[10px] font-bold uppercase flex items-center space-x-1 shrink-0">
-                                      <Radio className="w-3 h-3 text-red-600" />
-                                      <span>Live Event</span>
-                                    </span>
+                                <div className="flex items-center space-x-2.5">
+                                  {(e.posterUrl || e.bannerImage) ? (
+                                    <img
+                                      src={e.posterUrl || e.bannerImage}
+                                      alt=""
+                                      className="w-10 h-10 object-cover rounded-lg border border-slate-200 shrink-0 bg-slate-100"
+                                      onError={evt => { (evt.currentTarget as HTMLElement).style.display = 'none'; }}
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200">
+                                      <Calendar className="w-4 h-4" />
+                                    </div>
                                   )}
-                                  <div className="font-serif font-bold text-slate-900 text-xs truncate">{e.title}</div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center space-x-1.5">
+                                      {isLive && (
+                                        <span className="px-1.5 py-0.5 rounded-md bg-red-100 text-red-700 text-[10px] font-bold uppercase flex items-center space-x-1 shrink-0">
+                                          <Radio className="w-2.5 h-2.5 text-red-600" />
+                                          <span>Live</span>
+                                        </span>
+                                      )}
+                                      <div className="font-serif font-bold text-slate-900 text-xs truncate" title={e.title}>{e.title}</div>
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 truncate">{e.location || 'New Delhi'}</div>
+                                  </div>
                                 </div>
-                                <div className="text-[10px] text-slate-500">{e.location || 'New Delhi'}</div>
                               </td>
                               <td className="p-3.5 text-slate-700">
                                 <div className="font-mono text-slate-900">{e.date}</div>

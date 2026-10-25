@@ -17,21 +17,11 @@ import {
 } from 'lucide-react';
 import { extractYouTubeId, getYouTubeWatchUrl, computeLiveEventStatus } from '../../utils/youtube';
 import { LiveEventWatchModal } from './LiveEventWatchModal';
+import { resolveEventImage, DEFAULT_EVENT_IMAGE } from '../../utils/eventImage';
 
 interface EventListProps {
   onRegisterInterest?: (event: EventItem) => void;
 }
-
-const resolveEventImage = (url?: string): string => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
-  }
-  const clean = url.replace(/^\//, '');
-  return `${import.meta.env.BASE_URL}${clean}`;
-};
-
-const DEFAULT_EVENT_IMAGE = 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=800&q=80';
 
 export const EventList: React.FC<EventListProps> = ({ onRegisterInterest }) => {
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -106,7 +96,8 @@ export const EventList: React.FC<EventListProps> = ({ onRegisterInterest }) => {
           const isFlagship = evt.id === 'evt-ucc-flagship';
           const isLiveEvent = Boolean(evt.isLive || evt.youtubeUrl || evt.type === 'Live Stream');
           const liveStatus = isLiveEvent ? computeLiveEventStatus(evt) : undefined;
-          const imageUrl = resolveEventImage(evt.bannerImage) || DEFAULT_EVENT_IMAGE;
+          const rawPoster = evt.posterUrl || evt.bannerImage;
+          const imageUrl = rawPoster ? resolveEventImage(rawPoster) : DEFAULT_EVENT_IMAGE;
           const ytId = evt.youtubeId || (evt.youtubeUrl ? extractYouTubeId(evt.youtubeUrl) : '');
 
           return (

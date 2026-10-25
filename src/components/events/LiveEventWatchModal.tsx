@@ -21,6 +21,7 @@ import {
   getYouTubeWatchUrl, 
   computeLiveEventStatus 
 } from '../../utils/youtube';
+import { resolveEventImage } from '../../utils/eventImage';
 
 interface LiveEventWatchModalProps {
   event: EventItem | null;
@@ -291,6 +292,22 @@ export const LiveEventWatchModal: React.FC<LiveEventWatchModalProps> = ({
             <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span>{event.location || 'Online Webinar & YouTube Live Broadcast'}</span>
           </div>
+
+          {/* Official Event Poster Link */}
+          {(event.posterUrl || event.bannerImage) && (
+            <div className="flex items-center space-x-2 text-xs text-slate-400 pt-1">
+              <span className="font-semibold text-amber-400">Official Poster:</span>
+              <a
+                href={resolveEventImage(event.posterUrl || event.bannerImage)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-200 hover:text-white underline inline-flex items-center space-x-1 font-medium"
+              >
+                <span>View Full-Size Event Poster</span>
+                <ExternalLink className="w-3 h-3 text-amber-400" />
+              </a>
+            </div>
+          )}
 
           {/* Speakers */}
           {event.speakers && event.speakers.length > 0 && (

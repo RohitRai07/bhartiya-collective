@@ -7,6 +7,7 @@ import { eventService } from '../services/eventService';
 import { EventItem } from '../types/event';
 import { extractYouTubeId, getYouTubeWatchUrl, computeLiveEventStatus } from '../utils/youtube';
 import { LiveEventWatchModal } from '../components/events/LiveEventWatchModal';
+import { resolveEventImage } from '../utils/eventImage';
 
 interface EventsPageProps {
   onNavigate: (path: string) => void;
@@ -142,15 +143,18 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate }) => {
               </div>
             </div>
 
-            {/* Video Preview Card */}
-            {spotlightEvent.bannerImage && (
+            {/* Video / Poster Preview Card */}
+            {(spotlightEvent.posterUrl || spotlightEvent.bannerImage) && (
               <div 
                 onClick={() => setWatchingLiveEvent(spotlightEvent)}
-                className="relative aspect-video w-full max-w-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl cursor-pointer group shrink-0"
+                className="relative aspect-video w-full max-w-sm rounded-2xl overflow-hidden border border-white/20 shadow-xl cursor-pointer group shrink-0 bg-slate-900"
               >
                 <img
-                  src={spotlightEvent.bannerImage}
+                  src={resolveEventImage(spotlightEvent.posterUrl || spotlightEvent.bannerImage)}
                   alt={spotlightEvent.title}
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = 'none';
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">

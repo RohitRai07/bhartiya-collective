@@ -188,7 +188,8 @@ export const eventService = {
 
     const isLive = Boolean(input.isLive || input.youtubeUrl);
     const computedStatus = isLive ? (input.liveStatus || computeLiveEventStatus(input)) : undefined;
-    const bannerImage = input.bannerImage || (ytId ? getYouTubeThumbnail(ytId) : undefined);
+    const posterUrl = input.posterUrl || input.bannerImage || (ytId ? getYouTubeThumbnail(ytId) : undefined);
+    const bannerImage = input.bannerImage || posterUrl;
 
     const newEvent: EventItem = {
       ...input,
@@ -197,6 +198,7 @@ export const eventService = {
       youtubeId: ytId,
       liveStatus: computedStatus,
       bannerImage,
+      posterUrl,
       status: input.status || 'published',
     };
 
@@ -209,7 +211,7 @@ export const eventService = {
    */
   async createLiveEvent(input: LiveEventInput): Promise<EventItem> {
     const ytId = extractYouTubeId(input.youtubeUrl);
-    const thumbnail = input.thumbnailUrl || (ytId ? getYouTubeThumbnail(ytId) : undefined);
+    const thumbnail = input.posterUrl || input.thumbnailUrl || (ytId ? getYouTubeThumbnail(ytId) : undefined);
     const computedStatus = input.liveStatus || computeLiveEventStatus({ date: input.date, time: input.time, liveStatus: input.liveStatus });
 
     const eventPayload: Omit<EventItem, 'id'> = {
@@ -225,12 +227,13 @@ export const eventService = {
       ],
       registrationOpen: input.registrationOpen ?? true,
       bannerImage: thumbnail,
+      posterUrl: thumbnail,
       status: input.status || 'published',
       isLive: true,
       youtubeUrl: input.youtubeUrl,
       youtubeId: ytId,
       liveStatus: computedStatus,
-      customThumbnailUrl: input.thumbnailUrl,
+      customThumbnailUrl: input.thumbnailUrl || input.posterUrl,
     };
 
     return this.createEvent(eventPayload);
@@ -257,9 +260,24 @@ export const eventService = {
     }
 
     const isLive = updates.isLive !== undefined ? updates.isLive : (current.isLive || Boolean(updates.youtubeUrl || current.youtubeUrl));
-    let bannerImage = updates.bannerImage || current.bannerImage;
+    
+    let posterUrl = updates.posterUrl !== undefined
+      ? updates.posterUrl
+      : (updates.bannerImage !== undefined ? updates.bannerImage : current.posterUrl);
+
+    let bannerImage = updates.bannerImage !== undefined
+      ? updates.bannerImage
+      : (updates.posterUrl !== undefined ? updates.posterUrl : current.bannerImage);
+
+    if (updates.posterUrl && !updates.bannerImage) {
+      bannerImage = updates.posterUrl;
+    } else if (updates.bannerImage && !updates.posterUrl) {
+      posterUrl = updates.bannerImage;
+    }
+
     if (isLive && !bannerImage && ytId) {
       bannerImage = getYouTubeThumbnail(ytId);
+      if (!posterUrl) posterUrl = bannerImage;
     }
 
     const updated: EventItem = {
@@ -268,6 +286,8 @@ export const eventService = {
       youtubeId: ytId,
       isLive,
       bannerImage,
+      posterUrl,
+      customThumbnailUrl: updates.customThumbnailUrl || updates.posterUrl || current.customThumbnailUrl,
       liveStatus: isLive ? (updates.liveStatus || current.liveStatus || computeLiveEventStatus({ ...current, ...updates })) : current.liveStatus,
     };
 

@@ -65,6 +65,7 @@ import {
   STANDARD_SPEAKER_ROLES, 
   COMMON_AFFILIATIONS 
 } from '../types/event';
+import { resolveEventImage, DEFAULT_EVENT_IMAGE } from '../utils/eventImage';
 
 async function runTests() {
   console.log('🚀 Running Bhartiya Collective Architecture Verification Suite...\n');
@@ -1538,6 +1539,62 @@ async function runTests() {
   // Cleanup
   await eventService.deleteEvent(testSpeakerEvent.id);
   assert(true, 'Test live event with separated speaker roles cleaned up cleanly');
+
+  console.log('\n📌 Testing Event Poster Upload, Storage & Management:');
+  const samplePosterDataUrl = 'data:image/webp;base64,UklGRkAAAABXRUJQVlA4IDQAAADwAQCdASoBAAEAAkA4JaQAA3AA/vuUAAA=';
+  
+  // 1. Image resolver resolution tests
+  assert(resolveEventImage(samplePosterDataUrl) === samplePosterDataUrl, 'Resolves base64 data URL poster cleanly without mutation');
+  assert(resolveEventImage('https://example.com/poster.jpg') === 'https://example.com/poster.jpg', 'Resolves absolute remote HTTPS poster cleanly');
+  assert(resolveEventImage('') === '', 'Empty poster URL returns empty string without error');
+  assert(DEFAULT_EVENT_IMAGE.startsWith('http'), 'Default fallback image URL is defined and valid');
+
+  // 2. Create Event with Uploaded Poster (Data URL)
+  const posterEvent = await eventService.createEvent({
+    title: 'National Conference on Civilizational Sovereignty',
+    type: 'Symposium',
+    date: '2026-11-25',
+    time: '10:00 AM – 05:00 PM IST',
+    location: 'Vigyan Bhawan, New Delhi',
+    mode: 'In-Person',
+    description: 'A national conference examining legal paradigms and civilizational statecraft.',
+    speakers: [{ name: 'Justice (Retd.) M. Ramachandran', affiliation: 'Supreme Court', role: 'Keynote Speaker' }],
+    registrationOpen: true,
+    posterUrl: samplePosterDataUrl,
+  });
+
+  assert(posterEvent.id.startsWith('evt-'), 'Event created with valid ID');
+  assert(posterEvent.posterUrl === samplePosterDataUrl, 'Uploaded poster saved in posterUrl field');
+  assert(posterEvent.bannerImage === samplePosterDataUrl, 'Uploaded poster synchronized with bannerImage field');
+
+  // 3. Update / Replace Event Poster
+  const updatedPosterUrl = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80';
+  const updatedEvent = await eventService.updateEvent(posterEvent.id, {
+    posterUrl: updatedPosterUrl,
+  });
+
+  assert(updatedEvent.posterUrl === updatedPosterUrl, 'Event poster replaced successfully with new image');
+  assert(updatedEvent.bannerImage === updatedPosterUrl, 'Updated poster automatically synchronizes with bannerImage');
+
+  // 4. Create YouTube Live Event with Dedicated Poster
+  const livePosterEvent = await eventService.createLiveEvent({
+    title: 'Live Dialogue on Article 44 & UCC',
+    description: 'Special livestream examining UCC and constitutional rights.',
+    youtubeUrl: 'https://www.youtube.com/live/5qap5aO4i9A',
+    date: '2026-10-28',
+    time: '04:00 PM IST',
+    posterUrl: samplePosterDataUrl,
+    status: 'published',
+  });
+
+  assert(livePosterEvent.posterUrl === samplePosterDataUrl, 'Live event stores dedicated uploaded poster');
+  assert(livePosterEvent.bannerImage === samplePosterDataUrl, 'Live event bannerImage prioritizes uploaded poster');
+  assert(livePosterEvent.customThumbnailUrl === samplePosterDataUrl, 'Live event customThumbnailUrl synced with uploaded poster');
+
+  // 5. Cleanup
+  await eventService.deleteEvent(posterEvent.id);
+  await eventService.deleteEvent(livePosterEvent.id);
+  assert(true, 'Test poster events cleaned up cleanly');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);
