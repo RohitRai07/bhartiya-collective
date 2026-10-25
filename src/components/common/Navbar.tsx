@@ -10,8 +10,7 @@ import {
   UserPlus, 
   ChevronDown, 
   ChevronRight, 
-  Search,
-  Lock
+  Search
 } from 'lucide-react';
 import { UniversalSearchModal } from '../search/UniversalSearchModal';
 
@@ -254,18 +253,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
                 <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-800" />
               </button>
 
-              {/* Admin Portal Direct Header Link */}
-              <button
-                type="button"
-                onClick={() => handleLinkClick('/admin')}
-                className="p-2 sm:p-2.5 rounded-xl text-slate-700 hover:text-amber-800 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 transition-colors cursor-pointer shadow-xs shrink-0 flex items-center justify-center space-x-1"
-                aria-label="Admin Portal"
-                title="Open Admin Portal"
-              >
-                <Lock className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-800" />
-                <span className="hidden xl:inline text-xs font-semibold text-slate-700">Admin</span>
-              </button>
-
               {/* Action CTAs (Desktop / Tablet) */}
               <div className="hidden sm:flex items-center space-x-1.5 sm:space-x-2">
                 {actionItems.map((action) => {
@@ -475,15 +462,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
             })}
 
             {/* Drawer Footer */}
-            <div className="pt-2 flex items-center justify-between text-xs text-slate-500 px-1">
-              <span className="font-serif italic truncate max-w-[200px]">{siteConfig.tagline}</span>
-              <button
-                type="button"
-                onClick={() => handleLinkClick('/admin')}
-                className="text-amber-800 hover:text-amber-950 font-semibold underline cursor-pointer shrink-0"
-              >
-                Admin Portal
-              </button>
+            <div className="pt-2 flex items-center justify-center text-xs text-slate-500 px-1">
+              <span className="font-serif italic text-center">{siteConfig.tagline}</span>
             </div>
           </div>
 
