@@ -50,6 +50,8 @@ import { CareerDetailModal } from '../components/admin/CareerDetailModal';
 import { NotificationCentre } from '../components/admin/NotificationCentre';
 import { PodcastEditorModal } from '../components/admin/PodcastEditorModal';
 import { LiveEventEditorModal } from '../components/admin/LiveEventEditorModal';
+import { FlagshipBannerEditorModal } from '../components/admin/FlagshipBannerEditorModal';
+import { flagshipService, FlagshipBannerContent, DEFAULT_FLAGSHIP_BANNER } from '../services/flagshipService';
 import { MagazineEditorModal } from '../components/admin/MagazineEditorModal';
 import { AdminSearchModal, AdminSearchResultItem } from '../components/admin/AdminSearchModal';
 import { NationalMemberModal } from '../components/admin/NationalMemberModal';
@@ -78,6 +80,7 @@ import {
   Edit3, 
   Trash2, 
   Eye, 
+  EyeOff, 
   BookOpen, 
   Calendar, 
   Compass, 
@@ -166,6 +169,10 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const [liveEventModalOpen, setLiveEventModalOpen] = useState(false);
   const [editingLiveEvent, setEditingLiveEvent] = useState<EventItem | null>(null);
   const [eventFilter, setEventFilter] = useState<'all' | 'regular' | 'live'>('all');
+
+  // Flagship Dialogue Banner state
+  const [flagshipModalOpen, setFlagshipModalOpen] = useState(false);
+  const [flagshipConfig, setFlagshipConfig] = useState<FlagshipBannerContent>(DEFAULT_FLAGSHIP_BANNER);
 
   // Magazine state
   const [magazines, setMagazines] = useState<MagazineIssue[]>([]);
@@ -336,6 +343,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
       setStateChapters(sChapters || []);
       setCentres(centreService.getAll() || []);
       setFeatures(featureConfig.get());
+      const fConfig = await flagshipService.getFlagshipBanner();
+      setFlagshipConfig(fConfig);
     } catch (err) {
       console.error('Error loading admin data:', err);
     } finally {
@@ -1035,6 +1044,21 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
     setEvents(refreshed);
     setLiveEventModalOpen(false);
     setEditingLiveEvent(null);
+  };
+
+  // Flagship National Dialogue Banner Handlers
+  const handleSaveFlagship = async (updated: FlagshipBannerContent) => {
+    setFlagshipConfig(updated);
+    const refreshed = await eventService.getEvents(true);
+    setEvents(refreshed);
+    setFlagshipModalOpen(false);
+  };
+
+  const handleToggleFlagshipVisibility = async () => {
+    const updated = await flagshipService.toggleVisibility();
+    setFlagshipConfig(updated);
+    const refreshed = await eventService.getEvents(true);
+    setEvents(refreshed);
   };
 
   // Podcast Handlers
@@ -1871,18 +1895,29 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
                 {contentSubTab !== 'media' && contentSubTab !== 'taxonomy' && (
                   <div className="flex flex-wrap items-center gap-2">
                     {contentSubTab === 'events' && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingLiveEvent(null);
-                          setLiveEventModalOpen(true);
-                        }}
-                        className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs transition-colors cursor-pointer flex-1 sm:flex-none"
-                        title="Add a YouTube Live Stream Event"
-                      >
-                        <Radio className="w-3.5 h-3.5 text-white" />
-                        <span>+ Live Event</span>
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setFlagshipModalOpen(true)}
+                          className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-xs transition-colors cursor-pointer flex-1 sm:flex-none"
+                          title="Manage Homepage & Events Flagship National Dialogue Banner"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                          <span>⭐ Flagship Banner</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingLiveEvent(null);
+                            setLiveEventModalOpen(true);
+                          }}
+                          className="inline-flex items-center justify-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white shadow-xs transition-colors cursor-pointer flex-1 sm:flex-none"
+                          title="Add a YouTube Live Stream Event"
+                        >
+                          <Radio className="w-3.5 h-3.5 text-white" />
+                          <span>+ Live Event</span>
+                        </button>
+                      </>
                     )}
                     <button
                       onClick={() => {
@@ -2460,6 +2495,90 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
                   </div>
                 </div>
 
+                {/* Flagship National Dialogue Section Management Card */}
+                <div className="bg-gradient-to-br from-slate-900 via-amber-950/40 to-slate-900 rounded-2xl p-4 sm:p-5 border-2 border-amber-500/30 shadow-md text-white">
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div className="flex items-start space-x-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-400/30 flex items-center justify-center shrink-0 shadow-inner">
+                        <Sparkles className="w-6 h-6 text-amber-400" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[10px] font-bold uppercase tracking-wider">
+                            {flagshipConfig.badge1 || 'Flagship National Dialogue'}
+                          </span>
+                          {flagshipConfig.badge2 && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold uppercase tracking-wider">
+                              {flagshipConfig.badge2}
+                            </span>
+                          )}
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                            flagshipConfig.isVisible && flagshipConfig.status === 'published'
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+                              : 'bg-slate-700 text-slate-300 border-slate-600'
+                          }`}>
+                            {flagshipConfig.isVisible && flagshipConfig.status === 'published' ? 'Active on Public Site' : 'Draft / Hidden'}
+                          </span>
+                        </div>
+                        <h3 className="font-serif font-bold text-white text-base tracking-tight">
+                          {flagshipConfig.title} <span className="text-amber-400">{flagshipConfig.titleHighlight}</span>
+                        </h3>
+                        <p className="text-xs text-slate-300 max-w-2xl line-clamp-1">
+                          {flagshipConfig.subtitle || flagshipConfig.description}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1 text-[11px] text-amber-200/90">
+                          <span className="flex items-center space-x-1">
+                            <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>{flagshipConfig.venueName || 'Constitution Club of India'}</span>
+                          </span>
+                          <span className="flex items-center space-x-1">
+                            <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>{flagshipConfig.scheduleInfo || 'Schedule & Registration Window: Coming Soon'}</span>
+                          </span>
+                          <span className="text-slate-400">
+                            • Linked Pages: <strong className="text-slate-200">Homepage</strong> & <strong className="text-slate-200">/events</strong>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0 pt-2 lg:pt-0 border-t border-white/10 lg:border-t-0">
+                      <button
+                        type="button"
+                        onClick={handleToggleFlagshipVisibility}
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-colors cursor-pointer flex items-center space-x-1.5 flex-1 lg:flex-none justify-center ${
+                          flagshipConfig.isVisible && flagshipConfig.status === 'published'
+                            ? 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/20'
+                            : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border-emerald-400/30'
+                        }`}
+                        title={flagshipConfig.isVisible ? 'Hide Flagship Banner from Public Website' : 'Publish Flagship Banner to Public Website'}
+                      >
+                        {flagshipConfig.isVisible && flagshipConfig.status === 'published' ? (
+                          <>
+                            <EyeOff className="w-3.5 h-3.5 text-slate-300" />
+                            <span>Hide on Site</span>
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Show on Site</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFlagshipModalOpen(true)}
+                        className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs shadow-md transition-all flex items-center space-x-1.5 cursor-pointer flex-1 lg:flex-none justify-center"
+                        title="Edit Headings, Subtitles, Venue, Dates, CTA & Poster Image"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit Flagship Section</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Event Format / Live Stream Filter Pills */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1">
                   <button
@@ -2595,7 +2714,9 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
                                 </button>
                                 <button
                                   onClick={() => {
-                                    if (isLive) {
+                                    if (e.id === 'evt-ucc-flagship' || (e as any).isFlagship) {
+                                      setFlagshipModalOpen(true);
+                                    } else if (isLive) {
                                       setEditingLiveEvent(e);
                                       setLiveEventModalOpen(true);
                                     } else {
@@ -2603,7 +2724,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
                                     }
                                   }}
                                   className="p-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded transition-colors inline-flex cursor-pointer"
-                                  title={isLive ? 'Edit Live Event' : 'Edit Event'}
+                                  title={e.id === 'evt-ucc-flagship' || (e as any).isFlagship ? 'Edit Flagship Banner' : isLive ? 'Edit Live Event' : 'Edit Event'}
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
                                 </button>
@@ -5641,6 +5762,13 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
           setEditingLiveEvent(null);
         }}
         onSave={handleSaveLiveEvent}
+      />
+
+      {/* Flagship National Dialogue Banner Editor Modal */}
+      <FlagshipBannerEditorModal
+        isOpen={flagshipModalOpen}
+        onClose={() => setFlagshipModalOpen(false)}
+        onSaved={handleSaveFlagship}
       />
 
       {/* Magazine Editor Modal */}

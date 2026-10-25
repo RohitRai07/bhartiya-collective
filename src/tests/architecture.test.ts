@@ -34,6 +34,7 @@ import { teamService } from '../services/teamService';
 import { searchService } from '../services/searchService';
 import { centreService } from '../services/centreService';
 import { contactService } from '../services/contactService';
+import { flagshipService, DEFAULT_FLAGSHIP_BANNER } from '../services/flagshipService';
 import { centralizedNotificationService } from '../services/centralizedNotificationService';
 import { backendNotificationService } from '../services/backendNotificationService';
 import { 
@@ -1595,6 +1596,65 @@ async function runTests() {
   await eventService.deleteEvent(posterEvent.id);
   await eventService.deleteEvent(livePosterEvent.id);
   assert(true, 'Test poster events cleaned up cleanly');
+
+  // ==========================================
+  // SPECIFICATION: Flagship National Dialogue Banner Centralized Management
+  // ==========================================
+  console.log('\n--- Testing Flagship National Dialogue Banner Centralized Management ---');
+
+  // 1. Retrieve current flagship banner configuration
+  const initialFlagship = await flagshipService.getFlagshipBanner();
+  assert(Boolean(initialFlagship), 'Flagship dialogue banner configuration exists and loads');
+  assert(initialFlagship.id === 'evt-ucc-flagship', 'Flagship banner is associated with evt-ucc-flagship ID');
+  assert(initialFlagship.title === '#BharatDialogue', 'Initial flagship title defaults to #BharatDialogue');
+  assert(initialFlagship.badge1 === 'Flagship National Dialogue', 'Initial flagship badge1 matches specification');
+
+  // 2. Update flagship banner with new content
+  const customPosterUrl = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80';
+  const updatedFlagship = await flagshipService.updateFlagshipBanner({
+    title: '#BharatDialogue 2026',
+    titleHighlight: 'on CITIZENSHIP & EQUALITY',
+    subtitle: 'National Colloquium on Constitutional Values',
+    description: 'Updated dialogue description for constitutional jurists and citizens.',
+    venueName: 'Constitution Club of India, New Delhi',
+    scheduleInfo: 'Registration Open: 15 November 2026',
+    ctaText: 'Reserve Your Seat',
+    ctaLink: '/register',
+    posterUrl: customPosterUrl,
+    status: 'published',
+    isVisible: true,
+  });
+
+  assert(updatedFlagship.title === '#BharatDialogue 2026', 'Flagship title updated to custom title');
+  assert(updatedFlagship.titleHighlight === 'on CITIZENSHIP & EQUALITY', 'Flagship titleHighlight updated');
+  assert(updatedFlagship.posterUrl === customPosterUrl, 'Flagship poster image updated successfully');
+  assert(updatedFlagship.status === 'published', 'Flagship status remains published');
+  assert(updatedFlagship.isVisible === true, 'Flagship isVisible flag is true');
+
+  // 3. Verify automatic bidirectional synchronization with eventService
+  const syncedEvent = await eventService.getEventById('evt-ucc-flagship');
+  assert(Boolean(syncedEvent), 'evt-ucc-flagship event record exists in eventService');
+  if (syncedEvent) {
+    assert(syncedEvent.title.includes('#BharatDialogue 2026'), 'Event title synchronized with flagship banner updates');
+    assert(syncedEvent.posterUrl === customPosterUrl, 'Event posterUrl synchronized with flagship banner poster');
+    assert(syncedEvent.description.includes('Updated dialogue description'), 'Event description synchronized with flagship banner');
+  }
+
+  // 4. Test visibility toggle
+  const toggledOff = await flagshipService.toggleVisibility();
+  assert(toggledOff.isVisible === false, 'Flagship banner visibility toggled to hidden');
+  assert(toggledOff.status === 'draft', 'Flagship banner status set to draft when hidden');
+
+  const toggledOn = await flagshipService.toggleVisibility();
+  assert(toggledOn.isVisible === true, 'Flagship banner visibility toggled back to visible');
+  assert(toggledOn.status === 'published', 'Flagship banner status set to published when made visible');
+
+  // 5. Test reset to original defaults
+  const resetBanner = await flagshipService.resetToDefault();
+  assert(resetBanner.title === DEFAULT_FLAGSHIP_BANNER.title, 'Flagship banner reset restores original title');
+  assert(resetBanner.titleHighlight === DEFAULT_FLAGSHIP_BANNER.titleHighlight, 'Flagship banner reset restores original highlight');
+  assert(resetBanner.badge1 === DEFAULT_FLAGSHIP_BANNER.badge1, 'Flagship banner reset restores original badge1');
+  assert(resetBanner.badge2 === DEFAULT_FLAGSHIP_BANNER.badge2, 'Flagship banner reset restores original badge2');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);
