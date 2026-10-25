@@ -521,7 +521,92 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     setContentEditorOpen(true);
   };
 
-  const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers: boolean) => {
+    const openBroadcastNotification = (title: string, type: string, extraUrl?: string) => {
+    // 1. Members (candidates / fellows from registrations with phone for WhatsApp & SMS)
+    const memberRecipients: NotificationRecipient[] = registrations.map(r => ({
+      id: r.id,
+      name: `${r.firstName} ${r.lastName}`.trim() || 'Valued Member',
+      email: r.email,
+      phone: r.phoneNumber?.fullFormatted || '',
+      category: 'candidate',
+      sourceModule: 'registration',
+      referenceCode: r.registrationNumber,
+    }));
+
+    // 2. Newsletter Subscribers
+    const subRecipients: NotificationRecipient[] = subscribers.map((s, idx) => ({
+      id: s.id || `sub-${idx}`,
+      name: s.email.split('@')[0],
+      email: s.email,
+      phone: '',
+      category: 'subscriber',
+      sourceModule: 'newsletter',
+    }));
+
+    // 3. Deduplicate by email so registered members (carrying phones) take precedence
+    const seenEmails = new Set<string>();
+    const combined: NotificationRecipient[] = [];
+
+    for (const m of memberRecipients) {
+      if (m.email && !seenEmails.has(m.email.toLowerCase())) {
+        seenEmails.add(m.email.toLowerCase());
+        combined.push(m);
+      }
+    }
+    for (const s of subRecipients) {
+      if (s.email && !seenEmails.has(s.email.toLowerCase())) {
+        seenEmails.add(s.email.toLowerCase());
+        combined.push(s);
+      }
+    }
+
+    setNotifyRecipients(combined);
+
+    let prefix = 'New Update';
+    let bodyIntro = `We have just released an important update on our portal: "${title}".`;
+
+    if (type === 'event' || type === 'live-event') {
+      prefix = type === 'live-event' ? '🔴 Live Broadcast' : 'New Symposium & Event';
+      bodyIntro = `We are pleased to invite you to our upcoming ${type === 'live-event' ? 'live broadcast' : 'dialogue'}: "${title}".`;
+    } else if (type === 'publication') {
+      prefix = 'New Publication';
+      bodyIntro = `Our latest research monograph has just been published: "${title}".`;
+    } else if (type === 'circular') {
+      prefix = 'Official Circular & Guidelines';
+      bodyIntro = `An official advisory circular has been released: "${title}".`;
+    } else if (type === 'news') {
+      prefix = 'Media Release';
+      bodyIntro = `A new editorial article has been published: "${title}".`;
+    } else if (type === 'podcast') {
+      prefix = 'New Podcast Episode';
+      bodyIntro = `A new podcast episode is now streaming: "${title}".`;
+    } else if (type === 'magazine') {
+      prefix = 'New Magazine Edition';
+      bodyIntro = `The latest issue of the Bharat Collective Magazine is now available: "${title}".`;
+    } else if (type === 'centre') {
+      prefix = 'Research Centre Initiative';
+      bodyIntro = `A new Centre of Excellence initiative has been launched: "${title}".`;
+    }
+
+    setNotifyDefaultSubject(`${prefix}: ${title} • Bharat Collective`);
+    setNotifyDefaultMessage(
+      `Namaste,\n\n${bodyIntro}\n\nVisit the Bharat Collective Foundation portal to read the full brief, watch, or participate.\n${extraUrl ? `\nLink: ${extraUrl}\n` : ''}\nWarm regards,\nBharat Collective Secretariat`
+    );
+    setNotifyTemplateOptions([
+      { id: 'CUSTOM', label: 'Custom Broadcast Message' },
+      { id: 'ADMIN_NOTIFICATION', label: 'Official Secretariat Notice' },
+      { id: 'NEWSLETTER_DIGEST', label: 'Newsletter & Monograph Release' }
+    ]);
+    setNotifyDefaultTemplateId('CUSTOM');
+    setNotifyContextText(`Broadcasting update for "${title}" to ${combined.length} members & subscribers`);
+    setNotifyDynamicData({
+      title,
+      link: extraUrl || 'https://bharatcollective.org',
+    });
+    setNotifyModalOpen(true);
+  };
+
+const handleSaveContent = async (type: ContentEntityType, data: any, notifyUsers: boolean) => {
     if (type === 'circular') {
       if (editingItem?.id) {
         await circularService.updateCircular(editingItem.id, data);
@@ -563,18 +648,8 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     await loadAllData();
 
     if (notifyUsers) {
-      const title = data.title || data.name || 'New Publication';
-      setNotifyRecipients(subscribers.map((s, idx) => ({
-        id: s.id || `sub-${idx}`,
-        name: s.email.split('@')[0],
-        email: s.email,
-        phone: '',
-        category: 'subscriber',
-        sourceModule: 'newsletter',
-      })));
-      setNotifyDefaultSubject(`New Update: ${title} • Bharat Collective`);
-      setNotifyDefaultMessage(`Namaste,\n\nWe have just released an important update on our portal: "${title}".\n\nVisit the Bharat Collective Foundation portal to read the full brief and engage with our scholars.\n\nWarm regards,\nBharat Collective Secretariat`);
-      setNotifyModalOpen(true);
+      const title = data.title || data.name || 'New Update';
+      openBroadcastNotification(title, type);
     }
   };
 
@@ -643,7 +718,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     setCentres(centreService.getAll());
   };
 
-  const handleSaveCentre = async (data: Omit<BharatCentre, 'id'>) => {
+  const handleSaveCentre = async (data: Omit<BharatCentre, 'id'>, notifyUsers: boolean = false) => {
     if (editingCentre) {
       centreService.update(editingCentre.id, data);
     } else {
@@ -652,6 +727,10 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     setCentres(centreService.getAll());
     setCentreEditorOpen(false);
     setEditingCentre(null);
+
+    if (notifyUsers && data.status === 'published') {
+      openBroadcastNotification(data.name, 'centre');
+    }
   };
 
   const handleTogglePublishCentre = (id: string) => {
@@ -949,7 +1028,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   };
 
   // Live Event Handlers
-  const handleSaveLiveEvent = async (data: Partial<EventItem>, publishStatus: 'published' | 'draft') => {
+  const handleSaveLiveEvent = async (data: Partial<EventItem>, publishStatus: 'published' | 'draft', notifyUsers: boolean = false) => {
     if (editingLiveEvent?.id) {
       await eventService.updateEvent(editingLiveEvent.id, {
         ...data,
@@ -965,10 +1044,14 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     setEvents(refreshed);
     setLiveEventModalOpen(false);
     setEditingLiveEvent(null);
+
+    if (notifyUsers && publishStatus === 'published') {
+      openBroadcastNotification(data.title || 'Live Broadcast', 'live-event', data.youtubeUrl);
+    }
   };
 
   // Podcast Handlers
-  const handleSavePodcast = async (input: PodcastInput) => {
+  const handleSavePodcast = async (input: PodcastInput, notifyUsers: boolean = false) => {
     if (editingPodcast) {
       podcastService.update(editingPodcast.id, input);
     } else {
@@ -977,6 +1060,10 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     setPodcasts(podcastService.getAll());
     setPodcastEditorOpen(false);
     setEditingPodcast(null);
+
+    if (notifyUsers && (input.status === 'published' || !input.status)) {
+      openBroadcastNotification(input.title, 'podcast', input.youtubeUrl);
+    }
   };
 
   const handleDeletePodcast = (id: string) => {
@@ -987,7 +1074,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   };
 
   // Magazine Handlers
-  const handleSaveMagazine = async (input: MagazineIssueInput) => {
+  const handleSaveMagazine = async (input: MagazineIssueInput, notifyUsers: boolean = false) => {
     if (editingMagazine) {
       magazineService.update(editingMagazine.id, input);
     } else {
@@ -996,6 +1083,10 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     setMagazines(magazineService.getAll());
     setMagazineEditorOpen(false);
     setEditingMagazine(null);
+
+    if (notifyUsers && (input.status === 'published' || !input.status)) {
+      openBroadcastNotification(input.title, 'magazine');
+    }
   };
 
   const handleDeleteMagazine = (id: string) => {

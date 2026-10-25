@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Video, Check } from 'lucide-react';
+import { X, Save, Video, Check, BellRing } from 'lucide-react';
 import { PodcastEpisode, PodcastInput } from '../../types/podcast';
 import { extractYouTubeId } from '../../services/podcastService';
 
@@ -7,7 +7,7 @@ interface PodcastEditorModalProps {
   isOpen: boolean;
   initialData?: PodcastEpisode | null;
   onClose: () => void;
-  onSave: (data: PodcastInput) => Promise<void>;
+  onSave: (data: PodcastInput, notifyUsers?: boolean) => Promise<void>;
 }
 
 export const PodcastEditorModal: React.FC<PodcastEditorModalProps> = ({
@@ -17,6 +17,7 @@ export const PodcastEditorModal: React.FC<PodcastEditorModalProps> = ({
   onSave,
 }) => {
   const isEditing = Boolean(initialData?.id);
+  const [notifyUsers, setNotifyUsers] = useState(false);
   const [formData, setFormData] = useState<PodcastInput>({
     title: '',
     youtubeUrl: '',
@@ -65,6 +66,7 @@ export const PodcastEditorModal: React.FC<PodcastEditorModalProps> = ({
       });
     }
     setError(null);
+    setNotifyUsers(false);
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
@@ -97,7 +99,7 @@ export const PodcastEditorModal: React.FC<PodcastEditorModalProps> = ({
       await onSave({
         ...formData,
         thumbnailUrl: previewThumb,
-      });
+      }, notifyUsers);
       onClose();
     } catch (err: any) {
       setError(err?.message || 'Failed to save podcast episode.');
@@ -305,6 +307,26 @@ export const PodcastEditorModal: React.FC<PodcastEditorModalProps> = ({
                 Pin as Featured Episode
               </label>
             </div>
+          </div>
+
+          {/* Prompt to Notify Members & Subscribers */}
+          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/80 flex items-start space-x-2.5">
+            <input
+              type="checkbox"
+              id="notify-podcast-toggle"
+              checked={notifyUsers}
+              onChange={e => setNotifyUsers(e.target.checked)}
+              className="mt-0.5 rounded text-amber-600 focus:ring-amber-500"
+            />
+            <label htmlFor="notify-podcast-toggle" className="cursor-pointer text-xs text-amber-950">
+              <span className="font-bold block flex items-center space-x-1">
+                <BellRing className="w-3.5 h-3.5 text-amber-700" />
+                <span>Prompt to Notify Members & Subscribers</span>
+              </span>
+              <span className="text-[11px] text-amber-800">
+                Immediately launch the notification gateway after saving to broadcast this update via Email & WhatsApp.
+              </span>
+            </label>
           </div>
 
           {/* Modal Action Buttons */}
