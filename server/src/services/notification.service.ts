@@ -86,6 +86,18 @@ export class NotificationService {
           <br/><p>Warm regards,<br/>Careers Team</p>
         `,
         sms: `Namaste ${defaultName}, you have been invited for an interview at Bharat Collective for ${data.job_title || 'the position'}. Our team will contact you.`
+      },
+
+      // Payment Confirmation
+      'PAYMENT_CONFIRMATION': {
+        subject: `Payment Confirmation: ₹${data.amount || '0'} Received - Bharat Collective`,
+        email: `
+          <h2>Namaste ${defaultName},</h2>
+          <p>We gratefully acknowledge receipt of your contribution of <strong>₹${data.amount || '0'}</strong> (Payment ID: <strong>${data.payment_id || 'N/A'}</strong>) towards ${data.purpose || 'Bharat Collective Foundation'}.</p>
+          <p>Order Reference: ${data.order_id || 'N/A'}</p>
+          <br/><p>Warm regards,<br/>Patron Secretariat<br/>The Bharat Collective Foundation</p>
+        `,
+        sms: `Namaste ${defaultName}, payment of Rs.${data.amount || '0'} to Bharat Collective (Ref: ${data.payment_id || ''}) received successfully. Thank you!`
       }
     };
 

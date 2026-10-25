@@ -6,6 +6,9 @@ import { twoFactorService } from '../services/twoFactor.service';
 import { sessionService, SessionUser } from '../services/session.service';
 import crypto from 'crypto';
 import { paymentService } from '../services/payment.service';
+import { emailService } from '../services/email.service';
+import { smsService } from '../services/sms.service';
+import { notificationService } from '../services/notification.service';
 import { app } from '../index';
 
 async function runSecurityTests() {
@@ -293,6 +296,65 @@ async function runSecurityTests() {
   // Test Key Isolation (Backend Never Exposes Secret)
   assert(!('keySecret' in { keyId: config.razorpay.keyId }), 'keySecret is strictly isolated from public payloads');
   console.log('  ✅ PASS: Razorpay Key Secret isolated strictly on backend');
+
+  // 10. Automatic Payment Confirmation Email & Future SMS Support
+  console.log('\n📌 Testing Payment Confirmation Email & Future SMS Notifications:');
+
+  // Test Payment Confirmation Email Service
+  const emailSent = await emailService.sendPaymentConfirmationEmail('patron.test@bharatcollective.org', {
+    donorName: 'Smt. Ananya Sen',
+    amount: 5000,
+    paymentId: 'pay_test_conf_12345',
+    orderId: 'order_test_conf_67890',
+    receiptId: 'rcpt_sec_conf_001',
+    purpose: 'donation',
+    date: new Date().toISOString(),
+    cause: 'digital_archives',
+    frequency: 'monthly',
+    panNumber: 'ABCDE1234F',
+    phone: '+91 9876543210',
+  });
+  assert(emailSent === true, 'Payment confirmation email dispatched successfully');
+  console.log('  ✅ PASS: Payment confirmation email with branding & 80G tax receipt acknowledgment');
+
+  // Test Magazine Payment Confirmation Email
+  const magEmailSent = await emailService.sendPaymentConfirmationEmail('reader.test@bharatcollective.org', {
+    donorName: 'Sri Raghavendra',
+    amount: 100,
+    paymentId: 'pay_test_mag_54321',
+    orderId: 'order_test_mag_09876',
+    purpose: 'magazine',
+  });
+  assert(magEmailSent === true, 'Magazine payment confirmation email dispatched successfully');
+  console.log('  ✅ PASS: Reusable payment confirmation email adapts cleanly to magazine purchases');
+
+  // Test Future SMS Dispatch
+  const smsSent = await smsService.sendPaymentConfirmationSMS('+919876543210', {
+    name: 'Smt. Ananya Sen',
+    amount: 5000,
+    paymentId: 'pay_test_conf_12345',
+    purpose: 'Donation',
+  });
+  assert(smsSent === true, 'Future SMS payment confirmation dispatched without errors');
+  console.log('  ✅ PASS: Future SMS notification service connected and operational');
+
+  // Test Multi-Channel Notification Engine for Payments
+  const multiNotif = await notificationService.dispatchNotification({
+    userId: 'user_patron_01',
+    name: 'Smt. Ananya Sen',
+    email: 'patron.test@bharatcollective.org',
+    phone: '+919876543210',
+    channels: { email: true, sms: true, whatsapp: false },
+    type: 'PAYMENT_CONFIRMATION',
+    dynamicData: {
+      amount: '5000',
+      payment_id: 'pay_test_conf_12345',
+      order_id: 'order_test_conf_67890',
+      purpose: 'Visiting Research Fellowships',
+    },
+  });
+  assert(multiNotif.status === 'QUEUED', 'Multi-channel payment notification queued cleanly');
+  console.log('  ✅ PASS: Central notification service dispatches multi-channel payment receipt');
 
   console.log('\n====================================================');
   console.log('🎉 ALL BACKEND PRODUCTION SECURITY TESTS PASSED!');

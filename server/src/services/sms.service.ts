@@ -104,6 +104,29 @@ export class SMSService {
       templateId: config.sms.templates.otp
     });
   }
+
+  /**
+   * Future SMS dispatch for payment receipts.
+   * When SMS API credentials & DLT templates are configured,
+   * sends SMS automatically; otherwise logs safe placeholder.
+   */
+  public async sendPaymentConfirmationSMS(
+    to: string,
+    details: {
+      name?: string;
+      amount: number;
+      paymentId: string;
+      purpose?: string;
+    }
+  ): Promise<boolean> {
+    const donorName = details.name?.trim() ? ` ${details.name.trim()}` : '';
+    const purposeText = details.purpose ? ` towards ${details.purpose}` : '';
+    return this.sendSMS({
+      to,
+      message: `Namaste${donorName}, payment of Rs.${details.amount}${purposeText} to Bharat Collective (Ref: ${details.paymentId}) was confirmed. Confirmation email dispatched. Thank you!`,
+      templateId: (config.sms.templates as any)?.payment || config.sms.templates.general,
+    });
+  }
 }
 
 export const smsService = new SMSService();

@@ -21,6 +21,8 @@ import {
 export const MagazinePage: React.FC = () => {
   const [issues, setIssues] = useState<MagazineIssue[]>([]);
   const [purchasingIssue, setPurchasingIssue] = useState<MagazineIssue | null>(null);
+  const [readerName, setReaderName] = useState<string>('');
+  const [readerEmail, setReaderEmail] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState<{ filename: string; sizeKb: number } | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -82,6 +84,10 @@ export const MagazinePage: React.FC = () => {
       await launchRazorpayCheckout({
         order,
         description: `Bharat Review Magazine - ${purchasingIssue.issueNumber}`,
+        prefill: {
+          name: readerName.trim() || undefined,
+          email: readerEmail.trim() || undefined,
+        },
         notes: {
           issueId: purchasingIssue.id,
           issueNumber: purchasingIssue.issueNumber,
@@ -94,6 +100,11 @@ export const MagazinePage: React.FC = () => {
             razorpay_signature: rzpResponse.razorpay_signature,
             amount: purchasingIssue.price,
             purpose: 'magazine',
+            donorDetails: {
+              donorName: readerName.trim() || 'Reader Patron',
+              email: readerEmail.trim() || undefined,
+              receiptId: `MAG-${purchasingIssue.id}-${Date.now()}`,
+            },
           });
 
           if (verifyResult.success) {
@@ -250,6 +261,40 @@ export const MagazinePage: React.FC = () => {
                 <span className="text-xl font-serif text-amber-900">₹{purchasingIssue.price}</span>
               </div>
             </div>
+
+            {!downloadSuccess && (
+              <div className="space-y-3 p-4 bg-slate-50/70 rounded-2xl border border-slate-200/80">
+                <span className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                  Patron & Receipt Details (Optional)
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      Your Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={readerName}
+                      onChange={(e) => setReaderName(e.target.value)}
+                      placeholder="e.g. Dr. Raghavendra"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-amber-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                      Email Address (for receipt)
+                    </label>
+                    <input
+                      type="email"
+                      value={readerEmail}
+                      onChange={(e) => setReaderEmail(e.target.value)}
+                      placeholder="reader@domain.org"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-amber-700"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {paymentError && (
               <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium flex items-start space-x-2 animate-in fade-in">

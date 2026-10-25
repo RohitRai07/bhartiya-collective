@@ -67,6 +67,7 @@ export const config = {
       select: process.env.SMS_TEMPLATE_ID_SELECT || '',
       general: process.env.SMS_TEMPLATE_ID_GENERAL || '',
       otp: process.env.SMS_TEMPLATE_ID_OTP || '',
+      payment: process.env.SMS_TEMPLATE_ID_PAYMENT || '',
     }
   },
 

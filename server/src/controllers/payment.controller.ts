@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { paymentService } from '../services/payment.service';
 import { config } from '../config/env';
+import { emailService } from '../services/email.service';
+import { smsService } from '../services/sms.service';
 
 /**
  * Creates a server-side order with Razorpay
@@ -99,11 +101,46 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
         verifiedAt: new Date().toISOString(),
       });
 
+      // Automatic Payment Confirmation Email and Future SMS Dispatch
+      const recipientEmail = donorDetails?.email?.trim();
+      const recipientPhone = donorDetails?.phone?.trim();
+
+      if (recipientEmail) {
+        emailService.sendPaymentConfirmationEmail(recipientEmail, {
+          donorName: donorDetails?.donorName,
+          amount: Number(amount) || 0,
+          paymentId: razorpay_payment_id,
+          orderId: razorpay_order_id,
+          receiptId: donorDetails?.receiptId,
+          purpose: purpose || 'donation',
+          date: new Date().toISOString(),
+          cause: donorDetails?.cause,
+          frequency: donorDetails?.frequency,
+          panNumber: donorDetails?.panNumber,
+          phone: recipientPhone,
+        }).catch(err => {
+          console.error('Failed to dispatch payment confirmation email:', err);
+        });
+      }
+
+      if (recipientPhone) {
+        smsService.sendPaymentConfirmationSMS(recipientPhone, {
+          name: donorDetails?.donorName,
+          amount: Number(amount) || 0,
+          paymentId: razorpay_payment_id,
+          purpose: purpose || 'donation',
+        }).catch(err => {
+          console.error('Failed to dispatch payment confirmation SMS:', err);
+        });
+      }
+
       res.status(200).json({ 
         success: true, 
         message: 'Payment verified and confirmed successfully.',
         paymentId: razorpay_payment_id,
         orderId: razorpay_order_id,
+        emailConfirmationSent: !!recipientEmail,
+        smsConfirmationSent: !!recipientPhone,
         transaction,
       });
     } else {
@@ -138,9 +175,45 @@ export const razorpayWebhook = async (req: Request, res: Response): Promise<void
     console.log('[Razorpay Webhook Received]', event);
 
     switch (event) {
-      case 'payment.captured':
-        // Payment was captured by Razorpay
+      case 'payment.captured': {
+        const payment = req.body.payload?.payment?.entity;
+        if (payment) {
+          const recorded = paymentService.getTransaction(payment.id);
+          if (!recorded) {
+            paymentService.recordTransaction({
+              id: payment.id,
+              orderId: payment.order_id,
+              amount: payment.amount ? payment.amount / 100 : 0,
+              purpose: payment.notes?.purpose || 'donation',
+              donorName: payment.notes?.donorName || payment.notes?.name,
+              email: payment.email || payment.notes?.email,
+              phone: payment.contact || payment.notes?.phone,
+              panNumber: payment.notes?.panNumber,
+              cause: payment.notes?.cause,
+              frequency: payment.notes?.frequency,
+              receiptId: payment.notes?.receiptId,
+              status: 'captured',
+              verifiedAt: new Date().toISOString(),
+            });
+
+            const targetEmail = payment.email || payment.notes?.email;
+            if (targetEmail) {
+              emailService.sendPaymentConfirmationEmail(targetEmail, {
+                donorName: payment.notes?.donorName || payment.notes?.name,
+                amount: payment.amount ? payment.amount / 100 : 0,
+                paymentId: payment.id,
+                orderId: payment.order_id,
+                purpose: payment.notes?.purpose || 'donation',
+                cause: payment.notes?.cause,
+                frequency: payment.notes?.frequency,
+                panNumber: payment.notes?.panNumber,
+                phone: payment.contact || payment.notes?.phone,
+              }).catch(err => console.error('Webhook email dispatch error:', err));
+            }
+          }
+        }
         break;
+      }
       case 'payment.failed':
         // Payment failed at provider
         break;
