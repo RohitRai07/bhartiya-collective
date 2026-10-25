@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import { config } from './config/env';
 import { setSecurityHeaders } from './middleware/securityHeaders.middleware';
 import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
 import paymentRoutes from './routes/payment.routes';
 import notificationRoutes from './routes/notification.routes';
+import contentRoutes from './routes/content.routes';
 
 export const app = express();
 
@@ -56,9 +58,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// 4.5. Static Media File Serving (Physical Uploads)
+const cwd = process.cwd();
+const isServerSubdir = cwd.endsWith('server') || cwd.endsWith('server\\') || cwd.endsWith('server/');
+const rootDir = isServerSubdir ? path.resolve(cwd, '..') : cwd;
+app.use('/uploads', express.static(path.resolve(rootDir, 'public/uploads')));
+app.use('/uploads', express.static(path.resolve(rootDir, 'server/uploads')));
+
 // 5. Mount Application Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/content', contentRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/notification', notificationRoutes);
 

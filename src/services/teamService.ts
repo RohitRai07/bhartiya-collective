@@ -6,6 +6,7 @@
  */
 
 import { NationalTeamMember, StateChapter, TeamPublishStatus } from '../types/team';
+import { contentSyncService } from './contentSyncService';
 
 const NATIONAL_STORAGE_KEY = 'bharat_collective_national_team';
 const STATE_STORAGE_KEY = 'bharat_collective_state_chapters';
@@ -115,8 +116,10 @@ const SEED_STATE_CHAPTERS: StateChapter[] = [
   },
 ];
 
-let memoryNationalTeam: NationalTeamMember[] = [...SEED_NATIONAL_TEAM];
-let memoryStateChapters: StateChapter[] = [...SEED_STATE_CHAPTERS];
+const bundledNational = contentSyncService.getBundledModule<NationalTeamMember[]>('nationalTeam', SEED_NATIONAL_TEAM);
+const bundledState = contentSyncService.getBundledModule<StateChapter[]>('stateChapters', SEED_STATE_CHAPTERS);
+let memoryNationalTeam: NationalTeamMember[] = [...bundledNational];
+let memoryStateChapters: StateChapter[] = [...bundledState];
 
 function loadStoredNationalTeam(): NationalTeamMember[] {
   if (typeof window === 'undefined') return [...memoryNationalTeam];
@@ -141,6 +144,7 @@ function saveNationalTeam(list: NationalTeamMember[]) {
   } catch (e) {
     console.error('Failed to save national team:', e);
   }
+  contentSyncService.persistModule('nationalTeam', list).catch(() => {});
 }
 
 function loadStoredStateChapters(): StateChapter[] {
@@ -166,6 +170,7 @@ function saveStateChapters(list: StateChapter[]) {
   } catch (e) {
     console.error('Failed to save state chapters:', e);
   }
+  contentSyncService.persistModule('stateChapters', list).catch(() => {});
 }
 
 export const teamService = {

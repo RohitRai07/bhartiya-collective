@@ -1,4 +1,5 @@
 import { CareerApplicationInput, CareerApplicationRecord, MAX_CV_SIZE_BYTES } from '../types/career';
+import { contentSyncService } from './contentSyncService';
 
 const STORAGE_KEY = 'bharat_career_applications';
 
@@ -42,7 +43,7 @@ const SEED_APPLICATIONS: CareerApplicationRecord[] = [
 ];
 
 class CareerService {
-  private memoryStore: CareerApplicationRecord[] = [...SEED_APPLICATIONS];
+  private memoryStore: CareerApplicationRecord[] = [...contentSyncService.getBundledModule<CareerApplicationRecord[]>('careers', SEED_APPLICATIONS)];
 
   private getStore(): CareerApplicationRecord[] {
     if (typeof window === 'undefined') return this.memoryStore;
@@ -67,6 +68,7 @@ class CareerService {
       } catch (e) {
         console.error('Failed to store career applications:', e);
       }
+      contentSyncService.persistModule('careers', records).catch(() => {});
     }
   }
 

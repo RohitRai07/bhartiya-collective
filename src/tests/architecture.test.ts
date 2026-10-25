@@ -1681,6 +1681,54 @@ async function runTests() {
   assert(Boolean(sampleEvent), 'Events catalog is available for registration');
   assert(typeof sampleEvent.id === 'string', 'Event has valid ID for registration and RSVP logging');
 
+  // ==========================================
+  // SPECIFICATION: Admin Panel Data, Content & Image Synchronization
+  // ==========================================
+  console.log('\n--- Testing Admin Panel Content & Image Synchronization ---');
+
+  // 1. liveContent.json exists and has all 16 content modules
+  const liveContentPath = 'src/data/liveContent.json';
+  assert(fs.existsSync(liveContentPath), 'src/data/liveContent.json exists and is tracked in project files');
+  const liveContent = JSON.parse(fs.readFileSync(liveContentPath, 'utf8'));
+  assert(Array.isArray(liveContent.events) && liveContent.events.length > 0, 'liveContent.json contains persisted events module');
+  assert(Boolean(liveContent.flagship && liveContent.flagship.title), 'liveContent.json contains persisted flagship module');
+  assert(Array.isArray(liveContent.publications) && liveContent.publications.length > 0, 'liveContent.json contains persisted publications module');
+  assert(Array.isArray(liveContent.circulars) && liveContent.circulars.length > 0, 'liveContent.json contains persisted circulars module');
+  assert(Array.isArray(liveContent.nationalTeam) && liveContent.nationalTeam.length > 0, 'liveContent.json contains persisted nationalTeam module');
+  assert(Array.isArray(liveContent.centres) && liveContent.centres.length > 0, 'liveContent.json contains persisted centres module');
+
+  // 2. contentSyncService is operational
+  const { contentSyncService } = await import('../services/contentSyncService');
+  assert(typeof contentSyncService.getBundledModule === 'function', 'contentSyncService exposes getBundledModule');
+  assert(typeof contentSyncService.syncAllToProject === 'function', 'contentSyncService exposes syncAllToProject');
+  assert(typeof contentSyncService.uploadPhysicalMedia === 'function', 'contentSyncService exposes uploadPhysicalMedia');
+
+  const bundledEvents = contentSyncService.getBundledModule('events', []);
+  assert(Array.isArray(bundledEvents) && bundledEvents.length > 0, 'contentSyncService seamlessly bundles events from repository json');
+
+  // 3. Physical Upload Directory verification
+  const publicUploadsDir = 'public/uploads';
+  const serverUploadsDir = 'server/uploads';
+  assert(fs.existsSync(publicUploadsDir), 'public/uploads/ exists for static Vite & GitHub Pages serving');
+  assert(fs.existsSync(serverUploadsDir), 'server/uploads/ exists for persistent backend storage');
+
+  // 4. Test physical file writing through contentStorage
+  const path = await import('path');
+  const { contentStorage } = await import('../../server/src/storage/contentStorage');
+  const testPngDataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  const uploaded = contentStorage.saveUploadedFile('test-sync-banner.png', 'image/png', testPngDataUrl);
+
+  assert(typeof uploaded.url === 'string' && uploaded.url.startsWith('uploads/'), 'Uploaded file receives public-relative URL (uploads/...)');
+  const physicalPublicFile = path.join(publicUploadsDir, uploaded.fileName);
+  const physicalServerFile = path.join(serverUploadsDir, uploaded.fileName);
+  assert(fs.existsSync(physicalPublicFile), 'Uploaded image written to public/uploads/ for Git tracking & web serving');
+  assert(fs.existsSync(physicalServerFile), 'Uploaded image mirrored to server/uploads/ for backend persistence');
+
+  // Clean up test file
+  if (fs.existsSync(physicalPublicFile)) fs.unlinkSync(physicalPublicFile);
+  if (fs.existsSync(physicalServerFile)) fs.unlinkSync(physicalServerFile);
+  assert(!fs.existsSync(physicalPublicFile), 'Test uploaded media cleaned up successfully');
+
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);
   console.log(`========================================\n`);

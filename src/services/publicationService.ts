@@ -9,16 +9,18 @@ import { apiConfig } from '../config/apiConfig';
 import { apiClient } from './apiClient';
 import { Publication, PublicationCategory } from '../types/publication';
 import { mockPublications } from '../data/mockPublications';
+import { contentSyncService } from './contentSyncService';
 
 const STORAGE_KEY = 'bharat_collective_publications';
 
 function loadStoredPublications(): Publication[] {
-  if (typeof window === 'undefined') return mockPublications;
+  const bundledPubs = contentSyncService.getBundledModule<Publication[]>('publications', mockPublications);
+  if (typeof window === 'undefined') return bundledPubs;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       // Initialize with existing website content
-      const initial = mockPublications.map(p => ({
+      const initial = bundledPubs.map(p => ({
         ...p,
         status: 'published' as const,
       }));
@@ -39,6 +41,7 @@ function savePublications(list: Publication[]) {
   } catch (e) {
     console.error('Failed to save publications:', e);
   }
+  contentSyncService.persistModule('publications', list).catch(() => {});
 }
 
 export const publicationService = {

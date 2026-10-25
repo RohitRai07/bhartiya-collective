@@ -10,11 +10,13 @@ import { apiConfig } from '../config/apiConfig';
 import { apiClient } from './apiClient';
 import { ScholarExpert, ExpertRole } from '../types/expert';
 import { mockExperts } from '../data/mockExperts';
+import { contentSyncService } from './contentSyncService';
 
 const STORAGE_KEY = 'bharat_collective_experts';
 
 function loadStoredExperts(): ScholarExpert[] {
-  if (typeof window === 'undefined') return mockExperts;
+  const bundledExperts = contentSyncService.getBundledModule<ScholarExpert[]>('experts', mockExperts);
+  if (typeof window === 'undefined') return bundledExperts;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
@@ -40,6 +42,7 @@ function saveExperts(list: ScholarExpert[]) {
   } catch (e) {
     console.error('Failed to save experts:', e);
   }
+  contentSyncService.persistModule('experts', list).catch(() => {});
 }
 
 export const expertService = {

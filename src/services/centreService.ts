@@ -1,9 +1,10 @@
 import { BHARAT_CENTRES, BharatCentre } from '../data/centresData';
+import { contentSyncService } from './contentSyncService';
 
 const STORAGE_KEY = 'bharat_collective_centres_data';
 
 class CentreService {
-  private memoryStore: BharatCentre[] = BHARAT_CENTRES.map(c => ({ ...c, status: c.status || 'published' }));
+  private memoryStore: BharatCentre[] = contentSyncService.getBundledModule<BharatCentre[]>('centres', BHARAT_CENTRES).map(c => ({ ...c, status: c.status || 'published' }));
 
   private getStore(): BharatCentre[] {
     if (typeof window === 'undefined') {
@@ -33,6 +34,7 @@ class CentreService {
     } catch (e) {
       console.error('Failed to save centres to localStorage:', e);
     }
+    contentSyncService.persistModule('centres', centres).catch(() => {});
   }
 
   public getAll(): BharatCentre[] {

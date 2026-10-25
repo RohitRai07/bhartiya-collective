@@ -9,6 +9,7 @@ import { apiConfig } from '../config/apiConfig';
 import { apiClient } from './apiClient';
 import { EventItem, LiveEventInput } from '../types/event';
 import { mockEvents } from '../data/mockEvents';
+import { contentSyncService } from './contentSyncService';
 import { extractYouTubeId, getYouTubeThumbnail, computeLiveEventStatus } from '../utils/youtube';
 
 const STORAGE_KEY = 'bharat_collective_events';
@@ -35,7 +36,8 @@ function recordDeletedEventId(id: string): void {
   }
 }
 
-let memoryStore: EventItem[] = mockEvents.map(e => {
+const bundledEvents = contentSyncService.getBundledModule<EventItem[]>('events', mockEvents);
+let memoryStore: EventItem[] = bundledEvents.map(e => {
   const item: EventItem = { ...e, status: e.status || 'published' };
   if (item.youtubeUrl && !item.youtubeId) {
     item.youtubeId = extractYouTubeId(item.youtubeUrl);
@@ -51,7 +53,7 @@ function loadStoredEvents(): EventItem[] {
     const todayStr = new Date().toISOString().split('T')[0];
 
     if (!raw) {
-      const initial = mockEvents
+      const initial = bundledEvents
         .filter(m => !deletedIds.has(m.id))
         .map(e => {
           const item: EventItem = {
@@ -98,7 +100,7 @@ function loadStoredEvents(): EventItem[] {
 
     // Ensure all seeded mock events (like the YouTube Live broadcast) exist for returning visitors,
     // as long as they haven't been deleted by an administrator
-    for (const defaultEvt of mockEvents) {
+    for (const defaultEvt of bundledEvents) {
       if (deletedIds.has(defaultEvt.id)) continue;
       if (!migrated.some(e => e.id === defaultEvt.id)) {
         migrated.unshift({
@@ -130,6 +132,7 @@ function saveEvents(list: EventItem[]) {
   } catch (e) {
     console.error('Failed to save events:', e);
   }
+  contentSyncService.persistModule('events', list).catch(() => {});
 }
 
 export const eventService = {

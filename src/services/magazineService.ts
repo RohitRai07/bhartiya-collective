@@ -1,4 +1,5 @@
 import { MagazineIssue, MagazineIssueInput } from '../types/magazine';
+import { contentSyncService } from './contentSyncService';
 import { jsPDF } from 'jspdf';
 import { siteConfig } from '../config/siteConfig';
 
@@ -62,12 +63,13 @@ class MagazineService {
   private memoryStore: MagazineIssue[] = [...SEED_MAGAZINES];
 
   private getStore(): MagazineIssue[] {
+    const bundled = contentSyncService.getBundledModule<MagazineIssue[]>('magazines', SEED_MAGAZINES);
     if (typeof window === 'undefined') return this.memoryStore;
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_MAGAZINES));
-        return SEED_MAGAZINES;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(bundled));
+        return bundled;
       }
       return JSON.parse(raw);
     } catch {
@@ -84,6 +86,7 @@ class MagazineService {
       } catch (e) {
         console.error('Failed to store magazines:', e);
       }
+      contentSyncService.persistModule('magazines', records).catch(() => {});
     }
   }
 

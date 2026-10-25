@@ -36,6 +36,7 @@ import { CareerApplicationRecord, CareerApplicationStatus } from '../types/caree
 import { PodcastEpisode, PodcastInput } from '../types/podcast';
 import { MagazineIssue, MagazineIssueInput } from '../types/magazine';
 import { teamService } from '../services/teamService';
+import { contentSyncService } from '../services/contentSyncService';
 import { NationalTeamMember, StateChapter } from '../types/team';
 
 import { AdminLoginForm } from '../components/admin/AdminLoginForm';
@@ -1254,6 +1255,26 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
         </button>
 
         <div className="flex items-center space-x-1.5 sm:space-x-4 text-xs shrink-0">
+          {/* Synchronize to Project & Git Button */}
+          <button
+            type="button"
+            onClick={handleSyncToProject}
+            disabled={isSyncing}
+            className={`flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+              syncFeedback?.type === 'success'
+                ? 'bg-emerald-600 text-white border-emerald-500 shadow-xs'
+                : syncFeedback?.type === 'error'
+                ? 'bg-rose-600 text-white border-rose-500 shadow-xs'
+                : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border-amber-500/40'
+            }`}
+            title="Persist all website content & images to repository files (src/data/liveContent.json & public/uploads/) for persistent GitHub deployment."
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-amber-300' : ''}`} />
+            <span className="hidden sm:inline">
+              {isSyncing ? 'Syncing...' : syncFeedback?.type === 'success' ? 'Saved to Project!' : 'Sync to Git & Live'}
+            </span>
+          </button>
+
           <div className="hidden lg:flex items-center space-x-2 text-slate-300">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>Administrator: <strong className="text-white font-mono">{session.user.email}</strong></span>
@@ -1268,6 +1289,35 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
           </button>
         </div>
       </header>
+
+      {/* Repository Synchronization Status Banner */}
+      {syncFeedback && (
+        <div className={`border-b px-4 py-2.5 text-xs flex items-center justify-between transition-all ${
+          syncFeedback.type === 'success'
+            ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200 shadow-inner'
+            : 'bg-rose-950/90 border-rose-500/40 text-rose-200 shadow-inner'
+        }`}>
+          <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              {syncFeedback.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              )}
+              <span className="font-medium">{syncFeedback.message}</span>
+              {syncFeedback.timestamp && (
+                <span className="text-slate-400 text-[11px] font-mono">[{syncFeedback.timestamp}]</span>
+              )}
+            </div>
+            <button
+              onClick={() => setSyncFeedback(null)}
+              className="text-slate-400 hover:text-white ml-2 text-xs font-bold cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-4 sm:space-y-6 min-w-0">

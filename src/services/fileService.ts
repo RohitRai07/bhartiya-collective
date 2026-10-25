@@ -8,6 +8,23 @@
 import { apiConfig } from '../config/apiConfig';
 import { apiClient } from './apiClient';
 import { UploadedFileMetadata } from '../types/file';
+import { contentSyncService } from './contentSyncService';
+
+async function syncPhysicalFile<T extends { url: string; name: string; mimeType: string }>(result: T): Promise<T> {
+  try {
+    const physicalUrl = await contentSyncService.uploadPhysicalMedia(
+      result.name,
+      result.mimeType,
+      result.url
+    );
+    if (physicalUrl) {
+      result.url = physicalUrl;
+    }
+  } catch {
+    // Fallback to data URL
+  }
+  return result;
+}
 
 export const fileService = {
   /**
@@ -92,8 +109,11 @@ export const fileService = {
             sizeKb: Math.round(file.size / 1024),
             mimeType: file.type,
           };
-          this.saveToMediaLibrary(result);
-          return resolve(result);
+          syncPhysicalFile(result).then(res => {
+            this.saveToMediaLibrary(res);
+            resolve(res);
+          });
+          return;
         }
 
         // Resize and optimize through offscreen Canvas if available
@@ -140,8 +160,10 @@ export const fileService = {
               dimensions: { width, height },
             };
 
-            this.saveToMediaLibrary(result);
-            resolve(result);
+            syncPhysicalFile(result).then(res => {
+              this.saveToMediaLibrary(res);
+              resolve(res);
+            });
           };
 
           img.onerror = () => {
@@ -210,8 +232,10 @@ export const fileService = {
           pageCountEstimate,
         };
 
-        this.saveToPdfLibrary(result);
-        resolve(result);
+        syncPhysicalFile(result).then(res => {
+          this.saveToPdfLibrary(res);
+          resolve(res);
+        });
       };
 
       reader.onerror = () => reject(new Error('Failed to read PDF file.'));

@@ -9,6 +9,7 @@ import { apiConfig } from '../config/apiConfig';
 import { apiClient } from './apiClient';
 import { NewsletterSubscriptionInput, NewsletterSubscriptionRecord } from '../types/newsletter';
 import { notificationService } from './notificationService';
+import { contentSyncService } from './contentSyncService';
 
 const STORAGE_KEY = 'bharat_collective_newsletter_subscribers';
 
@@ -36,7 +37,8 @@ const initialSubscribers: NewsletterSubscriptionRecord[] = [
   }
 ];
 
-let inMemorySubscribers: NewsletterSubscriptionRecord[] = [...initialSubscribers];
+const bundledSubs = contentSyncService.getBundledModule<NewsletterSubscriptionRecord[]>('subscribers', initialSubscribers);
+let inMemorySubscribers: NewsletterSubscriptionRecord[] = [...bundledSubs];
 
 function loadStoredSubscribers(): NewsletterSubscriptionRecord[] {
   if (typeof window === 'undefined') return inMemorySubscribers;
@@ -60,6 +62,7 @@ function saveSubscribers(list: NewsletterSubscriptionRecord[]) {
   } catch (e) {
     console.error('Failed to save subscribers:', e);
   }
+  contentSyncService.persistModule('subscribers', list).catch(() => {});
 }
 
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;

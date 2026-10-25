@@ -9,10 +9,12 @@ import { apiConfig } from '../config/apiConfig';
 import { apiClient } from './apiClient';
 import { ResearchDomain } from '../types/research';
 import { mockResearchDomains } from '../data/mockResearch';
+import { contentSyncService } from './contentSyncService';
 
 const STORAGE_KEY = 'bharat_collective_research_domains';
 
-let memoryDomains: ResearchDomain[] = mockResearchDomains.map(d => ({ ...d, status: 'published' as const }));
+const bundledDomains = contentSyncService.getBundledModule<ResearchDomain[]>('research', mockResearchDomains);
+let memoryDomains: ResearchDomain[] = bundledDomains.map(d => ({ ...d, status: 'published' as const }));
 
 function loadStoredDomains(): ResearchDomain[] {
   if (typeof window === 'undefined') return memoryDomains;
@@ -37,6 +39,7 @@ function saveDomains(list: ResearchDomain[]) {
   } catch (e) {
     console.error('Failed to save research domains:', e);
   }
+  contentSyncService.persistModule('research', list).catch(() => {});
 }
 
 export const researchService = {

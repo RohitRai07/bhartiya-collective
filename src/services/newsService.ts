@@ -10,15 +10,17 @@ import { apiConfig } from '../config/apiConfig';
 import { apiClient } from './apiClient';
 import { NewsArticle } from '../types/news';
 import { mockNews } from '../data/mockNews';
+import { contentSyncService } from './contentSyncService';
 
 const STORAGE_KEY = 'bharat_collective_news';
 
 function loadStoredNews(): NewsArticle[] {
-  if (typeof window === 'undefined') return mockNews;
+  const bundledNews = contentSyncService.getBundledModule<NewsArticle[]>('news', mockNews);
+  if (typeof window === 'undefined') return bundledNews;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      const initial = mockNews.map(n => ({
+      const initial = bundledNews.map(n => ({
         ...n,
         status: 'published' as const,
       }));
@@ -39,6 +41,7 @@ function saveNews(list: NewsArticle[]) {
   } catch (e) {
     console.error('Failed to save news articles:', e);
   }
+  contentSyncService.persistModule('news', list).catch(() => {});
 }
 
 export const newsService = {

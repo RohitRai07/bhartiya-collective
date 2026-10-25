@@ -8,17 +8,19 @@
 
 import { Circular, CircularCategory, CircularStatus } from '../types/circular';
 import { mockCirculars } from '../data/mockCirculars';
+import { contentSyncService } from './contentSyncService';
 
 const STORAGE_KEY = 'bharat_collective_circulars';
-let inMemoryCirculars: Circular[] = [...mockCirculars];
+const bundledCirculars = contentSyncService.getBundledModule<Circular[]>('circulars', mockCirculars);
+let inMemoryCirculars: Circular[] = [...bundledCirculars];
 
 function loadStoredCirculars(): Circular[] {
   if (typeof window === 'undefined') return [...inMemoryCirculars];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockCirculars));
-      return mockCirculars;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(bundledCirculars));
+      return bundledCirculars;
     }
     return JSON.parse(raw);
   } catch {
@@ -35,6 +37,7 @@ function saveCirculars(list: Circular[]) {
   } catch (e) {
     console.error('Failed to save circulars to storage:', e);
   }
+  contentSyncService.persistModule('circulars', list).catch(() => {});
 }
 
 export const circularService = {

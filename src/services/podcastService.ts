@@ -1,4 +1,5 @@
 import { PodcastEpisode, PodcastInput } from '../types/podcast';
+import { contentSyncService } from './contentSyncService';
 import { extractYouTubeId as ytExtract } from '../utils/youtube';
 
 const STORAGE_KEY = 'bharat_podcasts';
@@ -54,7 +55,7 @@ const SEED_PODCASTS: PodcastEpisode[] = [
 ];
 
 class PodcastService {
-  private memoryStore: PodcastEpisode[] = [...SEED_PODCASTS];
+  private memoryStore: PodcastEpisode[] = [...contentSyncService.getBundledModule<PodcastEpisode[]>('podcasts', SEED_PODCASTS)];
 
   private getStore(): PodcastEpisode[] {
     if (typeof window === 'undefined') return this.memoryStore;
@@ -79,6 +80,7 @@ class PodcastService {
       } catch (e) {
         console.error('Failed to store podcasts:', e);
       }
+      contentSyncService.persistModule('podcasts', records).catch(() => {});
     }
   }
 

@@ -1,3 +1,4 @@
+import { contentSyncService } from './contentSyncService';
 /**
  * Dynamic Taxonomy & Dropdown Options Service
  * 
@@ -233,7 +234,8 @@ const DEFAULT_TAGS: string[] = [
 ];
 
 // In-memory cache for fast access and Node environment testing
-let inMemoryOptions: Record<string, DropdownOption[]> = { ...DEFAULT_OPTIONS };
+const bundledTax = contentSyncService.getBundledModule<Record<string, DropdownOption[]>>('taxonomy', DEFAULT_OPTIONS);
+let inMemoryOptions: Record<string, DropdownOption[]> = { ...bundledTax };
 let inMemoryTags: string[] = [...DEFAULT_TAGS];
 
 function loadTaxonomy(): Record<string, DropdownOption[]> {
@@ -272,6 +274,7 @@ function saveTaxonomy(data: Record<string, DropdownOption[]>) {
   } catch (e) {
     console.warn('Could not save taxonomy options:', e);
   }
+  contentSyncService.persistModule('taxonomy', data).catch(() => {});
 }
 
 function loadTags(): string[] {

@@ -1,0 +1,1151 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-10-25T14:52:07.721Z",
+  "events": [
+    {
+      "id": "evt-live-ucc-broadcast",
+      "title": "🔴 LIVE BROADCAST: Constitutional Morality & Article 44 Implementation",
+      "type": "Live Stream",
+      "date": "2026-10-25",
+      "time": "05:30 PM – 07:30 PM IST",
+      "location": "Constitutional Club / YouTube Live Global Broadcast",
+      "mode": "Online Webinar",
+      "description": "Special live-streamed keynote panel and public consultation addressing personal law reforms, civilizational values, and foundational constitutional rights under Article 44.",
+      "speakers": [
+        {
+          "name": "Hon. Justice (Retd.) M. Ramachandran",
+          "affiliation": "Former Judge, Supreme Court of India",
+          "role": "Keynote Speaker"
+        },
+        {
+          "name": "Sr. Adv. J. Sai Deepak",
+          "affiliation": "Supreme Court of India",
+          "role": "Plenary Panelist"
+        }
+      ],
+      "registrationOpen": true,
+      "seatsLeft": 500,
+      "bannerImage": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80",
+      "isLive": true,
+      "youtubeUrl": "https://www.youtube.com/watch?v=5qap5aO4i9A",
+      "youtubeId": "5qap5aO4i9A",
+      "liveStatus": "live",
+      "status": "published"
+    },
+    {
+      "id": "evt-ucc-flagship",
+      "title": "#BharatDialogue on UNIFORM CIVIL CODE (UCC)",
+      "type": "Symposium",
+      "date": "COMING SOON",
+      "time": "Full Day National Dialogue",
+      "location": "Constitution Club of India, Rafi Marg, Sansad Marg Area, New Delhi 110001",
+      "mode": "Hybrid",
+      "description": "A landmark national dialogue examining law, equality, personal laws reform, gender justice, and foundational constitutional values with leading jurists, scholars, and policy practitioners.",
+      "speakers": [
+        {
+          "name": "Eminent Constitutional Jurists",
+          "affiliation": "Supreme Court of India & High Courts",
+          "role": "Keynote Panel"
+        },
+        {
+          "name": "Scholars of Comparative Jurisprudence",
+          "affiliation": "National Law Universities",
+          "role": "Plenary Session"
+        },
+        {
+          "name": "Civic & Legal Reform Advocates",
+          "affiliation": "Bharat Collective Policy Forum",
+          "role": "Roundtable Chairs"
+        }
+      ],
+      "registrationOpen": true,
+      "seatsLeft": 150,
+      "bannerImage": "images/bharat-dialogue-ucc-banner.jpg"
+    },
+    {
+      "id": "evt-101",
+      "title": "National Symposium on Civilizational Jurisprudence & Dharma",
+      "type": "Symposium",
+      "date": "2026-10-18",
+      "time": "09:30 AM – 05:30 PM IST",
+      "location": "India International Centre (IIC), Max Mueller Marg, New Delhi",
+      "mode": "Hybrid",
+      "description": "An apex gathering of jurists, constitutional scholars, and philosophers addressing the synthesis between constitutional morality and ancient Indian jurisprudential treatises.",
+      "speakers": [
+        {
+          "name": "Hon. Justice (Retd.) M. Ramachandran",
+          "affiliation": "Former Judge, Supreme Court of India",
+          "role": "Keynote Speaker"
+        },
+        {
+          "name": "Prof. Vidya Shankar",
+          "affiliation": "National Law School of India University",
+          "role": "Plenary Panelist"
+        },
+        {
+          "name": "Dr. Chetan Bhattacharya",
+          "affiliation": "Centre for Policy Research",
+          "role": "Session Chair"
+        }
+      ],
+      "registrationOpen": true,
+      "seatsLeft": 45,
+      "bannerImage": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      "id": "evt-102",
+      "title": "Roundtable: Computational Linguistics & Sanskrit Knowledge Systems",
+      "type": "Roundtable",
+      "date": "2026-11-05",
+      "time": "02:00 PM – 06:00 PM IST",
+      "location": "IIT Delhi & Online Stream",
+      "mode": "Hybrid",
+      "description": "Deep technical exploration into Paninian generative grammar, knowledge representation, semantic networks, and large language model architectures for Indic languages.",
+      "speakers": [
+        {
+          "name": "Dr. Srinivas Parameswaran",
+          "affiliation": "IIT Bombay Computer Science & Sanskrit Studies",
+          "role": "Lead Speaker"
+        },
+        {
+          "name": "Dr. Preeti Deshmukh",
+          "affiliation": "Computational Paninian Grammar Lab",
+          "role": "Discussant"
+        }
+      ],
+      "registrationOpen": true,
+      "seatsLeft": 80,
+      "bannerImage": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80"
+    },
+    {
+      "id": "evt-103",
+      "title": "Public Lecture: The Economic Architecture of Ancient Indian Guilds (Shrenis)",
+      "type": "Public Lecture",
+      "date": "2026-11-22",
+      "time": "06:00 PM – 07:30 PM IST",
+      "location": "Auditorium, NMML, Teen Murti Bhavan, New Delhi",
+      "mode": "In-Person",
+      "description": "A historical and institutional analysis of self-regulating merchant guilds, craft standardization, contract enforcement, and international maritime trade in early India.",
+      "speakers": [
+        {
+          "name": "Prof. Alok Ranjan",
+          "affiliation": "Delhi School of Economics",
+          "role": "Distinguished Speaker"
+        }
+      ],
+      "registrationOpen": true,
+      "seatsLeft": 120,
+      "bannerImage": "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80"
+    }
+  ],
+  "flagship": {
+    "id": "evt-ucc-flagship",
+    "badge1": "Flagship National Dialogue",
+    "badge2": "COMING SOON",
+    "presenterText": "Bharat Collective Foundation Presents",
+    "title": "#BharatDialogue",
+    "titleHighlight": "on UNIFORM CIVIL CODE",
+    "subtitle": "A Dialogue on Law, Equality & Constitutional Values",
+    "description": "Convening constitutional jurists, scholars, and civil society leaders to deliberate upon common citizenship, gender justice, personal laws, and constitutional morality.",
+    "venueName": "Venue: Constitution Club of India",
+    "venueAddress": "Rafi Marg, Sansad Marg Area, New Delhi, Delhi 110001",
+    "scheduleInfo": "Schedule & Registration Window: Coming Soon",
+    "ctaText": "Pre-Register / RSVP",
+    "ctaLink": "/register",
+    "posterUrl": "images/bharat-dialogue-ucc-banner.jpg",
+    "posterCaption": "Connecting Bharat, Bringing Minds Together",
+    "status": "published",
+    "isVisible": true
+  },
+  "publications": [
+    {
+      "id": "pub-001",
+      "title": "Dharma, Artha, and the Modern State",
+      "subtitle": "Re-evaluating Classical Governance Paradigms for 21st Century Public Administration",
+      "authors": [
+        "Prof. Ananya Someshwar",
+        "Dr. Raghuram Deodhar"
+      ],
+      "abstract": "This foundational monograph examines the institutional principles articulated in the Arthashastra, Shukraniti, and Mahabharata Rajadharma Parva, drawing rigorous parallels to modern constitutional checks, fiscal decentralization, and statecraft.",
+      "category": "Monograph",
+      "publishedDate": "2026-08-15",
+      "pages": 148,
+      "isbn": "978-81-945678-1-2",
+      "tags": [
+        "Governance",
+        "Statecraft",
+        "Dharmic Jurisprudence",
+        "Public Administration"
+      ],
+      "featured": true
+    },
+    {
+      "id": "pub-002",
+      "title": "Indic Epistemologies in Cognitive Science & Education",
+      "subtitle": "Integrating Nyaya-Vaisheshika Logic and Pramana Shastra with Modern Learning Frameworks",
+      "authors": [
+        "Dr. Meenakshi Sundaram",
+        "Prof. Arvind K. Joshi"
+      ],
+      "abstract": "A critical study demonstrating how the fourfold Pramana model (Pratyaksha, Anumana, Upamana, Shabda) offers a resilient cognitive framework for critical thinking and artificial intelligence alignment.",
+      "category": "Policy Paper",
+      "publishedDate": "2026-06-21",
+      "pages": 64,
+      "tags": [
+        "Epistemology",
+        "Cognitive Science",
+        "NEP 2020",
+        "Pramana Theory"
+      ],
+      "featured": true
+    },
+    {
+      "id": "pub-003",
+      "title": "Decentralized Economy & Circular Ecology",
+      "subtitle": "Traditional Water Harvesting, Gram Swaraj, and Climate Resilience in the Gangetic Plains",
+      "authors": [
+        "Kavita Narayanan",
+        "Dr. Shridhar Pathak"
+      ],
+      "abstract": "Field research spanning 120 historic stepwells and tank irrigation systems across Rajasthan and Madhya Pradesh, presenting actionable policy recommendations for climate-adapted local water governance.",
+      "category": "Policy Paper",
+      "publishedDate": "2026-04-10",
+      "pages": 82,
+      "tags": [
+        "Ecology",
+        "Water Systems",
+        "Decentralization",
+        "Sustainable Development"
+      ],
+      "featured": false
+    },
+    {
+      "id": "pub-004",
+      "title": "Strategic Autonomy in a Polycentric World Order",
+      "subtitle": "Mandala Theory and India’s Contemporary Geopolitical Architecture",
+      "authors": [
+        "Amb. (Retd.) Vikramaditya Sen",
+        "Shreya Banerjee"
+      ],
+      "abstract": "Analyzing how Kautilyan Mandala dynamics provide a systematic vocabulary for multipolar diplomacy, maritime security across the Indian Ocean Region (IOR), and strategic supply chain alliances.",
+      "category": "Occasional Paper",
+      "publishedDate": "2026-02-18",
+      "pages": 54,
+      "tags": [
+        "Geopolitics",
+        "Mandala Theory",
+        "Foreign Policy",
+        "Indian Ocean"
+      ],
+      "featured": true
+    }
+  ],
+  "news": [
+    {
+      "id": "news-1",
+      "title": "Bhartiya Collective Concludes Bilateral Roundtable on Maritime Silk and Spice Corridors",
+      "slug": "maritime-silk-spice-corridors-roundtable",
+      "excerpt": "Historians and defense policy strategists from six Indian Ocean rim nations assembled in Chennai to map historical maritime trade links.",
+      "content": "The three-day symposium brought together over 40 delegates. Discussions centered around de-centering European colonial narratives of naval mastery by documenting early Chola, Kalinga, and Chera oceanic navigation methods and their role in peaceful cultural exchange across Suvarnabhumi.",
+      "author": "Editorial Desk",
+      "authorTitle": "Bhartiya Collective Policy Desk",
+      "category": "Discourse",
+      "publishedDate": "2026-09-12",
+      "readTime": "4 min read"
+    },
+    {
+      "id": "news-2",
+      "title": "Annual Fellowship Grants Announced for Indic Epistemology Scholars",
+      "slug": "annual-fellowship-grants-2026",
+      "excerpt": "Eight visiting scholars selected for the 2026-2027 residential fellowship in New Delhi focusing on ancient scientific treatises and grammar.",
+      "content": "The selection committee finalized grants across four domains: Mathematical astronomy in the Kerala School, agricultural meteorology in Krishi-Parashara, metallurgy in Rasashastra, and Paninian morpho-syntax.",
+      "author": "Council Secretariat",
+      "authorTitle": "Academic Admissions Committee",
+      "category": "Announcement",
+      "publishedDate": "2026-08-30",
+      "readTime": "3 min read"
+    },
+    {
+      "id": "news-3",
+      "title": "Perspective: Why Constitutional Morality Must Be Anchored in Lived Civilizational Ethos",
+      "slug": "constitutional-morality-civilizational-ethos",
+      "excerpt": "An inquiry into how legal jurisprudence gains genuine public legitimacy when informed by societal concepts of Nyaya and Dharma.",
+      "content": "Law cannot remain an alien transplant if it seeks deep adherence. When democratic institutions reflect the shared civilizational duties and ethical imperatives of the society they govern, public trust and civic responsibility naturally deepen.",
+      "author": "Prof. Ananya Someshwar",
+      "authorTitle": "Senior Fellow, Bhartiya Collective",
+      "category": "Perspective",
+      "publishedDate": "2026-08-14",
+      "readTime": "7 min read"
+    }
+  ],
+  "research": [
+    {
+      "id": "res-domain-1",
+      "name": "Statecraft, Governance & Rajadharma",
+      "sanskritName": "राजधर्म एवं शासन व्यवस्था",
+      "slug": "statecraft-governance",
+      "description": "Examining political theory, decentralized governance, civil service ethics, and institutional accountability grounded in Indian administrative literature.",
+      "leadFellow": "Prof. Ananya Someshwar",
+      "keyThemes": [
+        "Decentralized Polities",
+        "Administrative Ethics",
+        "Public Finance in Arthashastra",
+        "Constitutional Synthesis"
+      ],
+      "activeProjectsCount": 4,
+      "publishedPapersCount": 14,
+      "iconName": "Landmark",
+      "status": "published"
+    },
+    {
+      "id": "res-domain-2",
+      "name": "Indian Knowledge Systems & Epistemology",
+      "sanskritName": "भारतीय ज्ञान परम्परा एवं प्रमाण शास्त्र",
+      "slug": "iks-epistemology",
+      "description": "Investigating Nyaya logic, Mimamsa hermeneutics, computational linguistics, mathematics, Ayurveda philosophy, and pedagogies for higher education.",
+      "leadFellow": "Dr. Meenakshi Sundaram",
+      "keyThemes": [
+        "Pramana Theory",
+        "Paninian Linguistics",
+        "Pedagogical Frameworks",
+        "Traditional Medicine Philosophy"
+      ],
+      "activeProjectsCount": 6,
+      "publishedPapersCount": 22,
+      "iconName": "BookOpen",
+      "status": "published"
+    },
+    {
+      "id": "res-domain-3",
+      "name": "Ecological Ethics & Regenerative Economics",
+      "sanskritName": "पर्यावरण चेतना एवं चक्रीय अर्थनीति",
+      "slug": "ecology-economics",
+      "description": "Fostering non-extractive, circular resource models, traditional watershed resilience, artisanal supply chains, and holistic rural-urban development.",
+      "leadFellow": "Dr. Shridhar Pathak",
+      "keyThemes": [
+        "Watershed Architecture",
+        "Circular Bio-Economy",
+        "Indigenous Agro-Ecology",
+        "Sacred Groves & Biodiversity"
+      ],
+      "activeProjectsCount": 3,
+      "publishedPapersCount": 11,
+      "iconName": "Leaf",
+      "status": "published"
+    },
+    {
+      "id": "res-domain-4",
+      "name": "Geopolitics, Maritime History & Civilizational Ties",
+      "sanskritName": "वैश्विक कूटनीति एवं सामुद्रिक इतिहास",
+      "slug": "geopolitics-maritime",
+      "description": "Tracing India’s maritime heritage, trade corridors across Southeast Asia and the Indian Ocean, strategic autonomy, and multipolar balance.",
+      "leadFellow": "Amb. (Retd.) Vikramaditya Sen",
+      "keyThemes": [
+        "Indian Ocean Networks",
+        "Cultural Diplomacy",
+        "Strategic Autonomy",
+        "Monsoon Trade Historiography"
+      ],
+      "activeProjectsCount": 5,
+      "publishedPapersCount": 18,
+      "iconName": "Compass",
+      "status": "published"
+    }
+  ],
+  "experts": [
+    {
+      "id": "exp-1",
+      "name": "Prof. Ananya Someshwar",
+      "designation": "Senior Fellow & Chair, Statecraft Initiative",
+      "institution": "Former Professor of Public Policy, JNU & National Law School",
+      "biography": "Specializes in classical Indian political thought, administrative reform, and comparative constitutional jurisprudence. Author of three monographs on Kautilya and modern state structure.",
+      "focusAreas": [
+        "Rajadharma",
+        "Public Ethics",
+        "Constitutional Law"
+      ],
+      "photoUrl": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80",
+      "publicationsCount": 38
+    },
+    {
+      "id": "exp-2",
+      "name": "Dr. Meenakshi Sundaram",
+      "designation": "Distinguished Fellow, Epistemic Traditions",
+      "institution": "Director, Center for Classical Indian Cognition",
+      "biography": "Pioneered computational models based on Paninian ashtadhyayi and Nyaya epistemological classifications. Consults with universities globally on curriculum indigenization.",
+      "focusAreas": [
+        "Pramana Shastra",
+        "Computational Linguistics",
+        "Philosophy of Mind"
+      ],
+      "photoUrl": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80",
+      "publicationsCount": 45
+    },
+    {
+      "id": "exp-3",
+      "name": "Amb. (Retd.) Vikramaditya Sen",
+      "designation": "Principal Advisor, Geopolitical Research",
+      "institution": "Former Ambassador to ASEAN countries & Maritime Envoy",
+      "biography": "Veteran diplomat and strategic analyst with over 35 years representing India in Southeast Asia, Central Asia, and multilateral forums.",
+      "focusAreas": [
+        "Indian Ocean Strategy",
+        "Mandala Geopolitics",
+        "Maritime History"
+      ],
+      "photoUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80",
+      "publicationsCount": 29
+    },
+    {
+      "id": "exp-4",
+      "name": "Dr. Shridhar Pathak",
+      "designation": "Lead Researcher, Ecological Heritage",
+      "institution": "Senior Environmental Economist, National Institute of Ecology",
+      "biography": "Field ecologist documenting community-led water conservation, sacred groves, and traditional sustainable agro-forestry systems across the Deccan.",
+      "focusAreas": [
+        "Traditional Irrigation",
+        "Bio-diversity Law",
+        "Gram Swaraj"
+      ],
+      "photoUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80",
+      "publicationsCount": 24
+    }
+  ],
+  "circulars": [
+    {
+      "id": "circ-const-india-01",
+      "title": "The Constitution of India (Comprehensive Text with Preamble & Amendments)",
+      "shortTitle": "Constitution of India",
+      "circularNumber": "Supreme Lex of Bharat • Ministry of Law & Justice Codification",
+      "category": "constitution",
+      "issuingAuthority": "Constituent Assembly of India / Ministry of Law and Justice, Govt. of India",
+      "releaseDate": "1950-01-26",
+      "effectiveDate": "1950-01-26",
+      "summary": "The supreme organic law and constitutional foundation of the Republic of Bharat. Enshrines sovereign, socialist, secular, democratic republic principles, fundamental rights, directive principles of state policy, fundamental duties, and the constitutional architecture of legislative, executive, and judicial governance.",
+      "keyProvisions": [
+        "Preamble: Sovereign Socialist Secular Democratic Republic securing Justice, Liberty, Equality, Fraternity and Integrity of the Nation.",
+        "Part III (Articles 12-35): Fundamental Rights including Right to Equality (Art. 14), Protection of Personal Liberty (Art. 21), and Right to Constitutional Remedies (Art. 32).",
+        "Part IV (Articles 36-51): Directive Principles of State Policy including Article 44 directing the State to secure a Uniform Civil Code.",
+        "Part IV-A (Article 51A): Fundamental Duties of every citizen to cherish constitutional ideals and civilizational heritage.",
+        "Part XVIII (Articles 352-360) & Part XX (Article 368): Constitutional Amendment mechanisms and Emergency Powers."
+      ],
+      "pdfUrl": "https://legislative.gov.in/sites/default/files/COI_English.pdf",
+      "sourceUrl": "https://legislative.gov.in/constitution-of-india/",
+      "sourceName": "Ministry of Law & Justice, Legislative Dept (legislative.gov.in)",
+      "isAutoSynced": false,
+      "lastSyncedAt": "2024-01-26T00:00:00.000Z",
+      "fileName": "Constitution_of_India_Official.pdf",
+      "fileSize": "4.8 MB",
+      "pageCount": 404,
+      "language": "Bilingual",
+      "tags": [
+        "Constitution",
+        "Fundamental Rights",
+        "Article 44",
+        "Directive Principles",
+        "Bare Act"
+      ],
+      "important": true,
+      "status": "published",
+      "downloadsCount": 1420,
+      "contentPreview": "WE, THE PEOPLE OF INDIA, having solemnly resolved to constitute India into a SOVEREIGN SOCIALIST SECULAR DEMOCRATIC REPUBLIC and to secure to all its citizens:\nJUSTICE, social, economic and political;\nLIBERTY of thought, expression, belief, faith and worship;\nEQUALITY of status and of opportunity;\nand to promote among them all\nFRATERNITY assuring the dignity of the individual and the unity and integrity of the Nation;\nIN OUR CONSTITUENT ASSEMBLY this twenty-sixth day of November, 1949, do HEREBY ADOPT, ENACT AND GIVE TO OURSELVES THIS CONSTITUTION.\n\nArticle 1. Name and territory of the Union.—(1) India, that is Bharat, shall be a Union of States.\nArticle 14. Equality before law.—The State shall not deny to any person equality before the law or the equal protection of the laws within the territory of India.\nArticle 21. Protection of life and personal liberty.—No person shall be deprived of his life or personal liberty except according to procedure established by law.\nArticle 44. Uniform civil code for the citizens.—The State shall endeavour to secure for the citizens a uniform civil code throughout the territory of India."
+    },
+    {
+      "id": "circ-bns-2023-02",
+      "title": "The Bharatiya Nyaya Sanhita (BNS), 2023",
+      "shortTitle": "Bharatiya Nyaya Sanhita (BNS)",
+      "circularNumber": "Act No. 45 of 2023 • Gazette of India Ext. Part II-Sec 1",
+      "category": "acts_statutes",
+      "issuingAuthority": "Parliament of India / Ministry of Home Affairs, Govt. of India",
+      "releaseDate": "2023-12-25",
+      "effectiveDate": "2024-07-01",
+      "summary": "Consolidates and modernizes the substantive criminal law of Bharat, completely replacing the colonial Indian Penal Code, 1860. Introduces community service as a progressive restorative penal sanction, strengthens protections for women and minors, and establishes precise definitions for organized crime, mob violence, and economic sabotage.",
+      "keyProvisions": [
+        "Section 4: Recognizes community service as an official penal sanction for minor offences to promote restorative rehabilitation.",
+        "Sections 63-79: Overhauled framework for crimes against women and children with severe statutory minimum sentencing.",
+        "Section 69: Criminalizes sexual relations procured through deceitful promises of marriage or employment.",
+        "Section 111: Defines and penalizes Organized Crime syndicates, illicit trafficking, and systemic extortion.",
+        "Section 113: Statutory definitions and stringent penalties for Terrorist Acts and sovereign endangerment."
+      ],
+      "pdfUrl": "https://www.mha.gov.in/sites/default/files/2023-12/The%20Bharatiya%20Nyaya%20Sanhita%202023.pdf",
+      "sourceUrl": "https://www.mha.gov.in/sites/default/files/2023-12/The%20Bharatiya%20Nyaya%20Sanhita%202023.pdf",
+      "sourceName": "e-Gazette of India & Ministry of Home Affairs (mha.gov.in / egazette.gov.in)",
+      "isAutoSynced": true,
+      "lastSyncedAt": "2024-07-01T00:00:00.000Z",
+      "fileName": "Bharatiya_Nyaya_Sanhita_2023.pdf",
+      "fileSize": "3.2 MB",
+      "pageCount": 168,
+      "language": "English",
+      "tags": [
+        "Criminal Law",
+        "BNS 2023",
+        "Penal Reform",
+        "Community Service",
+        "Statute"
+      ],
+      "important": true,
+      "status": "published",
+      "downloadsCount": 980,
+      "contentPreview": "An Act to consolidate and amend the provisions relating to offences and for matters connected therewith or incidental thereto.\nBe it enacted by Parliament in the Seventy-fourth Year of the Republic of India as follows:—\n\nCHAPTER I: PRELIMINARY\n1. (1) This Act may be called the Bharatiya Nyaya Sanhita, 2023.\n(2) It shall come into force on the 1st day of July, 2024.\n(3) Every person shall be liable to punishment under this Sanhita and not otherwise for every act or omission contrary to the provisions thereof, of which he shall be guilty within India.\n\nCHAPTER II: OF PUNISHMENTS\n4. The punishments to which offenders are liable under the provisions of this Sanhita are:—\n(a) Death;\n(b) Imprisonment for life;\n(c) Imprisonment, which is of two descriptions, namely:— (i) Rigorous; (ii) Simple;\n(d) Forfeiture of property;\n(e) Fine;\n(f) Community service."
+    },
+    {
+      "id": "circ-bnss-2023-03",
+      "title": "The Bharatiya Nagarik Suraksha Sanhita (BNSS), 2023",
+      "shortTitle": "Bharatiya Nagarik Suraksha Sanhita (BNSS)",
+      "circularNumber": "Act No. 46 of 2023 • Gazette of India Ext. Part II-Sec 1",
+      "category": "acts_statutes",
+      "issuingAuthority": "Parliament of India / Ministry of Home Affairs, Govt. of India",
+      "releaseDate": "2023-12-25",
+      "effectiveDate": "2024-07-01",
+      "summary": "Replaces the Code of Criminal Procedure (CrPC), 1973. Mandates contemporary digital evidence handling, electronic first information reports (e-FIR), mandatory forensic videography during searches and seizures, time-bound trial schedules, and summary trials for petty matters.",
+      "keyProvisions": [
+        "Section 173: Formal statutory establishment of electronic FIRs (e-FIR) and Zero FIR jurisdiction across all police stations.",
+        "Section 176(3): Mandatory forensic expert presence and videographic evidence capture at scenes of serious offences (punishable by 7+ years).",
+        "Section 258: Streamlined plea-bargaining processes to resolve judicial backlogs within institutional deadlines.",
+        "Section 530: Statutory recognition of electronic summons, virtual witness depositions, and digital trial proceedings."
+      ],
+      "pdfUrl": "https://www.mha.gov.in/sites/default/files/2023-12/The%20Bharatiya%20Nagarik%20Suraksha%20Sanhita%202023.pdf",
+      "sourceUrl": "https://www.mha.gov.in/sites/default/files/2023-12/The%20Bharatiya%20Nagarik%20Suraksha%20Sanhita%202023.pdf",
+      "sourceName": "e-Gazette of India & Ministry of Home Affairs (mha.gov.in / egazette.gov.in)",
+      "isAutoSynced": true,
+      "lastSyncedAt": "2024-07-01T00:00:00.000Z",
+      "fileName": "Bharatiya_Nagarik_Suraksha_Sanhita_2023.pdf",
+      "fileSize": "3.6 MB",
+      "pageCount": 220,
+      "language": "English",
+      "tags": [
+        "Criminal Procedure",
+        "BNSS 2023",
+        "Forensics",
+        "Zero FIR",
+        "Digital Courts"
+      ],
+      "important": true,
+      "status": "published",
+      "downloadsCount": 840,
+      "contentPreview": "An Act to consolidate and amend the law relating to Criminal Procedure.\nBe it enacted by Parliament in the Seventy-fourth Year of the Republic of India as follows:—\n\nCHAPTER I: PRELIMINARY\n1. (1) This Act may be called the Bharatiya Nagarik Suraksha Sanhita, 2023.\n(2) It shall come into force on the 1st day of July, 2024.\n\nSection 173. Information in cognizable cases.—\n(1) Every information relating to the commission of a cognizable offence, irrespective of the area where the offence is committed may be given orally or by electronic communication to an officer in charge of a police station..."
+    },
+    {
+      "id": "circ-dpdp-2023-04",
+      "title": "Digital Personal Data Protection Act (DPDP Act), 2023",
+      "shortTitle": "DPDP Act 2023",
+      "circularNumber": "Act No. 22 of 2023 • Ministry of Electronics & IT (MeitY)",
+      "category": "acts_statutes",
+      "issuingAuthority": "Ministry of Electronics and Information Technology (MeitY), Govt. of India",
+      "releaseDate": "2023-08-11",
+      "effectiveDate": "2023-08-11",
+      "summary": "Establishes a statutory framework for processing digital personal data respecting individual autonomy and lawful national public interests. Defines obligations of Data Fiduciaries, statutory consent notices, rights of Data Principals, protections for children, and the formation of the Data Protection Board of India.",
+      "keyProvisions": [
+        "Section 4: Grounds for processing personal data on the basis of informed consent or legitimate lawful uses.",
+        "Section 6: Clear, itemized consent notices in English or any language specified in the Eighth Schedule of the Constitution.",
+        "Section 9: Mandatory additional obligations regarding children's personal data and prohibition of tracking.",
+        "Section 18: Constitution and powers of the Data Protection Board of India for inquiry and penalty adjudications."
+      ],
+      "pdfUrl": "https://www.meity.gov.in/writereaddata/files/Digital%20Personal%20Data%20Protection%20Act%202023.pdf",
+      "sourceUrl": "https://www.meity.gov.in/writereaddata/files/Digital%20Personal%20Data%20Protection%20Act%202023.pdf",
+      "sourceName": "e-Gazette of India & MeitY (meity.gov.in / egazette.gov.in)",
+      "isAutoSynced": true,
+      "lastSyncedAt": "2023-08-11T00:00:00.000Z",
+      "fileName": "DPDP_Act_2023_Official.pdf",
+      "fileSize": "1.4 MB",
+      "pageCount": 32,
+      "language": "English",
+      "tags": [
+        "Data Protection",
+        "Privacy",
+        "MeitY",
+        "DPDP Act",
+        "Digital Governance"
+      ],
+      "important": false,
+      "status": "published",
+      "downloadsCount": 710,
+      "contentPreview": "An Act to provide for the processing of digital personal data in a manner that recognises both the right of individuals to protect their personal data and the need to process such personal data for lawful purposes and for matters connected therewith or incidental thereto.\n\nSection 4. Grounds for processing personal data.—\n(1) A person may process the personal data of a Data Principal only—\n(a) for a lawful purpose for which the Data Principal has given her consent; or\n(b) for certain legitimate uses as specified in section 7."
+    },
+    {
+      "id": "circ-ucc-guidelines-05",
+      "title": "Uniform Civil Code (UCC) Model Legislative Framework & Harmonized Civil Guidelines",
+      "shortTitle": "UCC Model Framework & Guidelines",
+      "circularNumber": "BCF-LEG-2024-UCC-01 • Institutional Policy Blueprint",
+      "category": "model_bills",
+      "issuingAuthority": "Bharat Collective Legal Secretariat & Law Commission Consultative Bench",
+      "releaseDate": "2024-09-01",
+      "effectiveDate": "2024-10-01",
+      "summary": "A civilizational model legal framework prepared under Article 44 of the Constitution of India. Establishes uniform civic standards for marriage solemnization and mandatory registration, gender-equal inheritance and succession laws, equitable maintenance during divorce, and secular protection of women and orphaned minors.",
+      "keyProvisions": [
+        "Clause 2: Secular definitions of civil marriage, domestic cohabitation, legal guardianship, and intestate succession.",
+        "Clause 5: Universal mandatory registration of marriages and civil partnerships to eliminate child marriage and coercive unions.",
+        "Clause 8: Absolute gender parity in ancestral and self-acquired property inheritance, regardless of customary exclusions.",
+        "Clause 14: Objective, judicial formula-based alimony and child support criteria prioritizing custodial welfare."
+      ],
+      "sourceUrl": "https://legislative.gov.in/",
+      "sourceName": "Bharat Collective Consultative Bench (Article 44 Mandate Reference)",
+      "isAutoSynced": false,
+      "lastSyncedAt": "2024-09-01T00:00:00.000Z",
+      "fileName": "BharatCollective_UCC_Model_Framework.pdf",
+      "fileSize": "1.9 MB",
+      "pageCount": 48,
+      "language": "Bilingual",
+      "tags": [
+        "Uniform Civil Code",
+        "Article 44",
+        "Gender Equality",
+        "Succession",
+        "Model Bill"
+      ],
+      "important": true,
+      "status": "published",
+      "downloadsCount": 1120,
+      "contentPreview": "BHARAT COLLECTIVE FOUNDATION: MODEL BILL ON UNIFORM CIVIL JURISPRUDENCE\nPursuant to Article 44 of the Constitution of India:\n\n1. Short Title and Commencement:\n(1) This Act may be cited as the Uniform Civil Code (Model Harmonization) Framework, 2024.\n(2) It shall apply to all citizens within the territory of India irrespective of religious denomination.\n\n2. Equal Rights in Succession:\nEvery daughter and son shall inherit an equal and indivisible share in ancestral and parental estate upon intestate demise, superseding customary discriminations."
+    },
+    {
+      "id": "circ-rti-2005-06",
+      "title": "The Right to Information Act (RTI Act), 2005 & Compendium of DoPT Circulars",
+      "shortTitle": "Right to Information Act (RTI)",
+      "circularNumber": "Act No. 22 of 2005 • Ministry of Personnel, Public Grievances & Pensions",
+      "category": "circulars_rules",
+      "issuingAuthority": "Department of Personnel and Training (DoPT), Govt. of India",
+      "releaseDate": "2005-06-21",
+      "effectiveDate": "2005-10-12",
+      "summary": "Comprehensive statutory guide to India's freedom of information framework. Details procedural rules for public information requests, designated Public Information Officers (PIOs), first and second appellate remedies, suo motu disclosures under Section 4, and statutory exemption boundaries.",
+      "keyProvisions": [
+        "Section 3: Affirmation that all citizens shall have the right to information subject to the provisions of this Act.",
+        "Section 4: Mandatory proactive public disclosure by all public authorities via digital portals.",
+        "Section 7: 30-day strict compliance deadline (48 hours where life or liberty is involved) for providing requested records.",
+        "Section 8: Exemption grounds including national security, sovereignty, judicial contempt, and fiduciary privilege."
+      ],
+      "pdfUrl": "https://rti.gov.in/RTI%20Act,%202005%20(Amended)-English%20Version.pdf",
+      "sourceUrl": "https://rti.gov.in/RTI%20Act,%202005%20(Amended)-English%20Version.pdf",
+      "sourceName": "Department of Personnel and Training, Govt. of India (rti.gov.in)",
+      "isAutoSynced": false,
+      "lastSyncedAt": "2005-06-21T00:00:00.000Z",
+      "fileName": "RTI_Act_2005_Compendium.pdf",
+      "fileSize": "1.8 MB",
+      "pageCount": 38,
+      "language": "English",
+      "tags": [
+        "RTI",
+        "Transparency",
+        "DoPT",
+        "Good Governance",
+        "Public Information"
+      ],
+      "important": false,
+      "status": "published",
+      "downloadsCount": 650,
+      "contentPreview": "An Act to provide for setting out the practical regime of right to information for citizens to secure access to information under the control of public authorities, in order to promote transparency and accountability in the working of every public authority...\n\nSection 3. Right to information.—Subject to the provisions of this Act, all citizens shall have the right to information."
+    },
+    {
+      "id": "circ-nari-shakti-07",
+      "title": "Constitution (One Hundred and Sixth Amendment) Act, 2023 (Nari Shakti Vandan Adhiniyam)",
+      "shortTitle": "Nari Shakti Vandan Adhiniyam",
+      "circularNumber": "Act No. 34 of 2023 • Ministry of Law & Justice Gazette",
+      "category": "constitution",
+      "issuingAuthority": "Ministry of Law and Justice (Legislative Department), Govt. of India",
+      "releaseDate": "2023-09-28",
+      "effectiveDate": "2023-09-28",
+      "summary": "Historic constitutional amendment reserving one-third (33%) of all seats for women in the Lok Sabha (House of the People), State Legislative Assemblies, and the Legislative Assembly of the National Capital Territory of Delhi, revolutionizing women-led democratic governance.",
+      "keyProvisions": [
+        "Insertion of Article 330A: 33% reservation for women in seats allocated to Scheduled Castes and general constituencies in the Lok Sabha.",
+        "Insertion of Article 332A: 33% mandatory reservation for women in all State Legislative Assemblies across Bharat.",
+        "Insertion of Article 334A: Implementation linked with the first delimitation exercise and effective for a fifteen-year sunset period."
+      ],
+      "pdfUrl": "https://legislative.gov.in/sites/default/files/A2023-34.pdf",
+      "sourceUrl": "https://legislative.gov.in/sites/default/files/A2023-34.pdf",
+      "sourceName": "Ministry of Law & Justice, Legislative Dept (legislative.gov.in)",
+      "isAutoSynced": true,
+      "lastSyncedAt": "2023-09-28T00:00:00.000Z",
+      "fileName": "Constitution_106th_Amendment_Act_2023.pdf",
+      "fileSize": "890 KB",
+      "pageCount": 6,
+      "language": "Bilingual",
+      "tags": [
+        "Constitutional Amendment",
+        "Women in Governance",
+        "Parliament",
+        "Lok Sabha",
+        "Nari Shakti"
+      ],
+      "important": true,
+      "status": "published",
+      "downloadsCount": 890,
+      "contentPreview": "THE CONSTITUTION (ONE HUNDRED AND SIXTH AMENDMENT) ACT, 2023\n[28th September, 2023.]\nAn Act further to amend the Constitution of India.\nBE it enacted by Parliament in the Seventy-fourth Year of the Republic of India as follows:—\n\n1. Short title and commencement.—(1) This Act may be called the Constitution (One Hundred and Sixth Amendment) Act, 2023.\n2. Insertion of new article 330A.—After article 330 of the Constitution, the following article shall be inserted, namely:—\n\"330A. (1) Seats shall be reserved for women in the House of the People...\""
+    },
+    {
+      "id": "circ-sc-virtual-courts-08",
+      "title": "Supreme Court Standard Operating Procedure: Virtual Court Proceedings & Digital Accessibility",
+      "shortTitle": "Virtual Courts & Live-Streaming Guidelines",
+      "circularNumber": "Circular No. 14/2024/SC-Admin • Supreme Court Registry",
+      "category": "guidelines",
+      "issuingAuthority": "Registry of the Supreme Court of India & e-Committee",
+      "releaseDate": "2024-02-15",
+      "effectiveDate": "2024-03-01",
+      "summary": "Comprehensive practice directives and standard operating procedures (SOP) governing hybrid judicial hearings, electronic filing (e-Filing 3.0), digital evidence submission guidelines, and live-streaming protocols for Constitutional and larger bench hearings.",
+      "keyProvisions": [
+        "Directive 1: Universal right of appearing counsels, litigants-in-person, and media correspondents to attend via hybrid video conferencing.",
+        "Directive 4: Standardized digital document indexing, OCR text-searchable PDF submission, and electronic book-marking.",
+        "Directive 7: Live-streaming protocols preserving open justice while protecting personal dignity in sensitive matrimonial and POCSO hearings."
+      ],
+      "sourceUrl": "https://sci.gov.in/practice-directions-circulars/",
+      "sourceName": "Supreme Court of India, Registry & e-Committee (sci.gov.in)",
+      "isAutoSynced": true,
+      "lastSyncedAt": "2024-02-15T00:00:00.000Z",
+      "fileName": "Supreme_Court_Virtual_Courts_SOP_2024.pdf",
+      "fileSize": "1.2 MB",
+      "pageCount": 24,
+      "language": "English",
+      "tags": [
+        "Supreme Court",
+        "Virtual Courts",
+        "e-Filing",
+        "Judicial Transparency",
+        "Live-Streaming"
+      ],
+      "important": false,
+      "status": "published",
+      "downloadsCount": 520,
+      "contentPreview": "SUPREME COURT OF INDIA: E-COMMITTEE STANDARD OPERATING PROCEDURE (SOP)\nSubject: Seamless Conduct of Hybrid Hearings and Digital Case Management across Constitutional Benches.\n\n1. Universal Hybrid Accessibility:\nNo court shall insist on physical-only appearances where counsel or party-in-person exercises the option to appear through authorized high-definition video conferencing platform."
+    }
+  ],
+  "centres": [
+    {
+      "id": "centre-human-rights-legal-aid",
+      "slug": "human-rights-legal-aid",
+      "name": "Center for Human Rights & Legal Aid",
+      "shortName": "Human Rights & Legal Aid",
+      "sanskritName": "मानव अधिकार एवं विधि सहायता केंद्र",
+      "description": "Providing pro-bono constitutional advocacy, legal aid clinics for underprivileged citizens, and researching civil rights within indigenous jurisprudence.",
+      "leadFellow": "Sr. Adv. J. Sai Deepak & Legal Aid Panel",
+      "keyThemes": [
+        "Pro-Bono Legal Assistance",
+        "Fundamental Rights",
+        "Prisoner Rehabilitation",
+        "Tribal & Marginalized Legal Defense"
+      ],
+      "focusAreas": [
+        "Access to Justice",
+        "Statutory Redressal",
+        "Public Interest Litigation (PIL)",
+        "Grassroots Legal Clinics"
+      ],
+      "icon": "Scale"
+    },
+    {
+      "id": "centre-labour-rights",
+      "slug": "labour-rights-policy",
+      "name": "Center for Labour Rights Policy",
+      "shortName": "Labour Rights Policy",
+      "sanskritName": "श्रम अधिकार एवं नीति केंद्र",
+      "description": "Analyzing labour welfare legislation, unorganized sector social security, gig worker protections, and traditional artisanal guilds (Shreni) models.",
+      "leadFellow": "Prof. Ananya Someshwar",
+      "keyThemes": [
+        "Gig Economy Protections",
+        "Unorganized Workforce Welfare",
+        "Shreni Guild Economics",
+        "Workplace Safety"
+      ],
+      "focusAreas": [
+        "Social Security Code Implementation",
+        "Occupational Safety Audits",
+        "Artisanal Livelihood Protection"
+      ],
+      "icon": "Users"
+    },
+    {
+      "id": "centre-public-policy",
+      "slug": "public-policy-studies",
+      "name": "Center for Public Policy / Studies",
+      "shortName": "Public Policy / Studies",
+      "sanskritName": "लोक नीति एवं अध्ययन केंद्र",
+      "description": "Formulating evidence-based governance blueprints, regulatory reforms, decentralized district administration, and comparative fiscal federalism.",
+      "leadFellow": "Dr. Meenakshi Sundaram",
+      "keyThemes": [
+        "Decentralized Governance",
+        "Fiscal Federalism",
+        "Public Administration Reform",
+        "Civil Service Capability Building"
+      ],
+      "focusAreas": [
+        "Panchayati Raj Institutional Strength",
+        "Municipal Finance",
+        "Participatory Policymaking"
+      ],
+      "icon": "Landmark"
+    },
+    {
+      "id": "centre-women-rights",
+      "slug": "women-rights",
+      "name": "Center for Women Rights",
+      "shortName": "Women Rights",
+      "sanskritName": "स्त्री अधिकार एवं कल्याण केंद्र",
+      "description": "Advancing gender justice, economic self-reliance, matrimonial dispute reconciliation, equal succession rights, and leadership representation in public institutions.",
+      "leadFellow": "Dr. Rajeshwari Varma",
+      "keyThemes": [
+        "Gender Justice in Succession Laws",
+        "Anti-Harassment Enforcement",
+        "Maternal Health Policies",
+        "Women in Judiciary"
+      ],
+      "focusAreas": [
+        "Uniform Civil Code Perspectives on Gender",
+        "Self-Help Group (SHG) Networks",
+        "Family Welfare Mediation"
+      ],
+      "icon": "Heart"
+    },
+    {
+      "id": "centre-ipr-studies",
+      "slug": "ipr-studies",
+      "name": "Center for IPR Studies",
+      "shortName": "IPR Studies",
+      "sanskritName": "बौद्धिक संपदा अधिकार अध्ययन केंद्र",
+      "description": "Safeguarding traditional Indian knowledge systems, Geographical Indications (GI tags), patent litigation safeguards, and bio-piracy prevention.",
+      "leadFellow": "Adv. Siddhartha Dave",
+      "keyThemes": [
+        "Traditional Knowledge Digital Library (TKDL)",
+        "Geographical Indications (GI)",
+        "Pharmaceutical Patents",
+        "Artisanal Copyrights"
+      ],
+      "focusAreas": [
+        "Indigenous Seed Sovereignty",
+        "Ayurvedic Formulations IP",
+        "Tech Patent Defense"
+      ],
+      "icon": "Shield"
+    },
+    {
+      "id": "centre-engineering-ai",
+      "slug": "engineering-ai",
+      "name": "Center for Engineering & AI",
+      "shortName": "Engineering & AI",
+      "sanskritName": "अभियांत्रिकी एवं कृत्रिम मेधा केंद्र",
+      "description": "Investigating ethical AI governance, sovereign digital infrastructure, Indic language large models, algorithmic transparency, and national cyber defense.",
+      "leadFellow": "Dr. Alok Ranjan & AI Working Group",
+      "keyThemes": [
+        "Indic LLMs & Linguistic Equity",
+        "Ethical AI Regulations",
+        "Digital Public Infrastructure (DPI)",
+        "Cyber Sovereignty"
+      ],
+      "focusAreas": [
+        "Data Protection (DPDP Act)",
+        "Algorithmic Fairness",
+        "Critical National Infrastructure Security"
+      ],
+      "icon": "Compass"
+    }
+  ],
+  "nationalTeam": [
+    {
+      "id": "nat-1",
+      "role": "Director of Legal Affairs & Research",
+      "name": "Sr. Adv. J. Sai Deepak",
+      "affiliation": "Supreme Court of India",
+      "desc": "Oversees the Center for Human Rights & Legal Aid, directing constitutional litigations, civilizational jurisprudence analysis, and model legislative inputs.",
+      "status": "published",
+      "order": 1
+    },
+    {
+      "id": "nat-2",
+      "role": "Dean of Academic Inquiry & Fellowships",
+      "name": "Prof. Ananya Someshwar",
+      "affiliation": "Department of Public Policy & Statecraft",
+      "desc": "Leads visiting fellowship admissions, peer-reviewed monograph editorial pipelines, and curricular synthesis for Indian university networks.",
+      "status": "published",
+      "order": 2
+    },
+    {
+      "id": "nat-3",
+      "role": "Convener of National Dialogues",
+      "name": "Dr. Meenakshi Sundaram",
+      "affiliation": "Center for Public Policy / Studies",
+      "desc": "Directs the #BharatDialogue Conclaves, coordinating roundtables between senior advocates, high court jurists, and policy practitioners.",
+      "status": "published",
+      "order": 3
+    }
+  ],
+  "stateChapters": [
+    {
+      "id": "sc-up",
+      "state": "Uttar Pradesh Chapter",
+      "convener": "Dr. Devendra Pandey",
+      "city": "Lucknow / Varanasi",
+      "focus": "Civil Courts Legal Aid & Traditional Knowledge",
+      "status": "published",
+      "order": 1
+    },
+    {
+      "id": "sc-delhi",
+      "state": "Delhi-NCR Chapter",
+      "convener": "Adv. Siddhartha Dave",
+      "city": "New Delhi / Ghaziabad",
+      "focus": "Supreme Court & High Court Advocacy",
+      "status": "published",
+      "order": 2
+    },
+    {
+      "id": "sc-maha",
+      "state": "Maharashtra Chapter",
+      "convener": "Dr. Arvind Deshmukh",
+      "city": "Mumbai / Pune",
+      "focus": "Labour Rights & Industrial Policy",
+      "status": "published",
+      "order": 3
+    },
+    {
+      "id": "sc-kar",
+      "state": "Karnataka & South Chapter",
+      "convener": "Dr. Ramalingam Iyer",
+      "city": "Bengaluru",
+      "focus": "IPR, Tech Policy & AI Governance",
+      "status": "published",
+      "order": 4
+    },
+    {
+      "id": "sc-bihar",
+      "state": "Bihar & Jharkhand Chapter",
+      "convener": "Prof. Alok Ranjan",
+      "city": "Patna",
+      "focus": "Panchayat Governance & Agrarian Law",
+      "status": "published",
+      "order": 5
+    },
+    {
+      "id": "sc-guj",
+      "state": "Gujarat Chapter",
+      "convener": "Adv. Niharika Patel",
+      "city": "Ahmedabad",
+      "focus": "Artisanal Guilds & Micro-Enterprise",
+      "status": "published",
+      "order": 6
+    },
+    {
+      "id": "sc-mp",
+      "state": "Madhya Pradesh Chapter",
+      "convener": "Dr. Vikramaditya Chouhan",
+      "city": "Bhopal / Indore",
+      "focus": "Forest Rights & Tribal Legal Defense",
+      "status": "published",
+      "order": 7
+    },
+    {
+      "id": "sc-raj",
+      "state": "Rajasthan Chapter",
+      "convener": "Adv. Mahendra Singh Shekhawat",
+      "city": "Jaipur / Jodhpur",
+      "focus": "Ecological Heritage & Heritage Law",
+      "status": "published",
+      "order": 8
+    }
+  ],
+  "podcasts": [
+    {
+      "id": "pod-1",
+      "title": "Uniform Civil Code: Constitutional Equality & Civilizational Ethics",
+      "youtubeUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "youtubeId": "dQw4w9WgXcQ",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80",
+      "speaker": "Justice (Retd.) Hemant Gupta & Prof. Ananya Someshwar",
+      "speakerRole": "Former Supreme Court Judge & Constitutional Chair",
+      "topic": "Uniform Civil Code",
+      "duration": "52 min",
+      "date": "2026-09-15",
+      "description": "An exhaustive exploration of Article 44, gender justice under personal laws, and synthesizing civilizational equity with modern constitutional democracy.",
+      "featured": true,
+      "status": "published"
+    },
+    {
+      "id": "pod-2",
+      "title": "Decolonizing Legal Hermeneutics: From Macaulay to Nyaya",
+      "youtubeUrl": "https://www.youtube.com/watch?v=kJQP7kiw5Fk",
+      "youtubeId": "kJQP7kiw5Fk",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80",
+      "speaker": "Sr. Adv. J. Sai Deepak & Dr. Meenakshi Sundaram",
+      "speakerRole": "Supreme Court of India Advocate & Epistemology Scholar",
+      "topic": "Legal Philosophy",
+      "duration": "1 hr 14 min",
+      "date": "2026-09-02",
+      "description": "Examining the epistemological foundations of Indian jurisprudence, Pramana Shastra in statutory interpretation, and the evolution of the Bharatiya Nyaya Sanhita.",
+      "featured": true,
+      "status": "published"
+    },
+    {
+      "id": "pod-3",
+      "title": "Arthashastra for Multipolar Geopolitics and Strategic Autonomy",
+      "youtubeUrl": "https://www.youtube.com/watch?v=3JZ_D3ELwOQ",
+      "youtubeId": "3JZ_D3ELwOQ",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=1200&q=80",
+      "speaker": "Amb. (Retd.) Vikramaditya Sen & Dr. Shridhar Pathak",
+      "speakerRole": "Distinguished Fellow in Maritime & Strategic Studies",
+      "topic": "Geopolitics & Statecraft",
+      "duration": "44 min",
+      "date": "2026-08-20",
+      "description": "Applying Kautilyan statecraft, Mandala theory, and the maritime heritage of the Chola empire to contemporary Indo-Pacific strategic dilemmas.",
+      "featured": false,
+      "status": "published"
+    }
+  ],
+  "magazines": [
+    {
+      "id": "mag-1",
+      "title": "Bharat Collective Review: Inaugural Volume",
+      "issueNumber": "Volume I • Issue 1 (Autumn 2026)",
+      "theme": "Decolonizing Jurisprudence & The Indic Administrative Mind",
+      "publicationDate": "2026-09-01",
+      "price": 100,
+      "pageCount": 68,
+      "coverImageUrl": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80",
+      "fileUrl": "",
+      "originalFileName": "Bharat_Collective_Review_Vol1_Issue1.pdf",
+      "originalFileType": "pdf",
+      "fileSizeBytes": 840000,
+      "description": "The inaugural quarterly edition featuring deep-dive essays on constitutional synthesis, civilizational sovereignty, Uniform Civil Code perspectives, and indigenous ecological frameworks.",
+      "editorialLead": "Editorial Board • Prof. Ananya Someshwar & Dr. Meenakshi Sundaram",
+      "tableOfContents": [
+        "Editorial: The Imperative for an Indic Epistemic Framework",
+        "Article 44 & The Uniform Civil Code: A Historical Synthesis",
+        "Rajadharma in Modern Public Administration",
+        "Pramana Shastra in Statutory Interpretation",
+        "Grassroots Ecological Sovereignty in the Himalayas",
+        "Book Reviews: Ancient Indian Statecraft Revisited"
+      ],
+      "downloadCount": 342,
+      "status": "published"
+    },
+    {
+      "id": "mag-2",
+      "title": "Bharat Collective Review: Special Legal Edition",
+      "issueNumber": "Volume I • Issue 2 (Monsoon 2026)",
+      "theme": "Bharatiya Nyaya Sanhita & Criminal Justice Decolonization",
+      "publicationDate": "2026-07-15",
+      "price": 100,
+      "pageCount": 54,
+      "coverImageUrl": "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80",
+      "fileUrl": "",
+      "originalFileName": "Bharat_Collective_Review_Vol1_Issue2.docx",
+      "originalFileType": "docx",
+      "fileSizeBytes": 620000,
+      "description": "A comprehensive symposium edition analyzing the transition from the Indian Penal Code 1860 to the Bharatiya Nyaya Sanhita 2023, forensic reforms, and victim-centric justice.",
+      "editorialLead": "Legal Studies Panel • Justice (Retd.) Hemant Gupta",
+      "tableOfContents": [
+        "Foreword by Distinguished Jurists",
+        "From Colonial Coercion to Restorative Justice: An Overview of BNS",
+        "Digital Forensics and Admissibility under BSA 2023",
+        "Community Service as a Progressive Penal Concept",
+        "Judicial Perspectives on Civil Rights Safeguards"
+      ],
+      "downloadCount": 518,
+      "status": "published"
+    }
+  ],
+  "careers": [
+    {
+      "id": "app-seed-1",
+      "applicationCode": "BC-CAR-2026-0812",
+      "type": "internship",
+      "fullName": "Shreya Narang",
+      "email": "shreya.narang@nludelhi.ac.in",
+      "phone": "+91 98112 34567",
+      "currentInstitution": "National Law University Delhi (NLU Delhi)",
+      "qualification": "4th Year, B.A. LL.B (Hons.)",
+      "areaOfInterest": "Center for Human Rights & Legal Aid",
+      "coverLetter": "Passionate about civilizational jurisprudence and constitutional reforms. Interested in researching uniform civil laws and statecraft.",
+      "cvFileName": "Shreya_Narang_NLU_Resume.pdf",
+      "cvFileSize": 420000,
+      "cvDataUrl": "data:application/pdf;base64,JVBERi0xLjQKJcTl8uXrp/Og0MTGCjEgMCBvYmoKPDwKL1R5cGUgL0NhdGFsb2cKL1BhZ2VzIDIgMCBS...",
+      "status": "shortlisted",
+      "submittedAt": "2026-09-20T10:30:00Z",
+      "updatedAt": "2026-09-22T14:10:00Z"
+    },
+    {
+      "id": "app-seed-2",
+      "applicationCode": "BC-CAR-2026-0905",
+      "type": "job",
+      "fullName": "Dr. Alok Ranjan",
+      "email": "alok.ranjan@jnu.ac.in",
+      "phone": "+91 97118 76543",
+      "currentInstitution": "Centre for Historical Studies, JNU",
+      "qualification": "Ph.D. in Ancient Indian History & Epistemology",
+      "areaOfInterest": "Center for Public Policy / Studies",
+      "coverLetter": "Author of two monographs on pre-colonial administrative treaties. Seeking full-time research fellow role with Bharat Collective.",
+      "cvFileName": "Alok_Ranjan_CV_2026.pdf",
+      "cvFileSize": 780000,
+      "cvDataUrl": "data:application/pdf;base64,JVBERi0xLjQKJcTl8uXrp/Og0MTGCjEgMCBvYmoKPDwKL1R5cGUgL0NhdGFsb2cKL1BhZ2VzIDIgMCBS...",
+      "status": "reviewing",
+      "submittedAt": "2026-09-24T12:15:00Z",
+      "updatedAt": "2026-09-25T09:00:00Z"
+    }
+  ],
+  "inquiries": [
+    {
+      "id": "inq-001",
+      "inquiryCode": "BC-INQ-2026-0412",
+      "name": "Prof. Meenakshi Sundaram",
+      "email": "m.sundaram@madrasuniv.ac.in",
+      "phone": "+91 94440 98765",
+      "subject": "Visiting Fellowship Collaboration Inquiry for 2026-27",
+      "message": "We are seeking to establish a joint symposium track on Tamil legal traditions and Epigraphy with Bharat Collective Foundation.",
+      "category": "collaboration",
+      "status": "responded",
+      "submittedAt": "2026-09-15T09:30:00Z",
+      "updatedAt": "2026-09-16T14:20:00Z"
+    },
+    {
+      "id": "inq-002",
+      "inquiryCode": "BC-INQ-2026-0589",
+      "name": "Saurabh Agrawal",
+      "email": "saurabh.agrawal@nludelhi.ac.in",
+      "phone": "+91 98101 23456",
+      "subject": "Inquiry regarding student research associate positions",
+      "message": "Could you please clarify whether 3rd year law students are eligible for visiting internships at the Center for Public Policy?",
+      "category": "fellowship",
+      "status": "new",
+      "submittedAt": "2026-09-28T16:45:00Z",
+      "updatedAt": "2026-09-28T16:45:00Z"
+    }
+  ],
+  "subscribers": [
+    {
+      "id": "sub-001",
+      "email": "fellow.scholar@du.ac.in",
+      "status": "active",
+      "subscribedAt": "2026-10-11T14:28:42.698Z",
+      "source": "website-footer"
+    },
+    {
+      "id": "sub-002",
+      "email": "research.fellow@iitm.ac.in",
+      "status": "active",
+      "subscribedAt": "2026-10-20T14:28:42.698Z",
+      "source": "events-page"
+    },
+    {
+      "id": "sub-003",
+      "email": "library@bhu.ac.in",
+      "status": "active",
+      "subscribedAt": "2026-10-23T14:28:42.698Z",
+      "source": "monographs-page"
+    }
+  ],
+  "taxonomy": {},
+  "media": [
+    {
+      "id": "media_1792939927718_df4124",
+      "fileName": "test-sync-banner_1792939927711_db99fc84.png",
+      "originalName": "test-sync-banner.png",
+      "mimeType": "image/png",
+      "sizeBytes": 70,
+      "url": "uploads/test-sync-banner_1792939927711_db99fc84.png",
+      "uploadedAt": "2026-10-25T14:52:07.718Z"
+    },
+    {
+      "id": "media_1792939888147_d892c1",
+      "fileName": "test-sync-banner_1792939888143_49ffc15d.png",
+      "originalName": "test-sync-banner.png",
+      "mimeType": "image/png",
+      "sizeBytes": 70,
+      "url": "uploads/test-sync-banner_1792939888143_49ffc15d.png",
+      "uploadedAt": "2026-10-25T14:51:28.147Z"
+    }
+  ]
+}

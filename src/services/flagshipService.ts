@@ -7,6 +7,7 @@
  */
 
 import { eventService } from './eventService';
+import { contentSyncService } from './contentSyncService';
 
 export interface FlagshipBannerContent {
   id: string;
@@ -51,7 +52,7 @@ export const DEFAULT_FLAGSHIP_BANNER: FlagshipBannerContent = {
 
 const STORAGE_KEY = 'bharat_flagship_banner_config';
 
-let inMemoryConfig: FlagshipBannerContent = { ...DEFAULT_FLAGSHIP_BANNER };
+let inMemoryConfig: FlagshipBannerContent = { ...contentSyncService.getBundledModule<FlagshipBannerContent>('flagship', DEFAULT_FLAGSHIP_BANNER) };
 
 function loadStoredConfig(): FlagshipBannerContent {
   if (typeof window === 'undefined') return { ...inMemoryConfig };
@@ -75,6 +76,7 @@ function saveStoredConfig(data: FlagshipBannerContent) {
   } catch (e) {
     console.error('Failed to save flagship banner config:', e);
   }
+  contentSyncService.persistModule('flagship', data).catch(() => {});
 }
 
 export const flagshipService = {
