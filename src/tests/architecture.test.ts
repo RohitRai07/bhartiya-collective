@@ -1218,6 +1218,27 @@ async function runTests() {
   assert(activeEmbedUrl.includes('playsinline=1'), 'Embed URL includes playsinline=1');
   assert(activeEmbedUrl.includes('enablejsapi=1'), 'Embed URL includes enablejsapi=1');
 
+  // 10. Unpublishing and Publishing the Seeded Live Event
+  const unpublishedSeed = await eventService.togglePublish('evt-live-ucc-broadcast');
+  assert(unpublishedSeed.status === 'draft', 'Toggling live event unpublishes it to draft status');
+
+  const publicEventsWithDraft = await eventService.getEvents(false);
+  assert(!publicEventsWithDraft.some(e => e.id === 'evt-live-ucc-broadcast'), 'Draft live event hidden from public getEvents');
+
+  const publicLiveEventsWithDraft = await eventService.getLiveEvents(false);
+  assert(!publicLiveEventsWithDraft.some(e => e.id === 'evt-live-ucc-broadcast'), 'Draft live event hidden from public getLiveEvents');
+
+  // Verify persistence across repeated getEvents calls (ensures loadStoredEvents does not forcibly republish)
+  const reloadedAdminEvents = await eventService.getEvents(true);
+  const reloadedDraft = reloadedAdminEvents.find(e => e.id === 'evt-live-ucc-broadcast');
+  assert(reloadedDraft?.status === 'draft', 'Draft status persists across repeated storage reloads and is not reverted');
+
+  // Restore to published
+  const restoredSeed = await eventService.togglePublish('evt-live-ucc-broadcast');
+  assert(restoredSeed.status === 'published', 'Toggling live event again restores published status');
+  const publicEventsRestored = await eventService.getEvents(false);
+  assert(publicEventsRestored.some(e => e.id === 'evt-live-ucc-broadcast'), 'Restored live event visible on public website');
+
   console.log('\n📌 Testing Manual Time Entry & Validation in Admin Broadcast (HH:MM AM/PM):');
   // Valid times
   const v1 = validateBroadcastTime('09:30 AM');

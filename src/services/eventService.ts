@@ -12,6 +12,28 @@ import { mockEvents } from '../data/mockEvents';
 import { extractYouTubeId, getYouTubeThumbnail, computeLiveEventStatus } from '../utils/youtube';
 
 const STORAGE_KEY = 'bharat_collective_events';
+const DELETED_KEY = 'bharat_collective_events_deleted';
+
+function getDeletedEventIds(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(DELETED_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function recordDeletedEventId(id: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const ids = getDeletedEventIds();
+    ids.add(id);
+    localStorage.setItem(DELETED_KEY, JSON.stringify(Array.from(ids)));
+  } catch (e) {
+    console.error('Failed to record deleted event ID:', e);
+  }
+}
 
 let memoryStore: EventItem[] = mockEvents.map(e => {
   const item: EventItem = { ...e, status: e.status || 'published' };
@@ -25,24 +47,29 @@ function loadStoredEvents(): EventItem[] {
   if (typeof window === 'undefined') return memoryStore;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
+    const deletedIds = getDeletedEventIds();
+    const todayStr = new Date().toISOString().split('T')[0];
+
     if (!raw) {
-      const initial = mockEvents.map(e => {
-        const item: EventItem = {
-          ...e,
-          status: e.status || 'published',
-        };
-        if (item.youtubeUrl && !item.youtubeId) {
-          item.youtubeId = extractYouTubeId(item.youtubeUrl);
-        }
-        return item;
-      });
+      const initial = mockEvents
+        .filter(m => !deletedIds.has(m.id))
+        .map(e => {
+          const item: EventItem = {
+            ...e,
+            date: e.id === 'evt-live-ucc-broadcast' ? (e.date || todayStr) : e.date,
+            status: e.status || 'published',
+          };
+          if (item.youtubeUrl && !item.youtubeId) {
+            item.youtubeId = extractYouTubeId(item.youtubeUrl);
+          }
+          return item;
+        });
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
       memoryStore = initial;
       return initial;
     }
     const parsed: EventItem[] = JSON.parse(raw);
     let needsUpdate = false;
-    const todayStr = new Date().toISOString().split('T')[0];
 
     const migrated = parsed.map(evt => {
       let updatedEvt = { ...evt };
@@ -57,19 +84,10 @@ function loadStoredEvents(): EventItem[] {
         updatedEvt.bannerImage = getYouTubeThumbnail('5qap5aO4i9A');
         needsUpdate = true;
       }
-      if (updatedEvt.id === 'evt-live-ucc-broadcast') {
-        if (updatedEvt.date !== todayStr) {
-          updatedEvt.date = todayStr;
-          needsUpdate = true;
-        }
-        if (updatedEvt.liveStatus !== 'live') {
-          updatedEvt.liveStatus = 'live';
-          needsUpdate = true;
-        }
-        if (updatedEvt.status !== 'published') {
-          updatedEvt.status = 'published';
-          needsUpdate = true;
-        }
+      // Guarantee a status is set if not already defined (default to 'published' without overriding draft)
+      if (!updatedEvt.status) {
+        updatedEvt.status = defaultEvt?.status || 'published';
+        needsUpdate = true;
       }
       if (updatedEvt.youtubeUrl && !updatedEvt.youtubeId) {
         updatedEvt.youtubeId = extractYouTubeId(updatedEvt.youtubeUrl);
@@ -78,8 +96,10 @@ function loadStoredEvents(): EventItem[] {
       return updatedEvt;
     });
 
-    // Ensure all seeded mock events (like the YouTube Live broadcast) exist for returning visitors
+    // Ensure all seeded mock events (like the YouTube Live broadcast) exist for returning visitors,
+    // as long as they haven't been deleted by an administrator
     for (const defaultEvt of mockEvents) {
+      if (deletedIds.has(defaultEvt.id)) continue;
       if (!migrated.some(e => e.id === defaultEvt.id)) {
         migrated.unshift({
           ...defaultEvt,
@@ -266,6 +286,7 @@ export const eventService = {
     }
 
     await new Promise(resolve => setTimeout(resolve, 100));
+    recordDeletedEventId(id);
     const items = loadStoredEvents();
     saveEvents(items.filter(e => e.id !== id));
     return true;
@@ -277,7 +298,8 @@ export const eventService = {
   async togglePublish(id: string): Promise<EventItem> {
     const item = await this.getEventById(id);
     if (!item) throw new Error('Event not found');
-    const newStatus = item.status === 'published' ? 'draft' : 'published';
+    const isCurrentlyPublished = !item.status || item.status === 'published';
+    const newStatus = isCurrentlyPublished ? 'draft' : 'published';
     return this.updateEvent(id, { status: newStatus });
   }
 };

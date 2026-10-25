@@ -2495,9 +2495,9 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                               </td>
                               <td className="p-3.5">
                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                  e.status === 'published' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
+                                  e.status === 'draft' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-800'
                                 }`}>
-                                  {e.status || 'published'}
+                                  {e.status === 'draft' ? 'draft' : 'published'}
                                 </span>
                               </td>
                               <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
@@ -2505,7 +2505,7 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
                                   onClick={() => handleTogglePublish('event', e.id)}
                                   className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs transition-colors cursor-pointer"
                                 >
-                                  {e.status === 'published' ? 'Unpublish' : 'Publish'}
+                                  {e.status === 'draft' ? 'Publish' : 'Unpublish'}
                                 </button>
                                 <button
                                   onClick={() => {
