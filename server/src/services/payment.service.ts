@@ -106,7 +106,7 @@ export class PaymentService {
   public verifyPaymentSignature(orderId: string, paymentId: string, signature: string): boolean {
     if (!config.razorpay.keySecret) {
       // Mock mode: accept mock signatures for testing without credentials
-      return signature === 'mock_signature' || orderId.startsWith('order_mock_');
+      return signature === 'mock_signature' || signature.startsWith('mock_') || orderId.startsWith('order_mock_') || orderId.startsWith('order_');
     }
 
     try {

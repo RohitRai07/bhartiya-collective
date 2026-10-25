@@ -135,7 +135,7 @@ export const CentresPage: React.FC<CentresPageProps> = ({ onNavigate, selectedCe
                   Key Inquiry Themes
                 </span>
                 <div className="flex flex-wrap gap-1.5">
-                  {centre.keyThemes.map((theme, i) => (
+                  {(centre.keyThemes || []).map((theme, i) => (
                     <span
                       key={i}
                       className="text-xs bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1 rounded-lg"
@@ -152,7 +152,7 @@ export const CentresPage: React.FC<CentresPageProps> = ({ onNavigate, selectedCe
                   Actionable Focus Areas
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
-                  {centre.focusAreas.map((area, idx) => (
+                  {(centre.focusAreas || []).map((area, idx) => (
                     <div key={idx} className="flex items-center space-x-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                       <span>{area}</span>

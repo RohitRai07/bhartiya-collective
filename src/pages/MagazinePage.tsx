@@ -190,7 +190,7 @@ export const MagazinePage: React.FC = () => {
                   Featured Treatises & Inquiries
                 </span>
                 <ul className="space-y-1.5">
-                  {issue.featuredArticles.map((art, idx) => (
+                  {(issue.tableOfContents || (issue as any).featuredArticles || []).map((art: string, idx: number) => (
                     <li key={idx} className="text-xs text-slate-700 flex items-start space-x-2">
                       <span className="text-amber-600 font-bold">•</span>
                       <span>{art}</span>

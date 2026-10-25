@@ -185,7 +185,7 @@ export const AboutPage: React.FC = () => {
                 </div>
 
                 <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap gap-1">
-                  {expert.focusAreas.map((f, i) => (
+                  {(expert.focusAreas || []).map((f, i) => (
                     <span key={i} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
                       {f}
                     </span>

@@ -181,7 +181,7 @@ export const PublicationList: React.FC = () => {
               <div>
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1.5 mb-4">
-                  {pub.tags.map((tag) => (
+                  {(pub.tags || []).map((tag) => (
                     <span
                       key={tag}
                       className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600"

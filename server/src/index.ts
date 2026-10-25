@@ -63,7 +63,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/notification', notificationRoutes);
 
 // 6. 404 Handler for unknown API endpoints
-app.use('/api/*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found', code: 'NOT_FOUND' });
 });
 

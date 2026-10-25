@@ -52,7 +52,7 @@ export const ResearchList: React.FC = () => {
                 Core Themes
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {domain.keyThemes.map((theme, idx) => (
+                {(domain.keyThemes || []).map((theme, idx) => (
                   <span
                     key={idx}
                     className="text-[11px] bg-slate-50 border border-slate-200 text-slate-700 px-2.5 py-1 rounded-lg"
