@@ -28,6 +28,7 @@ import {
   Info,
   Calendar,
   Eye,
+  Share2,
   RotateCcw,
   Ban
 } from 'lucide-react';
@@ -50,6 +51,7 @@ import {
 import { backendNotificationService } from '../../services/backendNotificationService';
 import { ContactDetailsSection } from './ContactDetailsSection';
 import { SendNotificationModal } from './SendNotificationModal';
+import { ShareContentModal } from './ShareContentModal';
 
 const COMPOSE_TEMPLATES = [
   { id: 'CUSTOM', label: 'Custom Message (Compose Manually)' },
@@ -103,6 +105,11 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
   const [publishedTypeFilter, setPublishedTypeFilter] = useState<'all' | string>('all');
   const [publishedBroadcastFilter, setPublishedBroadcastFilter] = useState<'all' | 'broadcasted' | 'unbroadcasted'>('all');
   const [selectedPublishedContentId, setSelectedPublishedContentId] = useState<string>('');
+
+  // Share Content Modal State
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareTitle, setShareTitle] = useState('');
+  const [shareUrl, setShareUrl] = useState('');
 
   // Selection for bulk messaging
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -267,6 +274,13 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
     setModalContextText(`Broadcast Announcement for Published Item: "${item.title}" (${item.contentTypeLabel})`);
     setModalSourceModule(item.contentType);
     setNotifyModalOpen(true);
+  };
+
+  // Open Share modal for a published content item
+  const handleOpenSharePublished = (item: PublishedContentItem) => {
+    setShareTitle(item.title);
+    setShareUrl(item.publicUrl);
+    setShareModalOpen(true);
   };
 
   // Populate Compose form when a published content item is selected
@@ -1235,14 +1249,24 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
                     </div>
                   </div>
 
-                  {/* Broadcast Action Button */}
-                  <div className="flex md:flex-col items-center justify-end gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                  {/* Action Buttons: Broadcast & Share */}
+                  <div className="flex flex-row md:flex-col items-center justify-end gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
                     <button
                       onClick={() => handleOpenBroadcastPublished(item)}
                       className="w-full sm:w-auto px-4 py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-semibold rounded-xl text-xs shadow-xs flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                      title="Send multi-channel broadcast update to members & subscribers"
                     >
                       <Send className="w-3.5 h-3.5" />
                       <span>Broadcast Update</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenSharePublished(item)}
+                      className="w-full sm:w-auto px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-xl text-xs border border-blue-200/80 flex items-center justify-center space-x-1.5 transition-all cursor-pointer"
+                      title="Share link via Copy Link, 𝕏 Twitter, Facebook, LinkedIn, Email, or WhatsApp"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>Share</span>
                     </button>
                   </div>
                 </div>
@@ -2064,6 +2088,14 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
         onSuccess={() => {
           loadData();
         }}
+      />
+
+      {/* Share Content Modal (Copy Link, 𝕏 Twitter, Facebook, LinkedIn, Email, WhatsApp) */}
+      <ShareContentModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        contentTitle={shareTitle}
+        contentUrl={shareUrl}
       />
 
     </div>

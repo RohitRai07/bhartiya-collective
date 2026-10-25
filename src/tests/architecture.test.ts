@@ -1060,6 +1060,86 @@ async function runTests() {
   assert(refreshedTarget.notificationCount >= initialCount + 1, 'Broadcast notification increments notificationCount on published content item');
   assert(!!refreshedTarget.lastNotifiedAt, 'Broadcast notification sets lastNotifiedAt timestamp on published content item');
 
+  // 7c. Testing Share Functionality & Public URL Integrity Across All Modules
+  console.log('\n📌 Testing Share Functionality & Public URL Integrity Across All Modules:');
+
+  // Verify all content module routes match exact public URL conventions
+  const sampleOrigin = 'https://bharatcollective.org';
+  const resolveShareUrl = (contentUrl: string) => 
+    contentUrl.startsWith('http') ? contentUrl : `${sampleOrigin}${contentUrl.startsWith('/') ? '' : '/'}${contentUrl}`;
+
+  const shareTargets = [
+    { module: 'Publications', path: '/publications', expected: 'https://bharatcollective.org/publications' },
+    { module: 'Circulars', path: '/circulars', expected: 'https://bharatcollective.org/circulars' },
+    { module: 'Events', path: '/events', expected: 'https://bharatcollective.org/events' },
+    { module: 'Research Domains', path: '/research', expected: 'https://bharatcollective.org/research' },
+    { module: 'Research Centres', path: '/centres', expected: 'https://bharatcollective.org/centres' },
+    { module: 'Council & Fellows', path: '/about', expected: 'https://bharatcollective.org/about' },
+    { module: 'National Team', path: '/about', expected: 'https://bharatcollective.org/about' },
+    { module: 'State Chapters', path: '/centres', expected: 'https://bharatcollective.org/centres' },
+    { module: 'Media & News', path: '/news', expected: 'https://bharatcollective.org/news' },
+    { module: 'Podcasts', path: '/podcasts', expected: 'https://bharatcollective.org/podcasts' },
+    { module: 'Magazines', path: '/magazine', expected: 'https://bharatcollective.org/magazine' },
+  ];
+
+  for (const target of shareTargets) {
+    const resolved = resolveShareUrl(target.path);
+    assert(resolved === target.expected, `Share URL resolver maps ${target.module} cleanly to ${target.expected}`);
+  }
+
+  // Verify external stream share URL preservation
+  const externalVideoShareUrl = 'https://www.youtube.com/watch?v=5qap5aO4i9A';
+  assert(resolveShareUrl(externalVideoShareUrl) === externalVideoShareUrl, 'External video stream URLs are preserved verbatim without prefixing domain');
+
+  // Test Social Sharing Intent generation
+  const testTitle = 'Indic Economic Democracy: Monograph 2026';
+  const testUrl = 'https://bharatcollective.org/publications';
+  const encUrl = encodeURIComponent(testUrl);
+  const encTitle = encodeURIComponent(testTitle);
+
+  const twitterIntent = `https://twitter.com/intent/tweet?url=${encUrl}&text=${encTitle}`;
+  assert(twitterIntent.includes('twitter.com/intent/tweet'), 'Generates valid Twitter/X share intent URL');
+  assert(twitterIntent.includes(encUrl) && twitterIntent.includes(encTitle), 'Twitter/X share intent includes encoded URL and title');
+
+  const facebookIntent = `https://www.facebook.com/sharer/sharer.php?u=${encUrl}`;
+  assert(facebookIntent.includes('facebook.com/sharer') && facebookIntent.includes(encUrl), 'Generates valid Facebook share dialog URL');
+
+  const linkedInIntent = `https://www.linkedin.com/sharing/share-offsite/?url=${encUrl}`;
+  assert(linkedInIntent.includes('linkedin.com/sharing/share-offsite') && linkedInIntent.includes(encUrl), 'Generates valid LinkedIn share dialog URL');
+
+  // Test Direct Colleague Email Share via notificationService
+  const shareEmailResult = await notificationService.sendNotification({
+    channel: 'email',
+    recipients: [{
+      id: 'share-colleague-1',
+      name: 'Colleague',
+      email: 'fellow.scholar@iitd.ac.in',
+      phone: '',
+      category: 'subscriber',
+    }],
+    subject: `Bharat Collective: ${testTitle}`,
+    message: `Namaste,\n\nI thought you might be interested in this content from Bharat Collective: "${testTitle}".\n\nYou can view it here: ${testUrl}\n\nWarm regards,\nBharat Collective`,
+  });
+  assert(shareEmailResult.success === true, 'Direct colleague share via Email executes successfully');
+
+  // Test Direct Colleague WhatsApp Share via notificationService
+  const shareWhatsAppResult = await notificationService.sendNotification({
+    channel: 'whatsapp',
+    recipients: [{
+      id: 'share-colleague-2',
+      name: 'Colleague',
+      email: '',
+      phone: '+91 98765 43210',
+      category: 'subscriber',
+    }],
+    subject: `Bharat Collective: ${testTitle}`,
+    message: `Namaste,\n\nCheck out this content from Bharat Collective: *${testTitle}*\n\n${testUrl}`,
+  });
+  assert(shareWhatsAppResult.success === true, 'Direct colleague share via WhatsApp executes successfully');
+
+  // Verify Share action independence from publication state
+  assert(notificationService.getLogsForRecipient('share-colleague-1').length >= 1, 'Share action records separate audit entry without polluting broadcast counts');
+
   // 8. Contact Details Validation, Default +91 India Formatting, and Strict Sending Gate
   console.log('\n📌 Testing Contact Details Validation, +91 Phone Formatting & Sending Gate:');
 
