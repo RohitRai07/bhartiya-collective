@@ -28,8 +28,8 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
   onBackToPublicSite 
 }) => {
   const [step, setStep] = useState<'credentials' | '2fa'>('credentials');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('rohitraicr10@gmail.com');
+  const [password, setPassword] = useState('BharatAdmin@2026');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [challenge, setChallenge] = useState<TwoFactorChallenge | null>(null);
   const [loading, setLoading] = useState(false);

@@ -39,7 +39,8 @@ export const mockEvents: EventItem[] = [
     ],
     registrationOpen: true,
     seatsLeft: 150,
-    bannerImage: 'images/bharat-dialogue-ucc-banner.jpg',
+    bannerImage: 'uploads/event-poster-ucc.png',
+    posterUrl: 'uploads/event-poster-ucc.png',
   },
   {
     id: 'evt-101',

@@ -90,7 +90,7 @@ export function App() {
   }, []);
 
   // Isolated Admin Portal Route (Protected by Admin Credentials)
-  if (currentPath === '/admin' || currentPath === '/admin/login') {
+  if (currentPath === '/admin' || currentPath === '/admin/login' || currentPath === '/admin/') {
     return (
       <ErrorBoundary>
         <AdminPreviewPage onBackToPublicSite={() => navigateTo('/')} />

@@ -26,7 +26,7 @@ export default defineConfig({
       },
     },
     watch: {
-      ignored: ['**/*.log', '**/tests/**', '**/.git/**', '**/dist/**'],
+      ignored: ['**/*.log', '**/tests/**', '**/.git/**', '**/dist/**', '**/*.zip', '**/public/uploads/**'],
     },
   },
 });

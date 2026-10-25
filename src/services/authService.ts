@@ -293,7 +293,9 @@ export const authService = {
       creds.email.toLowerCase(),
       (creds.twoFactorEmail || '').toLowerCase(),
       'rohitraicr10@gmail.com',
-      'rohiraicr10@gmail.com'
+      'rohiraicr10@gmail.com',
+      'admin@bharatcollective.org',
+      'admin'
     ].filter(Boolean);
 
     if (allowedAdminLogins.includes(email) && password === creds.password) {

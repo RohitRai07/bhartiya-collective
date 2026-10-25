@@ -43,7 +43,7 @@ export const DEFAULT_FLAGSHIP_BANNER: FlagshipBannerContent = {
   scheduleInfo: 'Schedule & Registration Window: Coming Soon',
   ctaText: 'Pre-Register / RSVP',
   ctaLink: '/register',
-  posterUrl: 'images/bharat-dialogue-ucc-banner.jpg',
+  posterUrl: 'uploads/event-poster-ucc.png',
   posterCaption: 'Connecting Bharat, Bringing Minds Together',
   status: 'published',
   isVisible: true,
