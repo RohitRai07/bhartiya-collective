@@ -10,6 +10,34 @@ export interface EventSpeaker {
   avatarUrl?: string;
 }
 
+export const STANDARD_SPEAKER_ROLES = [
+  'Keynote Speaker',
+  'Plenary Panelist',
+  'Featured Panelist',
+  'Speaker / Panelist',
+  'Session Chair & Moderator',
+  'Distinguished Jurist',
+  'Constitutional Scholar',
+  'Research Fellow & Discussant',
+  'Guest Speaker',
+  'Guest of Honour',
+  'Special Address',
+  'Broadcasting Host',
+];
+
+export const COMMON_AFFILIATIONS = [
+  'Supreme Court of India',
+  'High Court of Delhi',
+  'National Law School of India University (NLSIU)',
+  'The Bharat Collective Advisory Council',
+  'Faculty of Law, University of Delhi',
+  'Indian Institute of Public Administration (IIPA)',
+  'NALSAR University of Law, Hyderabad',
+  'Centre for Policy Studies & Legal Research',
+  'National Judicial Academy',
+  'Independent Constitutional Jurist',
+];
+
 export type ContentStatus = 'published' | 'draft';
 
 export interface EventItem {

@@ -12,7 +12,13 @@ import {
   BellRing,
   Users
 } from 'lucide-react';
-import { EventItem, EventSpeaker, LiveStreamStatus } from '../../types/event';
+import { 
+  EventItem, 
+  EventSpeaker, 
+  LiveStreamStatus,
+  STANDARD_SPEAKER_ROLES,
+  COMMON_AFFILIATIONS
+} from '../../types/event';
 import { extractYouTubeId, getYouTubeThumbnail } from '../../utils/youtube';
 import { BroadcastTimeInput } from './BroadcastTimeInput';
 import { 
@@ -22,34 +28,6 @@ import {
   TIME_FORMAT_ERROR 
 } from '../../utils/timeValidation';
 import { expertService } from '../../services/expertService';
-
-export const STANDARD_SPEAKER_ROLES = [
-  'Keynote Speaker',
-  'Plenary Panelist',
-  'Featured Panelist',
-  'Speaker / Panelist',
-  'Session Chair & Moderator',
-  'Distinguished Jurist',
-  'Constitutional Scholar',
-  'Research Fellow & Discussant',
-  'Guest Speaker',
-  'Guest of Honour',
-  'Special Address',
-  'Broadcasting Host',
-];
-
-export const COMMON_AFFILIATIONS = [
-  'Supreme Court of India',
-  'High Court of Delhi',
-  'National Law School of India University (NLSIU)',
-  'The Bharat Collective Advisory Council',
-  'Faculty of Law, University of Delhi',
-  'Indian Institute of Public Administration (IIPA)',
-  'NALSAR University of Law, Hyderabad',
-  'Centre for Policy Studies & Legal Research',
-  'National Judicial Academy',
-  'Independent Constitutional Jurist',
-];
 
 interface LiveEventEditorModalProps {
   isOpen: boolean;

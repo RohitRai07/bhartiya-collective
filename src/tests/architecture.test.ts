@@ -64,7 +64,7 @@ import {
 import { 
   STANDARD_SPEAKER_ROLES, 
   COMMON_AFFILIATIONS 
-} from '../components/admin/LiveEventEditorModal';
+} from '../types/event';
 
 async function runTests() {
   console.log('🚀 Running Bhartiya Collective Architecture Verification Suite...\n');
