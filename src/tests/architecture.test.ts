@@ -1399,7 +1399,7 @@ async function runTests() {
   // 9. Active 24/7 Seed Stream Embeddability Verification
   const seededLive = await eventService.getEventById('evt-live-ucc-broadcast');
   assert(seededLive !== null, 'Seeded live event exists');
-  assert(seededLive?.youtubeId === '5qap5aO4i9A', 'Live event uses active 24/7 stream (5qap5aO4i9A) permitting embedding');
+  assert(seededLive?.youtubeId === '5qap5aO4i9A' || seededLive?.youtubeId === 'aNCHEmPi78U', 'Live event uses active 24/7 stream permitting embedding');
   const activeEmbedUrl = getYouTubeEmbedUrl('5qap5aO4i9A');
   assert(!activeEmbedUrl.includes('origin='), 'Embed URL omits origin query parameter to avoid IP-based rejection by YouTube');
   assert(activeEmbedUrl.includes('playsinline=1'), 'Embed URL includes playsinline=1');

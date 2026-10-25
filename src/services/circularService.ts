@@ -20,7 +20,18 @@ function loadStoredCirculars(): Circular[] {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mockCirculars));
       return mockCirculars;
     }
-    return JSON.parse(raw);
+    const parsed: Circular[] = JSON.parse(raw);
+    let needsUpdate = false;
+    for (const defCirc of mockCirculars) {
+      if (!parsed.some(c => c.id === defCirc.id)) {
+        parsed.unshift(defCirc);
+        needsUpdate = true;
+      }
+    }
+    if (needsUpdate) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    }
+    return parsed;
   } catch {
     return mockCirculars;
   }

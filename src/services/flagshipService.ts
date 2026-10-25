@@ -32,18 +32,18 @@ export interface FlagshipBannerContent {
 export const DEFAULT_FLAGSHIP_BANNER: FlagshipBannerContent = {
   id: 'evt-ucc-flagship',
   badge1: 'Flagship National Dialogue',
-  badge2: 'COMING SOON',
+  badge2: 'UPCOMING EVENT',
   presenterText: 'Bharat Collective Foundation Presents',
   title: '#BharatDialogue',
-  titleHighlight: 'on UNIFORM CIVIL CODE',
-  subtitle: 'A Dialogue on Law, Equality & Constitutional Values',
-  description: 'Convening constitutional jurists, scholars, and civil society leaders to deliberate upon common citizenship, gender justice, personal laws, and constitutional morality.',
-  venueName: 'Venue: Constitution Club of India',
-  venueAddress: 'Rafi Marg, Sansad Marg Area, New Delhi, Delhi 110001',
-  scheduleInfo: 'Schedule & Registration Window: Coming Soon',
+  titleHighlight: 'on ARTICLE 44 & UNIFORM CIVIL CODE',
+  subtitle: 'Towards a Unified, Just and Inclusive Bharat',
+  description: 'Bharat Collective Foundation presents a National Dialogue on Article 44 and the Uniform Civil Code, bringing together distinguished members of the judiciary, legal experts, advocates, policymakers, and social activists to deliberate on constitutional values, equality, personal laws, and the future of a unified and inclusive India.\n\nThe dialogue will explore constitutional perspectives, judicial insights, the progress of UCC implementation, and the legal and social challenges ahead. Through informed discussions and diverse viewpoints, the event aims to encourage constructive engagement on the role of Article 44 in shaping India\'s legal and constitutional framework.',
+  venueName: 'Indian Society of International Law (ISIL)',
+  venueAddress: 'V.K. Krishna Menon Bhawan, 9 Bhagwan Das Road, New Delhi, Delhi 110001',
+  scheduleInfo: 'Wednesday, 28 October 2026 || 4:00 PM - 8:00 PM IST',
   ctaText: 'Pre-Register / RSVP',
   ctaLink: '/register',
-  posterUrl: 'uploads/event-poster-ucc.png',
+  posterUrl: 'uploads/event-poster-ucc.jpg',
   posterCaption: 'Connecting Bharat, Bringing Minds Together',
   status: 'published',
   isVisible: true,
@@ -59,6 +59,12 @@ function loadStoredConfig(): FlagshipBannerContent {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...inMemoryConfig };
     const parsed = JSON.parse(raw);
+    if (parsed.venueAddress?.includes('Sansad Marg') || parsed.titleHighlight === 'on UNIFORM CIVIL CODE' || !parsed.venueName?.includes('ISIL')) {
+      const upgraded = { ...DEFAULT_FLAGSHIP_BANNER, ...parsed, venueName: DEFAULT_FLAGSHIP_BANNER.venueName, venueAddress: DEFAULT_FLAGSHIP_BANNER.venueAddress, titleHighlight: DEFAULT_FLAGSHIP_BANNER.titleHighlight, scheduleInfo: DEFAULT_FLAGSHIP_BANNER.scheduleInfo, posterUrl: parsed.posterUrl || DEFAULT_FLAGSHIP_BANNER.posterUrl };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(upgraded));
+      inMemoryConfig = upgraded;
+      return upgraded;
+    }
     inMemoryConfig = { ...DEFAULT_FLAGSHIP_BANNER, ...parsed };
     return inMemoryConfig;
   } catch {

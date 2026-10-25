@@ -68,8 +68,10 @@ function loadStoredEvents(): EventItem[] {
       memoryStore = initial;
       return initial;
     }
-    const parsed: EventItem[] = JSON.parse(raw);
-    let needsUpdate = false;
+    const parsedRaw: EventItem[] = JSON.parse(raw);
+    const OBSOLETE_IDS = new Set(['evt-101', 'evt-102', 'evt-103']);
+    let needsUpdate = parsedRaw.some(e => OBSOLETE_IDS.has(e.id));
+    const parsed = parsedRaw.filter(e => !OBSOLETE_IDS.has(e.id));
 
     const migrated = parsed.map(evt => {
       let updatedEvt = { ...evt };
@@ -78,10 +80,22 @@ function loadStoredEvents(): EventItem[] {
         needsUpdate = true;
         updatedEvt.bannerImage = defaultEvt.bannerImage;
       }
-      if (updatedEvt.youtubeId === 'dQw4w9WgXcQ' || updatedEvt.youtubeUrl?.includes('dQw4w9WgXcQ')) {
-        updatedEvt.youtubeUrl = 'https://www.youtube.com/watch?v=5qap5aO4i9A';
-        updatedEvt.youtubeId = '5qap5aO4i9A';
-        updatedEvt.bannerImage = getYouTubeThumbnail('5qap5aO4i9A');
+      if (evt.id === 'evt-ucc-flagship' && defaultEvt) {
+        if (updatedEvt.location?.includes('Constitution Club') || updatedEvt.title?.includes('(UCC)') || updatedEvt.date === 'COMING SOON') {
+          updatedEvt = { ...defaultEvt, seatsLeft: updatedEvt.seatsLeft ?? defaultEvt.seatsLeft };
+          needsUpdate = true;
+        }
+      }
+      if (evt.id === 'evt-live-ucc-broadcast' && defaultEvt) {
+        if (updatedEvt.title?.includes('🔴 LIVE BROADCAST:') || updatedEvt.youtubeId === '5qap5aO4i9A') {
+          updatedEvt = { ...defaultEvt };
+          needsUpdate = true;
+        }
+      }
+      if (updatedEvt.youtubeId === 'dQw4w9WgXcQ') {
+        updatedEvt.youtubeUrl = 'https://www.youtube.com/live/aNCHEmPi78U';
+        updatedEvt.youtubeId = 'aNCHEmPi78U';
+        updatedEvt.bannerImage = 'https://img.youtube.com/vi/aNCHEmPi78U/hqdefault.jpg';
         needsUpdate = true;
       }
       // Guarantee a status is set if not already defined (default to 'published' without overriding draft)
