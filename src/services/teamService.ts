@@ -170,6 +170,10 @@ function saveStateChapters(list: StateChapter[]) {
 
 export const teamService = {
   // ===================== NATIONAL TEAM =====================
+  async getNationalMembers(options?: { includeDrafts?: boolean }): Promise<NationalTeamMember[]> {
+    return this.getNationalTeam(options);
+  },
+
   async getNationalTeam(options?: { includeDrafts?: boolean }): Promise<NationalTeamMember[]> {
     await new Promise(resolve => setTimeout(resolve, 30));
     let items = loadStoredNationalTeam();

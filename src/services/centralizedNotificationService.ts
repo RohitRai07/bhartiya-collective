@@ -635,7 +635,7 @@ export class CentralizedNotificationService {
 
     // 9. National Team
     try {
-      const team = teamService.getNationalMembers();
+      const team = await (teamService.getNationalMembers ? teamService.getNationalMembers() : teamService.getNationalTeam());
       for (const t of team) {
         if (t.status === 'draft') continue;
         const logs = notificationService.getLogsForContent('team', t.id, t.name);
