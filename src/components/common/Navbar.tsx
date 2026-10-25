@@ -10,7 +10,8 @@ import {
   UserPlus, 
   ChevronDown, 
   ChevronRight, 
-  Search
+  Search,
+  Lock
 } from 'lucide-react';
 import { UniversalSearchModal } from '../search/UniversalSearchModal';
 
@@ -251,6 +252,18 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
                 title="Search website (Ctrl+K or ⌘K)"
               >
                 <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-800" />
+              </button>
+
+              {/* Admin Portal Direct Header Link */}
+              <button
+                type="button"
+                onClick={() => handleLinkClick('/admin')}
+                className="p-2 sm:p-2.5 rounded-xl text-slate-700 hover:text-amber-800 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 transition-colors cursor-pointer shadow-xs shrink-0 flex items-center justify-center space-x-1"
+                aria-label="Admin Portal"
+                title="Open Admin Portal"
+              >
+                <Lock className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-800" />
+                <span className="hidden xl:inline text-xs font-semibold text-slate-700">Admin</span>
               </button>
 
               {/* Action CTAs (Desktop / Tablet) */}
