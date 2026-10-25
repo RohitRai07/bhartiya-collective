@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { createDonation } from '../../services/donationService';
+import { 
+  createDonation, 
+  validateDonationAmount, 
+  validateDonationPhone, 
+  SUGGESTED_AMOUNTS 
+} from '../../services/donationService';
 import { 
   DonationData, 
   DonationFrequency, 
@@ -14,8 +19,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-const SUGGESTED_AMOUNTS = [1000, 2500, 5000, 10000, 25000];
-
 const CAUSE_OPTIONS: { id: DonationCause; title: string; desc: string }[] = [
   { id: 'general_research', title: 'Foundational Research Corpus', desc: 'Sustaining high-impact civilizational inquiry and institutional independence.' },
   { id: 'visiting_fellowships', title: 'Visiting Scholar Fellowships', desc: 'Direct residential grants for doctoral and post-doctoral researchers.' },
@@ -26,8 +29,8 @@ const CAUSE_OPTIONS: { id: DonationCause; title: string; desc: string }[] = [
 
 export const DonationSection: React.FC = () => {
   const [frequency, setFrequency] = useState<DonationFrequency>('one_time');
-  const [selectedAmount, setSelectedAmount] = useState<number>(2500);
-  const [customAmount, setCustomAmount] = useState<string>('');
+  const [amountInput, setAmountInput] = useState<string>('2500');
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(2500);
   const [selectedCause] = useState<DonationCause>('general_research');
   
   // Donor details
@@ -42,30 +45,64 @@ export const DonationSection: React.FC = () => {
   const [submissionResult, setSubmissionResult] = useState<DonationIntentResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const finalAmount = customAmount ? parseFloat(customAmount) || 0 : selectedAmount;
+  const parsedAmount = parseFloat(amountInput) || 0;
+
+  const handlePresetSelect = (amt: number) => {
+    setSelectedPreset(amt);
+    setAmountInput(amt.toString());
+    if (errorMessage === 'Minimum donation amount is ₹500.') {
+      setErrorMessage(null);
+    }
+  };
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.trim();
+    if (errorMessage === 'Minimum donation amount is ₹500.') {
+      setErrorMessage(null);
+    }
+    if (val === '') {
+      setAmountInput('');
+      setSelectedPreset(null);
+      return;
+    }
+    // Strictly reject negative values, allow only positive numbers with at most 2 decimal places
+    if (/^\d+(\.\d{0,2})?$/.test(val)) {
+      setAmountInput(val);
+      const num = parseFloat(val);
+      // Synchronize preset button highlight if entered value exactly matches a preset
+      if (!isNaN(num) && SUGGESTED_AMOUNTS.includes(num) && val === num.toString()) {
+        setSelectedPreset(num);
+      } else {
+        setSelectedPreset(null);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (finalAmount <= 0) {
-      setErrorMessage('Contribution amount must be greater than ₹0.');
+    // Minimum donation & amount validation
+    const amountVal = validateDonationAmount(amountInput);
+    if (!amountVal.isValid) {
+      setErrorMessage(amountVal.error || 'Minimum donation amount is ₹500.');
       return;
     }
-    if (customAmount && !/^\d+(\.\d{1,2})?$/.test(customAmount)) {
-      setErrorMessage('Contribution amount can have at most two decimal places and must be positive.');
-      return;
-    }
-    if (finalAmount < 10) {
-      setErrorMessage('Contribution amount must be at least ₹10.');
-      return;
-    }
+
     if (!donorName.trim()) {
       setErrorMessage('Please enter your full name.');
       return;
     }
+
     if (!email.trim() || !email.includes('@')) {
       setErrorMessage('Please enter a valid email address.');
+      return;
+    }
+
+    // Mandatory mobile number validation
+    const phoneVal = validateDonationPhone(phone);
+    if (!phoneVal.isValid) {
+      setErrorMessage(phoneVal.error || 'Please enter a valid 10-digit Indian mobile number.');
       return;
     }
 
@@ -73,12 +110,12 @@ export const DonationSection: React.FC = () => {
 
     try {
       const payload: DonationData = {
-        amount: finalAmount,
+        amount: amountVal.amount!,
         frequency,
         cause: selectedCause,
         donorName: donorName.trim(),
         email: email.trim().toLowerCase(),
-        phone: phone.trim() || undefined,
+        phone: phoneVal.cleanPhone || phone.trim(),
         panNumber: panNumber.trim().toUpperCase() || undefined,
         isIndianTaxResident,
       };
@@ -96,6 +133,12 @@ export const DonationSection: React.FC = () => {
   const handleReset = () => {
     setSubmissionResult(null);
     setErrorMessage(null);
+    setAmountInput('2500');
+    setSelectedPreset(2500);
+    setDonorName('');
+    setEmail('');
+    setPhone('');
+    setPanNumber('');
   };
 
   return (
@@ -195,13 +238,10 @@ export const DonationSection: React.FC = () => {
                     <button
                       key={amt}
                       type="button"
-                      onClick={() => {
-                        setSelectedAmount(amt);
-                        setCustomAmount('');
-                      }}
+                      onClick={() => handlePresetSelect(amt)}
                       className={`py-3 px-4 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
-                        selectedAmount === amt && !customAmount
-                          ? 'border-amber-600 bg-amber-50 text-amber-900 ring-2 ring-amber-600'
+                        selectedPreset === amt
+                          ? 'border-amber-600 bg-amber-50 text-amber-900 ring-2 ring-amber-600 shadow-sm'
                           : 'border-slate-200 text-slate-700 hover:border-slate-300 bg-slate-50/50'
                       }`}
                     >
@@ -215,25 +255,19 @@ export const DonationSection: React.FC = () => {
                   <input
                     type="text"
                     inputMode="decimal"
-                    placeholder="Other Amount (e.g. 500)"
-                    value={customAmount}
-                    onChange={e => {
-                      const val = e.target.value.trim();
-                      if (val === '') {
-                        setCustomAmount('');
-                        return;
-                      }
-                      // Strictly reject negative values, allow only positive numbers with at most 2 decimal places
-                      if (/^\d+(\.\d{0,2})?$/.test(val)) {
-                        setCustomAmount(val);
-                        setSelectedAmount(0);
-                      }
-                    }}
+                    placeholder="Enter amount (Min ₹500)"
+                    value={amountInput}
+                    onChange={handleAmountChange}
                     className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 placeholder-slate-400 focus:border-amber-600"
                   />
                 </div>
+                {amountInput !== '' && !isNaN(parseFloat(amountInput)) && parseFloat(amountInput) < 500 && (
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5 mt-2 font-medium">
+                    Minimum donation amount is ₹500.
+                  </p>
+                )}
                 <p className="text-[11px] text-slate-500 mt-1.5">
-                  Positive values only. Maximum 2 decimal places accepted.
+                  Minimum donation: ₹500. Positive values only (up to 2 decimal places).
                 </p>
               </div>
 
@@ -269,9 +303,12 @@ export const DonationSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Mobile Number (Optional)</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Mobile Number <span className="text-amber-600">*</span>
+                    </label>
                     <input
                       type="tel"
+                      required
                       placeholder="+91 9876543210"
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
@@ -294,7 +331,7 @@ export const DonationSection: React.FC = () => {
               </div>
 
               {errorMessage && (
-                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
                   {errorMessage}
                 </div>
               )}
@@ -309,7 +346,7 @@ export const DonationSection: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20 transition-all flex items-center justify-center space-x-2 disabled:opacity-70"
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold text-sm bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20 transition-all flex items-center justify-center space-x-2 disabled:opacity-70 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
@@ -318,7 +355,9 @@ export const DonationSection: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <span>Proceed to Support (₹{finalAmount.toLocaleString('en-IN')})</span>
+                      <span>
+                        Proceed to Support {parsedAmount >= 500 ? `(₹${parsedAmount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })})` : ''}
+                      </span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

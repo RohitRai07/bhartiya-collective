@@ -15,6 +15,42 @@ import { featureConfig } from '../config/featureConfig';
 import { apiClient } from './apiClient';
 import { DonationData, DonationIntentResponse } from '../types/donation';
 
+export const MIN_DONATION_AMOUNT = 500;
+export const SUGGESTED_AMOUNTS = [1000, 2500, 5000, 10000, 25000];
+
+export function validateDonationAmount(rawAmount: string | number): { isValid: boolean; error?: string; amount?: number } {
+  const str = typeof rawAmount === 'number' ? rawAmount.toString() : (rawAmount || '').trim();
+  if (!str) {
+    return { isValid: false, error: 'Minimum donation amount is ₹500.' };
+  }
+  const parsed = parseFloat(str);
+  if (isNaN(parsed) || parsed < MIN_DONATION_AMOUNT) {
+    return { isValid: false, error: 'Minimum donation amount is ₹500.' };
+  }
+  if (!/^\d+(\.\d{1,2})?$/.test(str)) {
+    return { isValid: false, error: 'Contribution amount can have at most two decimal places and must be positive.' };
+  }
+  return { isValid: true, amount: parsed };
+}
+
+export function validateDonationPhone(phone: string): { isValid: boolean; error?: string; cleanPhone?: string } {
+  const raw = (phone || '').trim();
+  const digitsOnly = raw.replace(/\D/g, '');
+  if (!digitsOnly) {
+    return { isValid: false, error: 'Please enter your mobile number.' };
+  }
+  let nationalNumber = digitsOnly;
+  if (digitsOnly.startsWith('91') && digitsOnly.length === 12) {
+    nationalNumber = digitsOnly.slice(2);
+  } else if (digitsOnly.startsWith('0') && digitsOnly.length === 11) {
+    nationalNumber = digitsOnly.slice(1);
+  }
+  if (nationalNumber.length !== 10 || !/^[6-9]\d{9}$/.test(nationalNumber)) {
+    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.' };
+  }
+  return { isValid: true, cleanPhone: `+91 ${nationalNumber}` };
+}
+
 /**
  * Donation functionality is currently prepared for future
  * payment integration. The actual payment provider can
@@ -53,6 +89,10 @@ export async function createDonation(donationData: DonationData): Promise<Donati
 
 export const donationService = {
   createDonation,
+  validateDonationAmount,
+  validateDonationPhone,
+  MIN_DONATION_AMOUNT,
+  SUGGESTED_AMOUNTS,
   
   /**
    * Future Phase 5 receipt verification endpoint

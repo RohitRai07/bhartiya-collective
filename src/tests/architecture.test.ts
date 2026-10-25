@@ -8,7 +8,13 @@ import { apiConfig } from '../config/apiConfig';
 import { pincodeService } from '../services/pincodeService';
 import { registrationService } from '../services/registrationService';
 import { newsletterService } from '../services/newsletterService';
-import { createDonation } from '../services/donationService';
+import { 
+  createDonation, 
+  validateDonationAmount, 
+  validateDonationPhone, 
+  SUGGESTED_AMOUNTS, 
+  MIN_DONATION_AMOUNT 
+} from '../services/donationService';
 import { publicationService } from '../services/publicationService';
 import { eventService } from '../services/eventService';
 import { researchService } from '../services/researchService';
@@ -177,6 +183,59 @@ async function runTests() {
   assert(donationIntent.amount === 5000, 'Donation amount recorded');
   assert(donationIntent.status === 'prepared_for_payment_gateway', 'Clean intent status recorded without fake gateway simulation');
   assert(donationIntent.donationId.startsWith('DON-INTENT-'), 'Generates intent identifier');
+
+  // Support Us Form: Preset Amounts, Synchronization & Minimum Validation
+  console.log('\n📌 Testing Support Us Preset Synchronization & Validation:');
+  assert(MIN_DONATION_AMOUNT === 500, 'Minimum donation amount is set to ₹500');
+  assert(Array.isArray(SUGGESTED_AMOUNTS) && SUGGESTED_AMOUNTS.includes(1000) && SUGGESTED_AMOUNTS.includes(2500), 'Contains suggested preset amounts ₹1,000 and ₹2,500');
+
+  // Amount validation rules
+  const belowMinResult = validateDonationAmount('499');
+  assert(belowMinResult.isValid === false, 'Amount below 500 is rejected');
+  assert(belowMinResult.error === 'Minimum donation amount is ₹500.', 'Displays exact message: Minimum donation amount is ₹500.');
+
+  const emptyAmountResult = validateDonationAmount('');
+  assert(emptyAmountResult.isValid === false && emptyAmountResult.error === 'Minimum donation amount is ₹500.', 'Empty amount rejected with minimum donation message');
+
+  const zeroAmountResult = validateDonationAmount('0');
+  assert(zeroAmountResult.isValid === false && zeroAmountResult.error === 'Minimum donation amount is ₹500.', 'Zero amount rejected with minimum donation message');
+
+  const validMinResult = validateDonationAmount('500');
+  assert(validMinResult.isValid === true && validMinResult.amount === 500, 'Minimum boundary amount ₹500 is accepted');
+
+  const validPreset1000 = validateDonationAmount('1000');
+  assert(validPreset1000.isValid === true && validPreset1000.amount === 1000, 'Preset ₹1,000 is accepted');
+
+  const validPreset2500 = validateDonationAmount('2500');
+  assert(validPreset2500.isValid === true && validPreset2500.amount === 2500, 'Preset ₹2,500 is accepted');
+
+  const invalidDecimalResult = validateDonationAmount('1000.999');
+  assert(invalidDecimalResult.isValid === false, 'Amount with >2 decimals is rejected');
+
+  // Preset synchronization simulation
+  const checkPresetMatch = (val: string) => {
+    const num = parseFloat(val);
+    return !isNaN(num) && SUGGESTED_AMOUNTS.includes(num) && val === num.toString() ? num : null;
+  };
+  assert(checkPresetMatch('1000') === 1000, 'Input 1000 synchronizes and selects preset 1000');
+  assert(checkPresetMatch('2500') === 2500, 'Input 2500 synchronizes and selects preset 2500');
+  assert(checkPresetMatch('5000') === 5000, 'Input 5000 synchronizes and selects preset 5000');
+  assert(checkPresetMatch('1500') === null, 'Non-preset custom input 1500 deselects all presets');
+  assert(checkPresetMatch('500') === null, 'Non-preset custom input 500 deselects all presets');
+  assert(checkPresetMatch('') === null, 'Empty input deselects all presets');
+
+  // Mobile number mandatory validation
+  const emptyPhoneResult = validateDonationPhone('');
+  assert(emptyPhoneResult.isValid === false && emptyPhoneResult.error === 'Please enter your mobile number.', 'Empty phone is rejected');
+
+  const shortPhoneResult = validateDonationPhone('98765');
+  assert(shortPhoneResult.isValid === false && shortPhoneResult.error === 'Please enter a valid 10-digit Indian mobile number.', 'Short phone is rejected');
+
+  const validPhoneResult = validateDonationPhone('9876543210');
+  assert(validPhoneResult.isValid === true && validPhoneResult.cleanPhone === '+91 9876543210', 'Valid 10-digit phone accepted and formatted');
+
+  const validPrefixedPhone = validateDonationPhone('+91 9876543210');
+  assert(validPrefixedPhone.isValid === true && validPrefixedPhone.cleanPhone === '+91 9876543210', '+91 prefixed phone accepted and normalized');
 
   // 7. Domain Services Decoupling (Sections 3 & 9)
   console.log('\n📌 Testing Domain Services Separation (Sections 3 & 9):');
