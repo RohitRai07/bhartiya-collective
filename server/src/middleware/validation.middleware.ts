@@ -146,6 +146,11 @@ export function validateEmailAddress(rawInput: string): { isValid: boolean; erro
     return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
   }
 
+  // Strict rule: email must only contain alphanumeric characters, '.' and '@' (no other special characters)
+  if (/[^a-zA-Z0-9.@]/.test(trimmed)) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+  }
+
   const atParts = trimmed.split('@');
   if (atParts.length !== 2) {
     return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
@@ -156,7 +161,15 @@ export function validateEmailAddress(rawInput: string): { isValid: boolean; erro
     return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
   }
 
+  if (localPart.startsWith('.') || localPart.endsWith('.') || localPart.includes('..')) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+  }
+
   if (!domainPart || !domainPart.includes('.')) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+  }
+
+  if (domainPart.startsWith('.') || domainPart.endsWith('.') || domainPart.includes('..')) {
     return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
   }
 
@@ -166,11 +179,11 @@ export function validateEmailAddress(rawInput: string): { isValid: boolean; erro
     return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
   }
 
-  if (domainParts.some(p => !p || p.startsWith('-') || p.endsWith('-'))) {
+  if (domainParts.some(p => !p || !/^[a-zA-Z0-9]+$/.test(p))) {
     return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
   }
 
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+  const emailRegex = /^[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)+$/;
   if (!emailRegex.test(trimmed)) {
     return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
   }

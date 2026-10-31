@@ -1767,7 +1767,7 @@ async function runTests() {
     'meera.verma@outlook.com',
     'advocate.rao@yahoo.co.in',
     'fellow@bharatcollective.org',
-    'user+tag@domain.co.in'
+    'scholar.user.123@domain.co.in'
   ];
   for (const email of validEmails) {
     const res = validateEmailAddress(email);
@@ -1792,6 +1792,11 @@ async function runTests() {
     'user@domain .com',
     'user@@domain.com',
     'user@domain..com',
+    'user+tag@domain.co.in',
+    'user_name@domain.com',
+    'user-name@domain.com',
+    'user#tag@domain.com',
+    'user%tag@domain.com',
   ];
   for (const email of invalidEmails) {
     const res = validateEmailAddress(email);

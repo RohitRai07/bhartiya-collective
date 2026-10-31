@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { newsletterService } from '../../services/newsletterService';
-import { notificationService } from '../../services/notificationService';
 import { NewsletterState } from '../../types/newsletter';
-import { Mail, CheckCircle2, AlertCircle, Info, Loader2, ArrowRight, ExternalLink, X, Eye } from 'lucide-react';
+import { Mail, CheckCircle2, AlertCircle, Info, Loader2, ArrowRight } from 'lucide-react';
 
 interface NewsletterFormProps {
   source?: string;
@@ -17,7 +16,6 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
   const [submittedEmail, setSubmittedEmail] = useState('');
   const [state, setState] = useState<NewsletterState>({ status: 'idle' });
   const [clientError, setClientError] = useState<string | null>(null);
-  const [showEmailModal, setShowEmailModal] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,9 +74,6 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
     setSubmittedEmail('');
   };
 
-  const activeEmailForPreview = submittedEmail || state.email || 'scholar@bharatcollective.org';
-  const previewData = notificationService.getWelcomeEmailPreview(activeEmailForPreview);
-
   return (
     <div className={`w-full ${variant === 'card' ? 'bg-white rounded-2xl p-6 sm:p-8 border border-amber-900/10 shadow-sm' : ''}`}>
       <div className="max-w-xl">
@@ -99,51 +94,17 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
 
         {/* Success State */}
         {state.status === 'success' && (
-          <div className="p-5 rounded-2xl bg-emerald-50/90 border border-emerald-200 text-emerald-950 space-y-4 animate-in fade-in duration-300">
+          <div className="p-4 sm:p-5 rounded-2xl bg-emerald-50/90 border border-emerald-200 text-emerald-950 space-y-2 animate-in fade-in duration-300">
             <div className="flex items-start space-x-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <p className="font-semibold text-sm text-emerald-900">Subscription Confirmed!</p>
-                <p className="text-xs text-emerald-800 leading-relaxed">{state.message}</p>
+                <p className="text-xs text-emerald-800 leading-relaxed">
+                  Thank you for subscribing to Bharat Collective Research Digest.
+                </p>
               </div>
             </div>
-
-            {/* Email Dispatch Details Card */}
-            <div className="bg-white/90 p-3.5 rounded-xl border border-emerald-200/80 space-y-2.5">
-              <div className="flex items-center justify-between text-xs text-slate-700">
-                <span>Dispatched to: <strong className="font-mono text-slate-900">{activeEmailForPreview}</strong></span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  Delivered
-                </span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowEmailModal(true)}
-                  className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>View Received Welcome Email</span>
-                </button>
-
-                <a
-                  href={notificationService.generateMailtoLink(
-                    activeEmailForPreview,
-                    'Welcome to the Bharat Collective Research Digest',
-                    'Namaste,\n\nI have subscribed to Bharat Collective Foundation Research Digest.'
-                  )}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition-colors flex items-center space-x-1.5 border border-slate-300"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Open in Mail App</span>
-                </a>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+            <div className="pt-1 text-xs">
               <button
                 type="button"
                 onClick={handleReset}
@@ -151,29 +112,30 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
               >
                 ← Subscribe another address
               </button>
-              <span className="text-[11px] text-slate-500">
-                Logged in Secretariat Communications & Audit Trail
-              </span>
             </div>
           </div>
         )}
 
         {/* Already Subscribed State */}
         {state.status === 'already_subscribed' && (
-          <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-2 animate-in fade-in duration-300">
+          <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/90 border border-amber-200 text-amber-950 space-y-2 animate-in fade-in duration-300">
             <div className="flex items-start space-x-3">
-              <Info className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-sm">Already Subscribed</p>
-                <p className="text-xs text-amber-800 mt-1">{state.message}</p>
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="mt-3 text-xs font-semibold text-amber-900 underline hover:text-amber-950"
-                >
-                  Enter another address
-                </button>
+              <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <p className="font-semibold text-sm text-amber-900">Already Subscribed</p>
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  This email is already subscribed to the Bharat Collective digest.
+                </p>
               </div>
+            </div>
+            <div className="pt-1 text-xs">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="font-medium text-amber-800 hover:text-amber-950 underline cursor-pointer"
+              >
+                Enter another address
+              </button>
             </div>
           </div>
         )}
@@ -248,119 +210,6 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
           </form>
         )}
       </div>
-
-      {/* Modal: View Delivered Welcome Email Letterhead */}
-      {showEmailModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
-            {/* Window Topbar */}
-            <div className="bg-slate-950 px-4 py-3 text-white flex items-center justify-between border-b border-slate-800">
-              <div className="flex items-center space-x-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-                <span className="text-xs font-mono font-medium text-slate-300 pl-2">
-                  Mail Delivery Preview • Bharat Collective Secretariat
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowEmailModal(false)}
-                className="text-slate-400 hover:text-white p-1 rounded transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Email Metadata Headers */}
-            <div className="bg-slate-50 p-4 border-b border-slate-200 text-xs space-y-1.5 font-sans">
-              <div className="flex items-start justify-between">
-                <span className="text-slate-500 w-16">From:</span>
-                <span className="font-semibold text-slate-800 flex-1 text-right">{previewData.sender}</span>
-              </div>
-              <div className="flex items-start justify-between">
-                <span className="text-slate-500 w-16">To:</span>
-                <span className="font-mono font-semibold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded border border-amber-300/60 text-right">
-                  {activeEmailForPreview}
-                </span>
-              </div>
-              <div className="flex items-start justify-between">
-                <span className="text-slate-500 w-16">Subject:</span>
-                <span className="font-bold text-slate-900 flex-1 text-right">{previewData.subject}</span>
-              </div>
-              <div className="flex items-start justify-between">
-                <span className="text-slate-500 w-16">Date:</span>
-                <span className="text-slate-600 flex-1 text-right">{previewData.date}</span>
-              </div>
-            </div>
-
-            {/* Letterhead Body */}
-            <div className="p-6 bg-white space-y-4 max-h-[60vh] overflow-y-auto">
-              <div className="border-b border-amber-900/10 pb-4 text-center space-y-1">
-                <div className="w-10 h-10 rounded-full bg-amber-700 text-amber-100 font-serif font-bold text-lg flex items-center justify-center mx-auto shadow-sm">
-                  भ
-                </div>
-                <p className="text-xs font-bold tracking-widest uppercase text-amber-800 font-sans">
-                  Bharat Collective Foundation
-                </p>
-                <p className="text-[11px] text-slate-500 font-sans">
-                  Centre for Indic Thought, Civilizational Policy & Research
-                </p>
-              </div>
-
-              <p className="text-sm font-semibold text-slate-800 font-serif">{previewData.salutation}</p>
-
-              {previewData.bodyParagraphs.map((paragraph, idx) => (
-                <p key={idx} className="text-xs leading-relaxed text-slate-700 font-sans">
-                  {paragraph}
-                </p>
-              ))}
-
-              <div className="pt-4 border-t border-slate-100 font-sans text-xs text-slate-600 space-y-1">
-                <p>{previewData.closing}</p>
-                <p className="font-semibold text-slate-900 whitespace-pre-line">{previewData.signatory}</p>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 text-[10px] text-slate-400 font-sans flex flex-wrap justify-between items-center gap-2">
-                <span>Security Reference: <code className="font-mono text-slate-600">{previewData.unsubscribeToken}</code></span>
-                <span className="text-emerald-700 font-semibold flex items-center space-x-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                  <span>Delivered via Secretariat Dispatch</span>
-                </span>
-              </div>
-            </div>
-
-            {/* Sandbox Notice & Action footer */}
-            <div className="bg-slate-50 px-5 py-3.5 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-              <p className="text-[11px] text-slate-500 leading-tight">
-                Simulated in local browser mode. Live delivery available via Webhook in Admin Settings.
-              </p>
-              <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
-                <a
-                  href={notificationService.generateMailtoLink(
-                    activeEmailForPreview,
-                    previewData.subject,
-                    `${previewData.salutation}\n\n${previewData.bodyParagraphs.join('\n\n')}\n\n${previewData.closing}\n${previewData.signatory}`
-                  )}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg font-semibold transition-colors flex items-center space-x-1 text-xs"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  <span>Send to Email App</span>
-                </a>
-                <button
-                  type="button"
-                  onClick={() => setShowEmailModal(false)}
-                  className="px-4 py-1.5 bg-slate-900 text-white rounded-lg font-semibold hover:bg-slate-800 transition-colors cursor-pointer text-xs"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

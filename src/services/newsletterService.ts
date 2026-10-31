@@ -139,7 +139,7 @@ export const newsletterService = {
 
           return {
             status: 'success',
-            message: response.message || 'Thank you for subscribing! A confirmation notification has been sent to your email.',
+            message: response.message || 'Thank you for subscribing to Bharat Collective Research Digest.',
             record,
           };
         }
@@ -187,7 +187,7 @@ export const newsletterService = {
 
       return {
         status: 'success',
-        message: 'Thank you for subscribing! A confirmation notification has been sent to your email.',
+        message: 'Thank you for subscribing to Bharat Collective Research Digest.',
         record,
       };
     } finally {
