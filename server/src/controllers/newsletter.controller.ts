@@ -22,21 +22,22 @@ export const subscribe = async (req: Request, res: Response): Promise<void> => {
     });
 
     if (!result.success) {
+      if (result.status === 'already_subscribed') {
+        res.status(409).json({
+          success: false,
+          status: 'already_subscribed',
+          error: result.message,
+          message: result.message,
+          data: result.data,
+        });
+        return;
+      }
+
       const statusCode = result.status === 'invalid_email' ? 400 : 500;
       res.status(statusCode).json({
         success: false,
         error: result.message,
         status: result.status,
-      });
-      return;
-    }
-
-    if (result.status === 'already_subscribed') {
-      res.status(200).json({
-        success: true,
-        status: 'already_subscribed',
-        message: result.message,
-        data: result.data,
       });
       return;
     }
@@ -93,6 +94,21 @@ export const listSubscribers = async (req: Request, res: Response): Promise<void
     res.status(500).json({
       success: false,
       error: 'Failed to retrieve newsletter subscribers.',
+    });
+  }
+};
+
+export const auditDuplicates = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const report = newsletterService.auditDuplicates();
+    res.status(200).json({
+      success: true,
+      report,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to execute duplicate audit.',
     });
   }
 };

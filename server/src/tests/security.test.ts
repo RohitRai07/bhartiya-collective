@@ -9,7 +9,7 @@ import { paymentService } from '../services/payment.service';
 import { emailService } from '../services/email.service';
 import { smsService } from '../services/sms.service';
 import { notificationService } from '../services/notification.service';
-import { newsletterService } from '../services/newsletter.service';
+import { newsletterService, DUPLICATE_SUBSCRIBER_MESSAGE } from '../services/newsletter.service';
 import { app } from '../index';
 import { validateEmailAddress, validateIndianMobile, INDIAN_MOBILE_CONFIG, validateAbstractSubmissionEmail, ABSTRACT_SUBMISSION_APPROVED_DOMAINS, ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR } from '../middleware/validation.middleware';
 import { submitPaper } from '../controllers/submission.controller';
@@ -446,6 +446,80 @@ async function runSecurityTests() {
   });
   assert(badSub.success === false && badSub.status === 'invalid_email', 'Disposable email rejected from newsletter');
   console.log('  ✅ PASS: Newsletter rejects disposable and invalid email addresses');
+
+  // --- Comprehensive 9-Scenario Duplicate Newsletter Subscription Prevention ---
+  console.log('\n📌 Testing 9-Scenario Database & Backend Duplicate Subscription Protection:');
+
+  // Scenario 1: New email subscription (Accept and save one record)
+  const initialUniqueCount = newsletterService.getAllSubscribers().length;
+  const testEmail1 = 'scholar.uniquetester@gmail.com';
+  const newSubTest = await newsletterService.subscribe({ email: testEmail1, source: 'test-scenario-1' });
+  assert(newSubTest.success === true && newSubTest.status === 'success', 'Scenario 1: Accepts new email');
+  assert(newsletterService.getAllSubscribers().length === initialUniqueCount + 1, 'Scenario 1: Exactly one record saved');
+  console.log('  ✅ PASS: Scenario 1 - New email subscription accepts and saves one record');
+
+  // Scenario 2: Same email subscribed again (Reject duplicate with exact message)
+  const dupSubSame = await newsletterService.subscribe({ email: testEmail1, source: 'test-scenario-2' });
+  assert(dupSubSame.success === false && dupSubSame.status === 'already_subscribed', 'Scenario 2: Rejects duplicate');
+  assert(dupSubSame.message === DUPLICATE_SUBSCRIBER_MESSAGE, 'Scenario 2: Exact duplicate message returned');
+  assert(dupSubSame.notificationSent === false, 'Scenario 2: No notification sent on duplicate');
+  console.log('  ✅ PASS: Scenario 2 - Same email subscribed again rejected with exact message');
+
+  // Scenario 3: Same email with uppercase characters (Reject duplicate case-insensitively)
+  const dupSubUpper = await newsletterService.subscribe({ email: 'SCHOLAR.UNIQUETESTER@GMAIL.COM', source: 'test-scenario-3' });
+  assert(dupSubUpper.status === 'already_subscribed', 'Scenario 3: Uppercase variant rejected');
+  assert(dupSubUpper.message === DUPLICATE_SUBSCRIBER_MESSAGE, 'Scenario 3: Exact message returned');
+  console.log('  ✅ PASS: Scenario 3 - Uppercase email variant rejected as duplicate');
+
+  // Scenario 4: Same email with leading/trailing spaces (Reject duplicate)
+  const dupSubSpaces = await newsletterService.subscribe({ email: '   scholar.uniquetester@gmail.com   ', source: 'test-scenario-4' });
+  assert(dupSubSpaces.status === 'already_subscribed', 'Scenario 4: Spaced variant rejected');
+  assert(dupSubSpaces.message === DUPLICATE_SUBSCRIBER_MESSAGE, 'Scenario 4: Exact message returned');
+  console.log('  ✅ PASS: Scenario 4 - Email with leading/trailing spaces rejected as duplicate');
+
+  // Scenario 5 & 6: Simultaneous API requests & multiple clicks (Atomic check-and-insert / race-condition test)
+  const raceEmail = 'race.condition.test@gmail.com';
+  const preRaceCount = newsletterService.getAllSubscribers().length;
+  // Fire 10 simultaneous requests at the exact same millisecond
+  const concurrentResults = await Promise.all([
+    newsletterService.subscribe({ email: raceEmail, source: 'click-1' }),
+    newsletterService.subscribe({ email: raceEmail, source: 'click-2' }),
+    newsletterService.subscribe({ email: raceEmail.toUpperCase(), source: 'click-3' }),
+    newsletterService.subscribe({ email: `  ${raceEmail}  `, source: 'click-4' }),
+    newsletterService.subscribe({ email: raceEmail, source: 'click-5' }),
+  ]);
+  const successfulCreations = concurrentResults.filter(r => r.status === 'success');
+  const duplicateRejections = concurrentResults.filter(r => r.status === 'already_subscribed');
+  assert(successfulCreations.length === 1, 'Scenario 5 & 6: Exactly ONE concurrent request succeeds');
+  assert(duplicateRejections.length === 4, 'Scenario 5 & 6: All other 4 concurrent requests rejected as duplicate');
+  assert(newsletterService.getAllSubscribers().length === preRaceCount + 1, 'Scenario 5 & 6: Database table contains only 1 record');
+  console.log('  ✅ PASS: Scenarios 5 & 6 - Multiple clicks and simultaneous API requests create only one record');
+
+  // Scenario 7: Duplicate email through direct API request (Returns 409 Conflict)
+  let directApiStatus = 0;
+  let directApiJson: any = null;
+  const mockDirectRes: any = {
+    status(code: number) { directApiStatus = code; return this; },
+    json(data: any) { directApiJson = data; return this; },
+  };
+  await subscribe({ body: { email: raceEmail } } as any, mockDirectRes);
+  assert(directApiStatus === 409, 'Scenario 7: Direct API returns 409 Conflict for duplicate');
+  assert(directApiJson.status === 'already_subscribed', 'Scenario 7: Direct API status is already_subscribed');
+  assert(directApiJson.error === DUPLICATE_SUBSCRIBER_MESSAGE, 'Scenario 7: Direct API error is exact required message');
+  console.log('  ✅ PASS: Scenario 7 - Duplicate email through direct API request rejected with 409 Conflict');
+
+  // Scenario 8: Duplicate email during admin import / listing (Deduplicated unique list)
+  const allSubs = newsletterService.getAllSubscribers();
+  const emailsSet = new Set(allSubs.map(s => s.email.toLowerCase()));
+  assert(emailsSet.size === allSubs.length, 'Scenario 8: All subscriber records in system have 100% unique emails');
+  console.log('  ✅ PASS: Scenario 8 - Admin subscriber list maintains 100% unique records');
+
+  // Scenario 9: Existing duplicate records (Audit and report safely)
+  const auditReport = newsletterService.auditDuplicates();
+  assert(auditReport !== undefined, 'Scenario 9: Audit report generated');
+  assert(auditReport.duplicateGroupCount === 0, 'Scenario 9: No duplicate groups remain in clean audit');
+  assert(auditReport.scannedCount === auditReport.uniqueCount, 'Scenario 9: Scanned count matches unique count');
+  console.log('  ✅ PASS: Scenario 9 - Existing records audited and verified duplicate-free');
 
 
   // --- Testing Server-Side Indian Mobile Validation & Gates ---

@@ -490,9 +490,19 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   };
 
   const handleExportSubscribersCsv = () => {
+    // Ensure unique subscribers by normalized email
+    const seen = new Set<string>();
+    const uniqueList: any[] = [];
+    for (const s of filteredSubscribers) {
+      const norm = (s.email || '').trim().toLowerCase();
+      if (!norm || seen.has(norm)) continue;
+      seen.add(norm);
+      uniqueList.push(s);
+    }
+
     const headers = ['Email', 'Subscribed At', 'Source', 'Status'];
-    const rows = filteredSubscribers.map(s => [
-      s.email,
+    const rows = uniqueList.map(s => [
+      s.email.trim().toLowerCase(),
       s.subscribedAt,
       s.source || 'website-footer',
       s.status
@@ -1207,10 +1217,25 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
     return matchesFilter && matchesSearch;
   });
 
-  // Filtered subscribers
-  const filteredSubscribers = (subscribers || []).filter(s => 
-    !subSearch || s.email.toLowerCase().includes(subSearch.toLowerCase())
-  );
+  // Deduplicated unique subscribers list (case-insensitive & trimmed)
+  const uniqueSubscribers = useMemo(() => {
+    const seen = new Set<string>();
+    const list: any[] = [];
+    for (const s of subscribers || []) {
+      const norm = (s.email || '').trim().toLowerCase();
+      if (!norm || seen.has(norm)) continue;
+      seen.add(norm);
+      list.push({ ...s, email: norm });
+    }
+    return list;
+  }, [subscribers]);
+
+  // Filtered subscribers (guaranteed unique)
+  const filteredSubscribers = useMemo(() => {
+    return uniqueSubscribers.filter(s => 
+      !subSearch || s.email.toLowerCase().includes(subSearch.trim().toLowerCase())
+    );
+  }, [uniqueSubscribers, subSearch]);
 
   // Filtered CFP Submissions
   const filteredSubmissions = (submissions || []).filter(s =>
@@ -1298,7 +1323,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
             { id: 'content', label: 'Website Content Management', icon: BookOpen },
             { id: 'communications', label: `Communications & Logs (${notificationLogs.length})`, icon: Send },
             { id: 'submissions', label: `Call for Papers (${submissions.length})`, icon: FileText },
-            { id: 'newsletter', label: `Subscribers (${subscribers.length})`, icon: Mail },
+            { id: 'newsletter', label: `Subscribers (${uniqueSubscribers.length})`, icon: Mail },
             { id: 'settings', label: 'Security & Settings', icon: KeyRound },
           ].map(tab => {
             const Icon = tab.icon;
@@ -4570,7 +4595,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
               <div className="space-y-1">
                 <h3 className="font-serif text-base font-bold text-slate-900 flex items-center space-x-2">
                   <Mail className="w-4 h-4 text-amber-700" />
-                  <span>Research Digest Subscriptions ({subscribers.length})</span>
+                  <span>Research Digest Subscriptions ({uniqueSubscribers.length})</span>
                 </h3>
                 <p className="text-xs text-slate-500">
                   Subscribers receive automated welcome email on signup and monthly policy updates.
@@ -4647,7 +4672,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
               </div>
 
               <span className="text-xs text-slate-500">
-                Showing <strong>{filteredSubscribers.length}</strong> of <strong>{subscribers.length}</strong> subscribers
+                Showing <strong>{filteredSubscribers.length}</strong> of <strong>{uniqueSubscribers.length}</strong> unique subscribers
               </span>
             </div>
 

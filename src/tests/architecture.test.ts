@@ -7,7 +7,7 @@ import { featureConfig } from '../config/featureConfig';
 import { apiConfig } from '../config/apiConfig';
 import { pincodeService } from '../services/pincodeService';
 import { registrationService } from '../services/registrationService';
-import { newsletterService } from '../services/newsletterService';
+import { newsletterService, DUPLICATE_SUBSCRIBER_MESSAGE } from '../services/newsletterService';
 import { 
   donationService,
   createDonation, 
@@ -118,6 +118,30 @@ async function runTests() {
 
   const sub2 = await newsletterService.subscribe({ email: validEmail, source: 'test-suite' });
   assert(sub2.status === 'already_subscribed', 'Duplicate email correctly triggers already_subscribed state');
+  assert(sub2.message === DUPLICATE_SUBSCRIBER_MESSAGE, 'Returns exact required duplicate message');
+
+  // Case-insensitive duplicate test
+  const subUpper = await newsletterService.subscribe({ email: validEmail.toUpperCase(), source: 'test-suite' });
+  assert(subUpper.status === 'already_subscribed', 'Uppercase email variant rejected as duplicate');
+
+  // Spaced duplicate test
+  const subSpaced = await newsletterService.subscribe({ email: `  ${validEmail}  `, source: 'test-suite' });
+  assert(subSpaced.status === 'already_subscribed', 'Spaced email variant rejected as duplicate');
+
+  // Admin manual duplicate rejection test
+  let adminDupCaught = false;
+  try {
+    await newsletterService.addSubscriberManually(validEmail);
+  } catch (err: any) {
+    adminDupCaught = true;
+    assert(err.message === DUPLICATE_SUBSCRIBER_MESSAGE, 'Admin manual addition throws exact duplicate message');
+  }
+  assert(adminDupCaught, 'Admin manual addition rejects duplicate email');
+
+  // Existing duplicates audit test
+  const auditRes = newsletterService.auditExistingDuplicates();
+  assert(auditRes !== undefined, 'Audit report generated');
+  assert(typeof auditRes.duplicatesFound === 'number', 'Audit reports duplicates found count');
 
   const subInvalid = await newsletterService.subscribe({ email: 'not-an-email', source: 'test-suite' });
   assert(subInvalid.status === 'error', 'Invalid email format is rejected gracefully');
