@@ -38,6 +38,7 @@ import { MagazineIssue, MagazineIssueInput } from '../types/magazine';
 import { teamService } from '../services/teamService';
 import { NationalTeamMember, StateChapter } from '../types/team';
 
+import { computeLiveEventStatus } from '../utils/youtube';
 import { AdminLoginForm } from '../components/admin/AdminLoginForm';
 import { RegistrationDetailModal } from '../components/admin/RegistrationDetailModal';
 import { SendNotificationModal, TemplateOption } from '../components/admin/SendNotificationModal';
@@ -300,13 +301,22 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
     };
   }, [session]);
 
-  // Listen to cross-system content updates
+  // Listen to cross-system content updates & auto-refresh scheduled events
   useEffect(() => {
     const handleUpdate = () => {
       loadAllData();
     };
     window.addEventListener('bharat:content-updated', handleUpdate);
-    return () => window.removeEventListener('bharat:content-updated', handleUpdate);
+    const liveInterval = setInterval(async () => {
+      try {
+        const refreshedEvents = await eventService.getEvents(true);
+        setEvents(refreshedEvents);
+      } catch {}
+    }, 30000);
+    return () => {
+      window.removeEventListener('bharat:content-updated', handleUpdate);
+      clearInterval(liveInterval);
+    };
   }, []);
 
   const loadAllData = async () => {
@@ -2685,13 +2695,18 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
                               </td>
                               <td className="p-3.5">
                                 {isLive ? (
-                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                    e.liveStatus === 'live' ? 'bg-red-600 text-white animate-pulse' :
-                                    e.liveStatus === 'upcoming' ? 'bg-amber-100 text-amber-900' :
-                                    'bg-slate-100 text-slate-600'
-                                  }`}>
-                                    {e.liveStatus === 'live' ? '🔴 Live Now' : e.liveStatus === 'upcoming' ? '⏳ Scheduled' : '⏹️ Ended'}
-                                  </span>
+                                  (() => {
+                                    const currentLiveStatus = computeLiveEventStatus(e);
+                                    return (
+                                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                        currentLiveStatus === 'live' ? 'bg-red-600 text-white animate-pulse' :
+                                        currentLiveStatus === 'upcoming' ? 'bg-amber-100 text-amber-900' :
+                                        'bg-slate-100 text-slate-600'
+                                      }`}>
+                                        {currentLiveStatus === 'live' ? '🔴 Live Now' : currentLiveStatus === 'upcoming' ? '⏳ Scheduled' : '⏹️ Ended'}
+                                      </span>
+                                    );
+                                  })()
                                 ) : ((e as any).isFlagship || e.id === 'evt-ucc-flagship') ? (
                                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900">Flagship</span>
                                 ) : (

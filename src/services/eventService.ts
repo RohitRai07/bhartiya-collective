@@ -157,7 +157,16 @@ export const eventService = {
     }
 
     await new Promise(resolve => setTimeout(resolve, 60));
-    const items = loadStoredEvents();
+    const rawItems = loadStoredEvents();
+    const items = rawItems.map(e => {
+      if (e.isLive || Boolean(e.youtubeUrl) || e.type === 'Live Stream') {
+        const autoStatus = computeLiveEventStatus(e);
+        if (autoStatus && e.liveStatus !== autoStatus) {
+          return { ...e, liveStatus: autoStatus };
+        }
+      }
+      return e;
+    });
     if (includeDrafts) return items;
     return items.filter(e => !e.status || e.status === 'published');
   },
@@ -179,7 +188,16 @@ export const eventService = {
       return response.data;
     }
 
-    const items = loadStoredEvents();
+    const rawItems = loadStoredEvents();
+    const items = rawItems.map(e => {
+      if (e.isLive || Boolean(e.youtubeUrl) || e.type === 'Live Stream') {
+        const autoStatus = computeLiveEventStatus(e);
+        if (autoStatus && e.liveStatus !== autoStatus) {
+          return { ...e, liveStatus: autoStatus };
+        }
+      }
+      return e;
+    });
     return items.find(e => e.id === id) || null;
   },
 
@@ -193,7 +211,16 @@ export const eventService = {
     }
 
     await new Promise(resolve => setTimeout(resolve, 150));
-    const items = loadStoredEvents();
+    const rawItems = loadStoredEvents();
+    const items = rawItems.map(e => {
+      if (e.isLive || Boolean(e.youtubeUrl) || e.type === 'Live Stream') {
+        const autoStatus = computeLiveEventStatus(e);
+        if (autoStatus && e.liveStatus !== autoStatus) {
+          return { ...e, liveStatus: autoStatus };
+        }
+      }
+      return e;
+    });
 
     let ytId = input.youtubeId;
     if (input.youtubeUrl && !ytId) {
@@ -263,7 +290,16 @@ export const eventService = {
     }
 
     await new Promise(resolve => setTimeout(resolve, 150));
-    const items = loadStoredEvents();
+    const rawItems = loadStoredEvents();
+    const items = rawItems.map(e => {
+      if (e.isLive || Boolean(e.youtubeUrl) || e.type === 'Live Stream') {
+        const autoStatus = computeLiveEventStatus(e);
+        if (autoStatus && e.liveStatus !== autoStatus) {
+          return { ...e, liveStatus: autoStatus };
+        }
+      }
+      return e;
+    });
     const idx = items.findIndex(e => e.id === id);
     if (idx === -1) throw new Error('Event not found.');
 
@@ -321,7 +357,16 @@ export const eventService = {
 
     await new Promise(resolve => setTimeout(resolve, 100));
     recordDeletedEventId(id);
-    const items = loadStoredEvents();
+    const rawItems = loadStoredEvents();
+    const items = rawItems.map(e => {
+      if (e.isLive || Boolean(e.youtubeUrl) || e.type === 'Live Stream') {
+        const autoStatus = computeLiveEventStatus(e);
+        if (autoStatus && e.liveStatus !== autoStatus) {
+          return { ...e, liveStatus: autoStatus };
+        }
+      }
+      return e;
+    });
     saveEvents(items.filter(e => e.id !== id));
     return true;
   },

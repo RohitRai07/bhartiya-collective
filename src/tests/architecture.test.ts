@@ -63,6 +63,9 @@ import {
 import { 
   validateBroadcastTime, 
   extractBroadcastTime, 
+  extractBroadcastEndTime,
+  parseEventTimeRange,
+  formatGraceEndTime,
   formatBroadcastStorageTime, 
   TIME_FORMAT_ERROR,
   parseBroadcastTime, 
@@ -1357,6 +1360,18 @@ async function runTests() {
   assert(computeLiveEventStatus({ date: todayStr }) === 'live', 'Event scheduled for today computes as live');
   assert(computeLiveEventStatus({ date: '2020-01-01' }) === 'ended', 'Event scheduled in past computes as ended');
   assert(computeLiveEventStatus({ date: '2030-12-31' }) === 'upcoming', 'Event scheduled in future computes as upcoming');
+
+  // Automatic Schedule Transitions (e.g. 1 November 4pm to 8pm + 30m grace)
+  const scheduledUserEvent = { date: '2026-11-01', time: '4pm to 8pm' };
+  assert(computeLiveEventStatus(scheduledUserEvent, new Date(2026, 10, 1, 15, 30)) === 'upcoming', 'Before start time computes as upcoming');
+  assert(computeLiveEventStatus(scheduledUserEvent, new Date(2026, 10, 1, 16, 0)) === 'live', 'Start time breach automatically changes to ongoing (live)');
+  assert(computeLiveEventStatus(scheduledUserEvent, new Date(2026, 10, 1, 18, 0)) === 'live', 'During event timing window computes as ongoing (live)');
+  assert(computeLiveEventStatus(scheduledUserEvent, new Date(2026, 10, 1, 20, 0)) === 'live', 'Scheduled end time remains ongoing within +30m grace');
+  assert(computeLiveEventStatus(scheduledUserEvent, new Date(2026, 10, 1, 20, 25)) === 'live', 'Inside end time + 30m grace remains ongoing (live)');
+  assert(computeLiveEventStatus(scheduledUserEvent, new Date(2026, 10, 1, 20, 31)) === 'ended', 'Breaching end time + 30m grace automatically changes to stream ended');
+
+  assert(formatGraceEndTime('08:00 PM') === '08:30 PM', 'End time grace threshold calculates +30 minutes correctly');
+  assert(formatGraceEndTime('04:15 PM') === '04:45 PM', 'End time grace threshold handles arbitrary minutes');
 
   // 4. Live Event Service CRUD & Publishing Lifecycle
   const testLiveEvent = await eventService.createLiveEvent({

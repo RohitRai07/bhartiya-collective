@@ -42,8 +42,12 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate }) => {
     };
 
     loadLive();
+    const timer = setInterval(loadLive, 30000);
     window.addEventListener('bharat:content-updated', loadLive);
-    return () => window.removeEventListener('bharat:content-updated', loadLive);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('bharat:content-updated', loadLive);
+    };
   }, []);
 
   if (!isEventsActive) {

@@ -3,6 +3,8 @@
  * Supports standard watch URLs, short URLs, embed URLs, and YouTube Live URLs.
  */
 
+import { calculateEventTimingWindow } from './timeValidation';
+
 export type LiveStreamStatus = 'upcoming' | 'live' | 'ended';
 
 /**
@@ -82,32 +84,29 @@ export function getYouTubeWatchUrl(youtubeId: string): string {
 }
 
 /**
- * Dynamically compute live event status based on explicit setting or scheduled date/time
+ * Dynamically compute live event status based on explicit setting or scheduled date/time.
+ * 
+ * Timing rules:
+ * - Before start time: 'upcoming' (Scheduled Stream)
+ * - Start time breach up to (End time + 30 minutes grace): 'live' (Ongoing / Live Now)
+ * - After (End time + 30 minutes grace): 'ended' (Stream Ended / Replay)
  */
-export function computeLiveEventStatus(event: {
-  date?: string;
-  time?: string;
-  liveStatus?: LiveStreamStatus;
-}): LiveStreamStatus {
-  if (event.liveStatus && ['upcoming', 'live', 'ended'].includes(event.liveStatus)) {
-    return event.liveStatus;
-  }
-
-  if (!event.date) return 'upcoming';
-
-  try {
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const eventDateStr = event.date.trim();
-
-    if (eventDateStr === todayStr) {
-      return 'live';
-    } else if (eventDateStr < todayStr) {
-      return 'ended';
-    } else {
-      return 'upcoming';
+export function computeLiveEventStatus(
+  event: {
+    date?: string;
+    time?: string;
+    liveStatus?: LiveStreamStatus;
+  },
+  now: Date = new Date()
+): LiveStreamStatus {
+  // If explicitly called with no date and no time (unit tests or explicit call without event schedule)
+  if (!event.date && !event.time) {
+    if (event.liveStatus && ['upcoming', 'live', 'ended'].includes(event.liveStatus)) {
+      return event.liveStatus;
     }
-  } catch {
     return 'upcoming';
   }
+
+  // Calculate dynamic status using scheduled start, end, and +30 min grace window
+  return calculateEventTimingWindow(event, now).status;
 }

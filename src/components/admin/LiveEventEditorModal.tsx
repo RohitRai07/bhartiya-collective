@@ -19,12 +19,15 @@ import {
   STANDARD_SPEAKER_ROLES,
   COMMON_AFFILIATIONS
 } from '../../types/event';
-import { extractYouTubeId, getYouTubeThumbnail } from '../../utils/youtube';
+import { extractYouTubeId, getYouTubeThumbnail, computeLiveEventStatus } from '../../utils/youtube';
 import { BroadcastTimeInput } from './BroadcastTimeInput';
 import { 
   validateBroadcastTime, 
   extractBroadcastTime, 
+  extractBroadcastEndTime,
   formatBroadcastStorageTime, 
+  parseEventTimeRange,
+  formatGraceEndTime,
   TIME_FORMAT_ERROR 
 } from '../../utils/timeValidation';
 import { expertService } from '../../services/expertService';
@@ -48,8 +51,10 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
   const [title, setTitle] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState('06:30 PM');
-  const [timeError, setTimeError] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState('04:00 PM');
+  const [endTime, setEndTime] = useState('08:00 PM');
+  const [startTimeError, setStartTimeError] = useState<string | null>(null);
+  const [endTimeError, setEndTimeError] = useState<string | null>(null);
   const [location, setLocation] = useState('Online & YouTube Live Broadcast');
   const [liveStatus, setLiveStatus] = useState<LiveStreamStatus | 'auto'>('auto');
   const [customThumbnail, setCustomThumbnail] = useState('');
@@ -79,7 +84,8 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       setTitle(initialData.title || '');
       setYoutubeUrl(initialData.youtubeUrl || '');
       setDate(initialData.date || new Date().toISOString().split('T')[0]);
-      setTime(extractBroadcastTime(initialData.time, '06:30 PM'));
+      setStartTime(extractBroadcastTime(initialData.time, '04:00 PM'));
+      setEndTime(extractBroadcastEndTime(initialData.time, ''));
       setLocation(initialData.location || 'Online & YouTube Live Broadcast');
       setLiveStatus(initialData.liveStatus || 'auto');
       setCustomThumbnail(initialData.posterUrl || initialData.bannerImage || initialData.customThumbnailUrl || '');
@@ -94,7 +100,8 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       setTitle('');
       setYoutubeUrl('');
       setDate(new Date().toISOString().split('T')[0]);
-      setTime('06:30 PM');
+      setStartTime('04:00 PM');
+      setEndTime('08:00 PM');
       setLocation('Online & YouTube Live Broadcast');
       setLiveStatus('auto');
       setCustomThumbnail('');
@@ -102,7 +109,8 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       setRegistrationOpen(true);
       setSpeakers([{ name: '', affiliation: '', role: 'Keynote Speaker' }]);
     }
-    setTimeError(null);
+    setStartTimeError(null);
+    setEndTimeError(null);
     setError(null);
   }, [initialData, isOpen]);
 
@@ -111,6 +119,13 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
   const currentYtId = extractYouTubeId(youtubeUrl);
   const autoYtThumbnail = currentYtId ? getYouTubeThumbnail(currentYtId) : '';
   const effectiveThumbnail = customThumbnail.trim() || autoYtThumbnail;
+
+  const combinedTimePreview = endTime.trim() ? `${startTime} – ${endTime} IST` : `${startTime} IST`;
+  const currentComputedStatus = computeLiveEventStatus({
+    date,
+    time: combinedTimePreview,
+    liveStatus: liveStatus === 'auto' ? undefined : liveStatus,
+  });
 
   const handleAddSpeaker = () => {
     setSpeakers([...speakers, { name: '', affiliation: '', role: 'Plenary Panelist' }]);
@@ -144,28 +159,40 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
       return;
     }
 
-    const timeValidation = validateBroadcastTime(time);
-    if (!timeValidation.isValid) {
-      const errMsg = timeValidation.error || TIME_FORMAT_ERROR;
-      setTimeError(errMsg);
+    const startValidation = validateBroadcastTime(startTime);
+    if (!startValidation.isValid) {
+      const errMsg = startValidation.error || TIME_FORMAT_ERROR;
+      setStartTimeError(errMsg);
       setError(errMsg);
       return;
     }
 
+    let storageTime = startValidation.formattedTime;
+    if (endTime.trim()) {
+      const endValidation = validateBroadcastTime(endTime);
+      if (!endValidation.isValid) {
+        setEndTimeError('Please enter a valid end time in HH:MM AM/PM format (e.g. 08:00 PM).');
+        setError('Please enter a valid end time in HH:MM AM/PM format (e.g. 08:00 PM).');
+        return;
+      }
+      storageTime = `${startValidation.formattedTime} – ${endValidation.formattedTime}`;
+    }
+    const finalStorageTime = formatBroadcastStorageTime(storageTime);
+
     setSaving(true);
     setError(null);
-    setTimeError(null);
+    setStartTimeError(null);
+    setEndTimeError(null);
 
     try {
       const filteredSpeakers = speakers.filter(s => s.name.trim() !== '');
-      const storageTime = formatBroadcastStorageTime(timeValidation.formattedTime);
 
       const payload: Partial<EventItem> = {
         title: title.trim(),
         type: 'Live Stream',
         mode: 'Online Webinar',
         date: date.trim(),
-        time: storageTime,
+        time: finalStorageTime,
         location: location.trim() || 'Online & YouTube Live Stream',
         description: description.trim(),
         speakers: filteredSpeakers.length > 0 ? filteredSpeakers : [
@@ -287,77 +314,100 @@ export const LiveEventEditorModal: React.FC<LiveEventEditorModalProps> = ({
             ) : null}
           </div>
 
-          {/* Schedule (Date, Time with Clock Picker, Live Status) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Schedule (Date, Start Time, End Time, Live Status) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="space-y-1">
-              <label className="block font-semibold text-slate-900">
+              <label className="block font-semibold text-slate-900 text-xs">
                 Scheduled Date *
               </label>
               <div className="relative">
-                <Calendar className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+                <Calendar className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="date"
                   required
                   value={date}
                   onChange={e => setDate(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white text-xs font-medium"
                 />
               </div>
             </div>
 
             <div>
-              {/* Manual Time Entry with Strict Validation */}
               <BroadcastTimeInput
-                value={time}
+                value={startTime}
                 onChange={val => {
-                  setTime(val);
-                  if (timeError) {
-                    const res = validateBroadcastTime(val);
-                    if (res.isValid) setTimeError(null);
+                  const range = parseEventTimeRange(val);
+                  if (range && range.hasEndTime) {
+                    setStartTime(extractBroadcastTime(val));
+                    setEndTime(extractBroadcastEndTime(val));
+                  } else {
+                    setStartTime(val);
                   }
+                  if (startTimeError) setStartTimeError(null);
                 }}
-                error={timeError}
-                onErrorChange={setTimeError}
-                label="Broadcast Time (IST) *"
+                error={startTimeError}
+                onErrorChange={setStartTimeError}
+                label="Start Time (IST) *"
+                placeholder="04:00 PM"
+              />
+            </div>
+
+            <div>
+              <BroadcastTimeInput
+                value={endTime}
+                onChange={val => {
+                  setEndTime(val);
+                  if (endTimeError) setEndTimeError(null);
+                }}
+                error={endTimeError}
+                onErrorChange={setEndTimeError}
+                label="End Time (IST)"
+                placeholder="08:00 PM"
+                required={false}
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block font-semibold text-slate-900">
+              <label className="block font-semibold text-slate-900 text-xs">
                 Live Status
               </label>
               <select
                 value={liveStatus}
                 onChange={e => setLiveStatus(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white font-medium"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:ring-1 focus:ring-red-600 focus:border-red-600 bg-white text-xs font-medium"
               >
                 <option value="auto">Auto (Calculate from schedule)</option>
-                <option value="live">🔴 Live Now (Broadcasting)</option>
+                <option value="live">🔴 Live Now (Broadcasting / Ongoing)</option>
                 <option value="upcoming">⏳ Upcoming (Scheduled)</option>
-                <option value="ended">⏹️ Ended / Replay</option>
+                <option value="ended">⏹️ Stream Ended / Replay</option>
               </select>
             </div>
           </div>
 
           {/* Schedule Confirmation & Clear Display Box */}
-          <div className="p-3 bg-gradient-to-r from-red-50 to-amber-50/70 border border-red-200/80 rounded-2xl flex items-center justify-between text-xs">
+          <div className="p-3 bg-gradient-to-r from-red-50 to-amber-50/70 border border-red-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
             <div className="flex items-center space-x-2.5">
               <div className="w-8 h-8 rounded-xl bg-red-600/15 text-red-700 flex items-center justify-center shrink-0 border border-red-200">
                 <Radio className="w-4 h-4 text-red-600" />
               </div>
               <div>
                 <span className="text-[10px] font-bold text-red-800 uppercase tracking-wider block">
-                  Broadcast Schedule Confirmation
+                  Broadcast Schedule & Auto-Transition Status
                 </span>
                 <span className="font-semibold text-slate-900 text-xs">
-                  {date ? new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'Date not set'} • {validateBroadcastTime(time).isValid ? formatBroadcastStorageTime(validateBroadcastTime(time).formattedTime) : (time ? `${time} (Invalid Format)` : 'Time not set')}
+                  {date ? new Date(date + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'Date not set'} • {startTime || 'Time not set'}{endTime ? ` – ${endTime} IST` : ' IST'} {endTime ? `(+30m grace to ${formatGraceEndTime(endTime)})` : ''}
                 </span>
               </div>
             </div>
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white text-slate-800 border border-slate-200 shadow-2xs">
-              {liveStatus === 'live' ? '🔴 Live' : liveStatus === 'upcoming' ? '⏳ Scheduled' : liveStatus === 'ended' ? '⏹️ Ended' : 'Auto Status'}
-            </span>
+            <div className="flex items-center space-x-2 self-start sm:self-auto">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white text-slate-800 border border-slate-200 shadow-2xs">
+                {currentComputedStatus === 'live' ? '🔴 Live Now (Ongoing)' : currentComputedStatus === 'upcoming' ? '⏳ Scheduled' : '⏹️ Stream Ended'}
+              </span>
+            </div>
           </div>
+          <p className="text-[11px] text-slate-500 -mt-1 pl-1">
+            ⚡ <strong>Automatic transition:</strong> Changes to <strong>Ongoing</strong> automatically when start time arrives, and to <strong>Stream Ended</strong> exactly 30 minutes after scheduled end time.
+          </p>
 
           {/* Event Poster Upload / Stream Artwork */}
           <div className="space-y-1.5 pt-1">
