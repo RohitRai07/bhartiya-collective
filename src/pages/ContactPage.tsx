@@ -414,7 +414,7 @@ export const ContactPage: React.FC = () => {
                 {/* Email Submission Information */}
                 <div className="pt-4 border-t border-slate-100 text-xs text-slate-600 space-y-1">
                   <p className="leading-relaxed">
-                    Please send your abstract to{' '}
+                    Please send your paper to{' '}
                     <a
                       href={siteConfig.contact.callForPapersMailto}
                       className="font-semibold text-amber-700 hover:text-amber-800 underline underline-offset-2 transition-colors inline-flex items-center space-x-1 cursor-pointer"

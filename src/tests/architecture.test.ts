@@ -1753,6 +1753,7 @@ async function runTests() {
   assert(contactPageSource.includes('siteConfig.contact.callForPapersMailto'), 'Contact page Call for Papers links to callForPapersMailto with CFP subject');
   assert(contactPageSource.includes('siteConfig.contact.phoneTel'), 'Contact page header links to phoneTel tel: link');
   assert(contactPageSource.includes('{siteConfig.contact.officeEmail}'), 'Contact page displays official office email');
+  assert(contactPageSource.includes('Please send your paper to'), 'Contact page instructs users: Please send your paper to office@bharatcollective.in');
 
   // --- Testing Email Address Validation Rules ---
   console.log('\n📌 Testing Robust Email Validation Rules (Client & Server):');
