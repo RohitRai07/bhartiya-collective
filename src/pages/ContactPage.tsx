@@ -8,7 +8,7 @@ import {
   validateExtendedAbstract, 
   countWords 
 } from '../services/contactValidation';
-import { Mail, MapPin, Phone, Send, CheckCircle2, Loader2, FileText, AlertCircle } from 'lucide-react';
+import { Send, CheckCircle2, Loader2, FileText, AlertCircle } from 'lucide-react';
 
 export const ContactPage: React.FC = () => {
   const [isCfpActive, setIsCfpActive] = useState(featureConfig.isEnabled('callForPapers'));
@@ -141,13 +141,10 @@ export const ContactPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Main Grid: On Mobile View, Call for Papers is FIRST (order-1), Secretariat is SECOND (order-2).
-          On Desktop View (lg:), Secretariat is on the Left (lg:order-1), Call for Papers on the Right (lg:order-2). */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        
-        {/* Call for Papers Section: order-1 on mobile, lg:order-2 on desktop */}
-        <div id="papers" className="order-1 lg:order-2 lg:col-span-7">
-          <div className="bg-white rounded-2xl p-7 sm:p-9 border border-slate-200 shadow-sm">
+      {/* Centered Call for Papers Application Section */}
+      <div className="max-w-3xl mx-auto w-full">
+        <div id="papers" className="w-full">
+          <div className="bg-white rounded-2xl p-7 sm:p-10 border border-slate-200 shadow-sm">
             <h3 className="font-serif text-2xl font-bold text-slate-900 mb-1">
               Call for Papers & Scholarly Abstracts
             </h3>
@@ -417,53 +414,6 @@ export const ContactPage: React.FC = () => {
 
           </div>
         </div>
-
-        {/* Secretariat Details Section: order-2 on mobile, lg:order-1 on desktop */}
-        <div className="order-2 lg:order-1 lg:col-span-5 space-y-6">
-          <div className="bg-white rounded-2xl p-7 border border-slate-200 shadow-sm space-y-6">
-            <h3 className="font-serif text-xl font-bold text-slate-900 border-b border-slate-100 pb-3">
-              Secretariat Details
-            </h3>
-
-            <div className="space-y-4 text-xs text-slate-600">
-              <div className="flex items-start space-x-3">
-                <MapPin className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-slate-800 text-sm">Postal Address</strong>
-                  <span>{siteConfig.contact.address}</span>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Mail className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-slate-800 text-sm">General Inquiries</strong>
-                  <span>{siteConfig.contact.email}</span>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Mail className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-slate-800 text-sm">Press & Editorial</strong>
-                  <span>{siteConfig.contact.pressEmail}</span>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Phone className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block text-slate-800 text-sm">Telephone</strong>
-                  <div className="space-y-0.5">
-                    <span className="block">{siteConfig.contact.phone}</span>
-                    <span className="block">{siteConfig.contact.phoneSecondary}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
 
     </div>

@@ -1690,19 +1690,14 @@ async function runTests() {
   assert(Boolean(sampleEvent), 'Events catalog is available for registration');
   assert(typeof sampleEvent.id === 'string', 'Event has valid ID for registration and RSVP logging');
 
-  // --- Testing Contact Page Call for Papers Section Priority & Mobile/Desktop Order ---
-  console.log('\n📌 Testing Contact Page Call for Papers Mobile/Desktop Priority & Layout:');
+  // --- Testing Contact Page Call for Papers Layout & Removal of Secretariat Details ---
+  console.log('\n📌 Testing Contact Page Call for Papers Layout & Complete Removal of Secretariat Details:');
   const contactPageSource = fs.readFileSync('src/pages/ContactPage.tsx', 'utf8');
   
-  // Verify Mobile Priority: Call for Papers has order-1, Secretariat has order-2
-  assert(
-    contactPageSource.includes('id="papers" className="order-1 lg:order-2 lg:col-span-7"'),
-    'Call for Papers container has order-1 for mobile and lg:order-2 for desktop'
-  );
-  assert(
-    contactPageSource.includes('className="order-2 lg:order-1 lg:col-span-5 space-y-6"'),
-    'Secretariat Details container has order-2 for mobile and lg:order-1 for desktop'
-  );
+  // Verify Secretariat Details Section is Completely Removed
+  assert(!contactPageSource.includes('Secretariat Details'), 'Secretariat Details section is completely removed from ContactPage');
+  assert(!contactPageSource.includes('Postal Address'), 'Postal Address section is removed from ContactPage');
+  assert(contactPageSource.includes('id="papers"'), 'Contact page contains Call for Papers intake');
 
   // Verify All 6 Mandatory Fields are Present in Exact Order
   const field1Idx = contactPageSource.indexOf('Candidate Full Name');
@@ -1724,13 +1719,6 @@ async function runTests() {
   assert(field3Idx < field4Idx, 'Mobile Number precedes Organization');
   assert(field4Idx < field5Idx, 'Organization precedes Qualification');
   assert(field5Idx < field6Idx, 'Qualification precedes Extended Abstract');
-
-  // Verify Secretariat Details Preserved
-  assert(contactPageSource.includes('Secretariat Details'), 'Secretariat Details title preserved');
-  assert(contactPageSource.includes('Postal Address'), 'Postal Address section preserved');
-  assert(contactPageSource.includes('General Inquiries'), 'General Inquiries section preserved');
-  assert(contactPageSource.includes('Press & Editorial'), 'Press & Editorial section preserved');
-  assert(contactPageSource.includes('Telephone'), 'Telephone section preserved');
 
   // --- Testing Centralized Email Configuration & Mailto Link ---
   console.log('\n📌 Testing Centralized Office Email Configuration & Mailto Link:');
