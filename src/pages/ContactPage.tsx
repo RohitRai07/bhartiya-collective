@@ -6,7 +6,8 @@ import {
   validateEmailAddress, 
   validateIndianMobile, 
   validateExtendedAbstract, 
-  countWords 
+  countWords,
+  INDIAN_MOBILE_CONFIG
 } from '../services/contactValidation';
 import { Send, CheckCircle2, Loader2, FileText, AlertCircle } from 'lucide-react';
 
@@ -94,12 +95,13 @@ export const ContactPage: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      const phoneVal = validateIndianMobile(mobileNumber);
       const record = await submissionService.submitPaper({
         candidateName: candidateName.trim(),
         authorName: candidateName.trim(),
         authorEmail: email.trim().toLowerCase(),
-        mobileNumber: mobileNumber.trim(),
-        phone: mobileNumber.trim(),
+        mobileNumber: phoneVal.formatted || mobileNumber.trim(),
+        phone: phoneVal.formatted || mobileNumber.trim(),
         organization: organization.trim(),
         affiliation: organization.trim(),
         qualification: qualification.trim(),
@@ -261,22 +263,28 @@ export const ContactPage: React.FC = () => {
                     <label htmlFor="mobileNumber" className="block text-xs font-semibold text-slate-700 mb-1">
                       Mobile Number (India) <span className="text-rose-500">*</span>
                     </label>
-                    <input
-                      id="mobileNumber"
-                      type="tel"
-                      required
-                      placeholder="e.g. 98765 43210 or +91 9876543210"
-                      value={mobileNumber}
-                      onChange={e => {
-                        setMobileNumber(e.target.value);
-                        if (errors.mobileNumber) setErrors(prev => ({ ...prev, mobileNumber: undefined }));
-                      }}
-                      className={`w-full px-3.5 py-2.5 rounded-xl border text-xs transition-colors ${
-                        errors.mobileNumber 
-                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:outline-none' 
-                          : 'border-slate-200 focus:border-amber-600 focus:outline-none'
-                      }`}
-                    />
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-600 font-semibold text-xs flex-shrink-0">
+                        {INDIAN_MOBILE_CONFIG.displayPrefix}
+                      </span>
+                      <input
+                        id="mobileNumber"
+                        type="tel"
+                        maxLength={INDIAN_MOBILE_CONFIG.digitCount}
+                        required
+                        placeholder={INDIAN_MOBILE_CONFIG.placeholder}
+                        value={mobileNumber}
+                        onChange={e => {
+                          setMobileNumber(INDIAN_MOBILE_CONFIG.sanitize(e.target.value));
+                          if (errors.mobileNumber) setErrors(prev => ({ ...prev, mobileNumber: undefined }));
+                        }}
+                        className={`w-full px-3.5 py-2.5 rounded-r-xl border text-xs transition-colors ${
+                          errors.mobileNumber 
+                            ? 'border-rose-400 bg-rose-50/30 focus:border-rose-500 focus:outline-none' 
+                            : 'border-slate-200 focus:border-amber-600 focus:outline-none'
+                        }`}
+                      />
+                    </div>
                     {errors.mobileNumber && (
                       <p className="text-[11px] text-rose-600 mt-1 flex items-center space-x-1">
                         <AlertCircle className="w-3 h-3 flex-shrink-0" />

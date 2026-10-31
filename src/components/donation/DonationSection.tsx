@@ -1,4 +1,4 @@
-import { validateEmailAddress } from '../../services/contactValidation';
+import { validateEmailAddress, INDIAN_MOBILE_CONFIG } from '../../services/contactValidation';
 import React, { useState } from 'react';
 import { 
   createDonation, 
@@ -402,16 +402,22 @@ export const DonationSection: React.FC = () => {
 
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">
-                      Mobile Number <span className="text-amber-600">*</span>
+                      Mobile Number (India) <span className="text-amber-600">*</span>
                     </label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="+91 9876543210"
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-amber-600"
-                    />
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-600 font-semibold text-xs flex-shrink-0">
+                        {INDIAN_MOBILE_CONFIG.displayPrefix}
+                      </span>
+                      <input
+                        type="tel"
+                        maxLength={INDIAN_MOBILE_CONFIG.digitCount}
+                        required
+                        placeholder={INDIAN_MOBILE_CONFIG.placeholder}
+                        value={phone}
+                        onChange={e => setPhone(INDIAN_MOBILE_CONFIG.sanitize(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-r-xl border border-slate-200 text-sm focus:border-amber-600 focus:outline-none"
+                      />
+                    </div>
                   </div>
 
                   <div>

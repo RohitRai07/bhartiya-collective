@@ -5580,7 +5580,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
                   </p>
                   <ul className="list-disc list-inside space-y-1 pl-1 text-[11px] text-amber-900">
                     <li>
-                      <strong>On-Screen Letterhead Preview:</strong> Whenever someone subscribes in the website footer, an instant "View Received Welcome Email" interactive modal displays the official letterhead and message.
+                      <strong>Automatic Confirmation:</strong> Whenever someone subscribes in the website footer, an instant on-screen confirmation is shown, and the notification is dispatched.
                     </li>
                     <li>
                       <strong>Admin Communications Log:</strong> Every generated confirmation is logged in the <em>Communications & Logs</em> tab.

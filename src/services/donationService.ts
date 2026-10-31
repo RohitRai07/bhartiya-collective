@@ -1,4 +1,4 @@
-import { validateEmailAddress } from './contactValidation';
+import { validateEmailAddress, validateIndianMobile } from './contactValidation';
 /**
  * Donation Service
  * 
@@ -40,16 +40,11 @@ export function validateDonationPhone(phone: string): { isValid: boolean; error?
   if (!digitsOnly) {
     return { isValid: false, error: 'Please enter your mobile number.' };
   }
-  let nationalNumber = digitsOnly;
-  if (digitsOnly.startsWith('91') && digitsOnly.length === 12) {
-    nationalNumber = digitsOnly.slice(2);
-  } else if (digitsOnly.startsWith('0') && digitsOnly.length === 11) {
-    nationalNumber = digitsOnly.slice(1);
+  const val = validateIndianMobile(raw);
+  if (!val.isValid) {
+    return { isValid: false, error: val.error || 'Please enter a valid 10-digit Indian mobile number.' };
   }
-  if (nationalNumber.length !== 10 || !/^[6-9]\d{9}$/.test(nationalNumber)) {
-    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.' };
-  }
-  return { isValid: true, cleanPhone: `+91 ${nationalNumber}` };
+  return { isValid: true, cleanPhone: `+91 ${val.nationalNumber}` };
 }
 
 /**

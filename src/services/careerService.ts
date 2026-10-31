@@ -1,4 +1,4 @@
-import { validateEmailAddress } from './contactValidation';
+import { validateEmailAddress, validateIndianMobile } from './contactValidation';
 import { CareerApplicationInput, CareerApplicationRecord, MAX_CV_SIZE_BYTES } from '../types/career';
 
 const STORAGE_KEY = 'bharat_career_applications';
@@ -89,6 +89,11 @@ class CareerService {
       throw new Error(emailVal.error || 'Please enter a valid email address.');
     }
 
+    const phoneVal = validateIndianMobile(input.phone);
+    if (!phoneVal.isValid) {
+      throw new Error(phoneVal.error || 'Please enter a valid 10-digit Indian mobile number.');
+    }
+
     if (input.cvFileSize && input.cvFileSize > MAX_CV_SIZE_BYTES) {
       throw new Error('CV file exceeds the strict maximum limit of 1 MB.');
     }
@@ -103,6 +108,7 @@ class CareerService {
 
     const newRecord: CareerApplicationRecord = {
       ...input,
+      phone: phoneVal.formatted,
       id: `app-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
       applicationCode,
       status: 'pending',

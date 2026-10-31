@@ -471,6 +471,22 @@ export function validateEmailAddress(rawInput: string): { isValid: boolean; erro
 }
 
 /**
+ * Standard Centralized Configuration for Indian Mobile Numbers
+ * Single source of truth across the Bharat Collective web ecosystem.
+ */
+export const INDIAN_MOBILE_CONFIG = {
+  countryCode: '+91',
+  flag: '🇮🇳',
+  displayPrefix: '🇮🇳 +91',
+  digitCount: 10,
+  placeholder: '9876543210',
+  errorMessage: 'Please enter a valid 10-digit Indian mobile number.',
+  startingDigits: ['6', '7', '8', '9'] as const,
+  regex: /^[6-9]\d{9}$/,
+  sanitize: (input: string): string => (input || '').replace(/[^0-9]/g, '').slice(0, 10),
+};
+
+/**
  * Validate 10-digit Indian Mobile Number
  * 
  * - Accepts 10 digits starting with 6, 7, 8, or 9
@@ -486,12 +502,12 @@ export function validateIndianMobile(rawInput: string): {
 } {
   const trimmed = (rawInput || '').trim();
   if (!trimmed) {
-    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.', formatted: '' };
+    return { isValid: false, error: INDIAN_MOBILE_CONFIG.errorMessage, formatted: '' };
   }
 
   // Check for illegal non-phone characters (anything other than digits, +, -, (, ), spaces)
   if (/[^\d\s\-+()]/.test(trimmed)) {
-    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.', formatted: trimmed };
+    return { isValid: false, error: INDIAN_MOBILE_CONFIG.errorMessage, formatted: trimmed };
   }
 
   let digits = trimmed.replace(/[\s\-()]/g, '');
@@ -507,8 +523,8 @@ export function validateIndianMobile(rawInput: string): {
   }
 
   // Validate exact 10 digits starting with 6, 7, 8, or 9
-  if (!/^[6-9]\d{9}$/.test(digits)) {
-    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.', formatted: trimmed };
+  if (!INDIAN_MOBILE_CONFIG.regex.test(digits)) {
+    return { isValid: false, error: INDIAN_MOBILE_CONFIG.errorMessage, formatted: trimmed };
   }
 
   const formatted = `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;

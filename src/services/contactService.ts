@@ -1,4 +1,4 @@
-import { validateEmailAddress } from './contactValidation';
+import { validateEmailAddress, validateIndianMobile } from './contactValidation';
 /**
  * Contact & Inquiry Service
  * 
@@ -101,6 +101,15 @@ class ContactService {
       throw new Error(emailVal.error || 'Please enter a valid email address.');
     }
 
+    let formattedPhone = input.phone;
+    if (input.phone && input.phone.trim()) {
+      const phoneVal = validateIndianMobile(input.phone);
+      if (!phoneVal.isValid) {
+        throw new Error(phoneVal.error || 'Please enter a valid 10-digit Indian mobile number.');
+      }
+      formattedPhone = phoneVal.formatted;
+    }
+
     const current = this.getStore();
     const count = current.length + 1;
     const randomSuffix = Math.floor(100 + Math.random() * 900);
@@ -108,6 +117,7 @@ class ContactService {
 
     const newRecord: ContactInquiryRecord = {
       ...input,
+      phone: formattedPhone,
       category: input.category || 'general',
       id: `inq-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
       inquiryCode,

@@ -6,6 +6,7 @@
 
 import { apiConfig } from '../config/apiConfig';
 import { apiClient } from './apiClient';
+import { validateIndianMobile } from './contactValidation';
 import { PaperSubmissionInput, PaperSubmissionRecord, PaperSubmissionStatus } from '../types/submission';
 
 const initialSubmissions: PaperSubmissionRecord[] = [
@@ -83,6 +84,15 @@ export const submissionService = {
     const affiliation = input.affiliation || input.organization || '';
     const phone = input.phone || input.mobileNumber || '';
 
+    let formattedPhone = phone;
+    if (phone && phone.trim()) {
+      const pVal = validateIndianMobile(phone);
+      if (!pVal.isValid) {
+        throw new Error(pVal.error || 'Please enter a valid 10-digit Indian mobile number.');
+      }
+      formattedPhone = pVal.formatted;
+    }
+
     const record: PaperSubmissionRecord = {
       researchDomainId: 'res-domain-1',
       keywords: ['Call for Papers', 'Scholarly Abstract'],
@@ -93,8 +103,8 @@ export const submissionService = {
       candidateName: authorName,
       affiliation,
       organization: affiliation,
-      phone,
-      mobileNumber: phone,
+      phone: formattedPhone,
+      mobileNumber: formattedPhone,
       id: `cfp-${Date.now()}`,
       submissionCode: `BC-CFP-${Math.floor(1000 + Math.random() * 9000)}`,
       status: 'submitted',

@@ -1,4 +1,4 @@
-import { validateEmailAddress } from '../services/contactValidation';
+import { validateEmailAddress, validateIndianMobile, INDIAN_MOBILE_CONFIG } from '../services/contactValidation';
 import React, { useState, useEffect } from 'react';
 import { careerService } from '../services/careerService';
 import { featureConfig } from '../config/featureConfig';
@@ -56,9 +56,9 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
       setSubmitError(emailVal.error || 'Please enter a valid email address.');
       return;
     }
-    const cleanPhone = phone.replace(/[^0-9]/g, '');
-    if (cleanPhone.length < 10) {
-      setSubmitError('Please provide a valid 10-digit mobile number.');
+    const phoneVal = validateIndianMobile(phone);
+    if (!phoneVal.isValid) {
+      setSubmitError(phoneVal.error || 'Please enter a valid 10-digit Indian mobile number.');
       return;
     }
     if (!institution.trim()) {
@@ -75,7 +75,7 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
         type: appType,
         fullName: fullName.trim(),
         email: email.trim().toLowerCase(),
-        phone: `+91 ${cleanPhone.slice(-10)}`,
+        phone: phoneVal.formatted,
         currentInstitution: institution.trim(),
         qualification: qualification.trim(),
         areaOfInterest,
@@ -270,15 +270,15 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
                 </label>
                 <div className="flex">
                   <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-100 text-slate-600 font-semibold text-xs">
-                    🇮🇳 +91
+                    {INDIAN_MOBILE_CONFIG.displayPrefix}
                   </span>
                   <input
                     type="tel"
-                    maxLength={10}
+                    maxLength={INDIAN_MOBILE_CONFIG.digitCount}
                     required
-                    placeholder="9876543210"
+                    placeholder={INDIAN_MOBILE_CONFIG.placeholder}
                     value={phone}
-                    onChange={e => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
+                    onChange={e => setPhone(INDIAN_MOBILE_CONFIG.sanitize(e.target.value))}
                     className="w-full px-3.5 py-2.5 rounded-r-xl border border-slate-200 text-sm text-slate-900 bg-slate-50/50 focus:border-amber-600 focus:bg-white"
                   />
                 </div>

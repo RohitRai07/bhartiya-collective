@@ -1,4 +1,4 @@
-import { validateEmailAddress } from './contactValidation';
+import { validateEmailAddress, validateIndianMobile } from './contactValidation';
 /**
  * Registration Service
  * 
@@ -134,13 +134,9 @@ export const registrationService = {
     if (phone.countryCode !== '+91') {
       return { isValid: false, error: 'Only country code +91 is currently supported.' };
     }
-    const cleanNumber = (phone.nationalNumber || '').replace(/\D/g, '');
-    if (cleanNumber.length !== 10) {
-      return { isValid: false, error: 'Mobile number must be exactly 10 digits.' };
-    }
-    // Indian mobile numbers start with 6, 7, 8, or 9
-    if (!/^[6-9]\d{9}$/.test(cleanNumber)) {
-      return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.' };
+    const val = validateIndianMobile(phone.nationalNumber || '');
+    if (!val.isValid) {
+      return { isValid: false, error: val.error || 'Please enter a valid 10-digit Indian mobile number.' };
     }
     return { isValid: true };
   },

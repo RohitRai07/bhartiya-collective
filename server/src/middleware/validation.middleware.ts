@@ -197,16 +197,31 @@ export function validateEmailAddress(rawInput: string): { isValid: boolean; erro
 }
 
 /**
+ * Standard Centralized Configuration for Indian Mobile Numbers (Backend)
+ */
+export const INDIAN_MOBILE_CONFIG = {
+  countryCode: '+91',
+  flag: '🇮🇳',
+  displayPrefix: '🇮🇳 +91',
+  digitCount: 10,
+  placeholder: '9876543210',
+  errorMessage: 'Please enter a valid 10-digit Indian mobile number.',
+  startingDigits: ['6', '7', '8', '9'] as const,
+  regex: /^[6-9]\d{9}$/,
+  sanitize: (input: string): string => (input || '').replace(/[^0-9]/g, '').slice(0, 10),
+};
+
+/**
  * Server-Side Indian Mobile Validation
  */
 export function validateIndianMobile(rawInput: string): { isValid: boolean; error?: string; formatted: string; nationalNumber?: string } {
   const trimmed = (rawInput || '').trim();
   if (!trimmed) {
-    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.', formatted: '' };
+    return { isValid: false, error: INDIAN_MOBILE_CONFIG.errorMessage, formatted: '' };
   }
 
   if (/[^\d\s\-+()]/.test(trimmed)) {
-    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.', formatted: trimmed };
+    return { isValid: false, error: INDIAN_MOBILE_CONFIG.errorMessage, formatted: trimmed };
   }
 
   let digits = trimmed.replace(/[\s\-()]/g, '');
@@ -220,8 +235,8 @@ export function validateIndianMobile(rawInput: string): { isValid: boolean; erro
     digits = digits.slice(1);
   }
 
-  if (!/^[6-9]\d{9}$/.test(digits)) {
-    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.', formatted: trimmed };
+  if (!INDIAN_MOBILE_CONFIG.regex.test(digits)) {
+    return { isValid: false, error: INDIAN_MOBILE_CONFIG.errorMessage, formatted: trimmed };
   }
 
   return { isValid: true, formatted: `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`, nationalNumber: digits };

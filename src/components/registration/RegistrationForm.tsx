@@ -1,4 +1,4 @@
-import { validateEmailAddress } from '../../services/contactValidation';
+import { validateEmailAddress, validateIndianMobile, INDIAN_MOBILE_CONFIG } from '../../services/contactValidation';
 import React, { useState } from 'react';
 import { registrationService } from '../../services/registrationService';
 import { pincodeService } from '../../services/pincodeService';
@@ -152,12 +152,10 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
       errors.email = emailVal.error || 'Please enter a valid email address.';
     }
 
-    // Phone validation (+91 10 digits)
-    const cleanPhone = formData.nationalNumber.replace(/\D/g, '');
-    if (!cleanPhone) {
-      errors.nationalNumber = 'Mobile number is required.';
-    } else if (cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
-      errors.nationalNumber = 'Please enter a valid 10-digit Indian mobile number.';
+    // Phone validation (+91 10 digits) via centralized validator
+    const phoneVal = validateIndianMobile(formData.nationalNumber);
+    if (!phoneVal.isValid) {
+      errors.nationalNumber = phoneVal.error || 'Please enter a valid 10-digit Indian mobile number.';
     }
 
     if (!formData.collegeName.trim()) errors.collegeName = 'College / University / Institution name is required.';
@@ -407,15 +405,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
             </label>
             <div className="flex">
               <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 text-slate-600 font-semibold text-xs">
-                🇮🇳 +91
+                {INDIAN_MOBILE_CONFIG.displayPrefix}
               </span>
               <input
                 type="tel"
-                maxLength={10}
-                placeholder="10-digit mobile number"
+                maxLength={INDIAN_MOBILE_CONFIG.digitCount}
+                placeholder={INDIAN_MOBILE_CONFIG.placeholder}
                 value={formData.nationalNumber}
                 onChange={e => {
-                  const cleaned = e.target.value.replace(/\D/g, '');
+                  const cleaned = INDIAN_MOBILE_CONFIG.sanitize(e.target.value);
                   handleChange('nationalNumber', cleaned);
                 }}
                 className={`w-full rounded-r-xl border px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 bg-slate-50/50 ${

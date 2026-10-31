@@ -11,6 +11,7 @@ import { smsService } from '../services/sms.service';
 import { notificationService } from '../services/notification.service';
 import { newsletterService } from '../services/newsletter.service';
 import { app } from '../index';
+import { validateEmailAddress, validateIndianMobile, INDIAN_MOBILE_CONFIG } from '../middleware/validation.middleware';
 
 async function runSecurityTests() {
   console.log('====================================================');
@@ -442,6 +443,33 @@ async function runSecurityTests() {
   });
   assert(badSub.success === false && badSub.status === 'invalid_email', 'Disposable email rejected from newsletter');
   console.log('  ✅ PASS: Newsletter rejects disposable and invalid email addresses');
+
+
+  // --- Testing Server-Side Indian Mobile Validation & Gates ---
+  console.log('\n📌 Testing Server-Side 10-Digit Indian Mobile Number Validation:');
+  const validServerMobiles = ['9876543210', '+91 9876543210', '+91-98765-43210', '98765 43210', '09876543210', '8123456789', '7012345678', '6901234567'];
+  for (const m of validServerMobiles) {
+    const valRes = validateIndianMobile(m);
+    assert(valRes.isValid === true, `Server accepts valid mobile: ${m}`);
+  }
+
+  const invalidServerMobiles = ['', '12345', '987654321', '98765432100', '5876543210', '1876543210', '98765abcde', '+1 9876543210'];
+  for (const m of invalidServerMobiles) {
+    const valRes = validateIndianMobile(m);
+    assert(valRes.isValid === false, `Server rejects invalid mobile: "${m}"`);
+    assert(valRes.error === INDIAN_MOBILE_CONFIG.errorMessage, 'Server returns standardized error message');
+  }
+  console.log('  ✅ PASS: Server-side validateIndianMobile correctly validates 10-digit Indian numbers');
+
+  // Verify Newsletter subscriber phone gate
+  const badPhoneSub = await newsletterService.subscribe({
+    email: 'valid.subscriber@du.ac.in',
+    phone: 'invalid-phone-number',
+  });
+  assert(badPhoneSub.success === false, 'Newsletter rejects invalid phone number');
+  assert(badPhoneSub.message === INDIAN_MOBILE_CONFIG.errorMessage, 'Newsletter returns standardized mobile error');
+  console.log('  ✅ PASS: Newsletter subscriber intake validates Indian mobile number');
+
 
   console.log('\n====================================================');
   console.log('🎉 ALL BACKEND PRODUCTION SECURITY TESTS PASSED!');

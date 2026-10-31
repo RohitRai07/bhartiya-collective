@@ -1,4 +1,4 @@
-import { validateEmailAddress } from '../middleware/validation.middleware';
+import { validateEmailAddress, validateIndianMobile } from '../middleware/validation.middleware';
 import { emailService } from './email.service';
 
 export interface SubscriberRecord {
@@ -89,6 +89,19 @@ class NewsletterService {
     const cleanEmail = val.formatted;
     const existing = this.subscribers.get(cleanEmail);
 
+    let cleanPhone = input.phone?.trim();
+    if (cleanPhone) {
+      const pVal = validateIndianMobile(cleanPhone);
+      if (!pVal.isValid) {
+        return {
+          success: false,
+          status: 'invalid_email',
+          message: pVal.error || 'Please enter a valid 10-digit Indian mobile number.',
+        };
+      }
+      cleanPhone = pVal.formatted;
+    }
+
     // 2. Prevent duplicate notifications on already-subscribed email
     if (existing && existing.status === 'active') {
       return {
@@ -105,7 +118,7 @@ class NewsletterService {
       id: existing ? existing.id : `sub-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       email: cleanEmail,
       name: input.name?.trim(),
-      phone: input.phone?.trim(),
+      phone: cleanPhone,
       source: input.source?.trim() || 'website-footer',
       status: 'active',
       subscribedAt: new Date().toISOString(),

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { notificationService, NotificationPayload } from '../services/notification.service';
 import { emailService } from '../services/email.service';
-import { validateEmailAddress } from '../middleware/validation.middleware';
+import { validateEmailAddress, validateIndianMobile } from '../middleware/validation.middleware';
 
 /**
  * Dispatch single notification (Admin authenticated)
@@ -23,6 +23,16 @@ export const sendNotification = async (req: Request, res: Response): Promise<voi
         return;
       }
       payload.email = emailVal.formatted;
+    }
+
+    // Validate mobile number format if SMS/WhatsApp channels are requested or phone is provided
+    if ((payload.channels?.sms || payload.channels?.whatsapp || payload.phone) && payload.phone) {
+      const phoneVal = validateIndianMobile(payload.phone);
+      if (!phoneVal.isValid) {
+        res.status(400).json({ error: phoneVal.error || 'Please enter a valid 10-digit Indian mobile number.' });
+        return;
+      }
+      payload.phone = phoneVal.formatted;
     }
 
     const result = await notificationService.dispatchNotification(payload);

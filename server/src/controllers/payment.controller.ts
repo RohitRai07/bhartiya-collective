@@ -3,6 +3,7 @@ import { paymentService } from '../services/payment.service';
 import { config } from '../config/env';
 import { emailService } from '../services/email.service';
 import { smsService } from '../services/sms.service';
+import { validateIndianMobile } from '../middleware/validation.middleware';
 
 /**
  * Creates a server-side order with Razorpay
@@ -25,6 +26,19 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         code: 'BELOW_MINIMUM_DONATION' 
       });
       return;
+    }
+
+    // Validate donor phone if provided
+    const phoneToValidate = notes?.phone || req.body?.phone;
+    if (phoneToValidate && typeof phoneToValidate === 'string' && phoneToValidate.trim()) {
+      const pVal = validateIndianMobile(phoneToValidate);
+      if (!pVal.isValid) {
+        res.status(400).json({ error: pVal.error || 'Please enter a valid 10-digit Indian mobile number.', code: 'INVALID_PHONE' });
+        return;
+      }
+      if (notes && notes.phone) {
+        notes.phone = pVal.formatted;
+      }
     }
 
     const order = await paymentService.createOrder({

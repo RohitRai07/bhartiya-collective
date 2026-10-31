@@ -47,6 +47,7 @@ import {
   removeInvalidLines,
   validateEmailAddress,
   validateIndianMobile,
+  INDIAN_MOBILE_CONFIG,
   validateExtendedAbstract,
   countWords,
 } from '../services/contactValidation';
@@ -2074,6 +2075,118 @@ async function runTests() {
     assert(err.message.includes('Please enter a valid email address'), 'Contact service throws error for disposable email');
   }
   assert(contactDispErrorCaught, 'Contact service rejects disposable email');
+
+
+  // --- Testing Global Indian Mobile Configuration & Cross-Service Consistency ---
+  console.log('\n📌 Testing Global Indian Mobile Centralized Configuration & Intake Gates:');
+  
+  assert(INDIAN_MOBILE_CONFIG.countryCode === '+91', 'INDIAN_MOBILE_CONFIG specifies +91 country code');
+  assert(INDIAN_MOBILE_CONFIG.displayPrefix === '🇮🇳 +91', 'INDIAN_MOBILE_CONFIG specifies 🇮🇳 +91 display prefix');
+  assert(INDIAN_MOBILE_CONFIG.digitCount === 10, 'INDIAN_MOBILE_CONFIG enforces exactly 10 digits');
+  assert(INDIAN_MOBILE_CONFIG.placeholder === '9876543210', 'INDIAN_MOBILE_CONFIG specifies standard placeholder 9876543210');
+  assert(INDIAN_MOBILE_CONFIG.errorMessage === 'Please enter a valid 10-digit Indian mobile number.', 'INDIAN_MOBILE_CONFIG specifies standardized error message');
+  
+  // Test sanitize utility
+  assert(INDIAN_MOBILE_CONFIG.sanitize('98765-43210') === '9876543210', 'Sanitize removes dashes');
+  assert(INDIAN_MOBILE_CONFIG.sanitize('+91 98765 43210') === '9198765432', 'Sanitize extracts digits up to 10 chars');
+  assert(INDIAN_MOBILE_CONFIG.sanitize('abc 98765 xyz 43210 extra') === '9876543210', 'Sanitize extracts digits and limits to 10');
+
+  // Test Career Service mobile gate
+  let careerPhoneErr = false;
+  try {
+    careerService.create({
+      type: 'internship',
+      fullName: 'Valid Name',
+      email: 'valid.scholar@du.ac.in',
+      phone: '12345',
+      currentInstitution: 'Delhi University',
+      qualification: 'LL.B',
+      areaOfInterest: 'Center for Public Policy / Studies',
+    });
+  } catch (err: any) {
+    careerPhoneErr = true;
+    assert(err.message === 'Please enter a valid 10-digit Indian mobile number.', 'Career service rejects invalid mobile number with standard message');
+  }
+  assert(careerPhoneErr, 'Career service rejects invalid mobile number');
+
+  const validCareerApp = careerService.create({
+    type: 'internship',
+    fullName: 'Valid Name',
+    email: 'valid.scholar2@du.ac.in',
+    phone: '9876543210',
+    currentInstitution: 'Delhi University',
+    qualification: 'LL.B',
+    areaOfInterest: 'Center for Public Policy / Studies',
+  });
+  assert(validCareerApp.phone === '+91 98765 43210', 'Career service accepts and formats valid mobile number');
+
+  // Test Contact Service mobile gate
+  let contactPhoneErr = false;
+  try {
+    contactService.create({
+      name: 'Inquirer Tester',
+      email: 'valid.inquirer@jnu.ac.in',
+      phone: 'invalid-phone',
+      subject: 'Fellowship Inquiry',
+      message: 'Hello, need information on fellowship.',
+    });
+  } catch (err: any) {
+    contactPhoneErr = true;
+    assert(err.message === 'Please enter a valid 10-digit Indian mobile number.', 'Contact service rejects invalid mobile with standard message');
+  }
+  assert(contactPhoneErr, 'Contact service rejects invalid mobile');
+
+  const validContactInquiry = contactService.create({
+    name: 'Inquirer Tester',
+    email: 'valid.inquirer2@jnu.ac.in',
+    phone: '9876543210',
+    subject: 'Fellowship Inquiry',
+    message: 'Hello, need information on fellowship.',
+  });
+  assert(validContactInquiry.phone === '+91 98765 43210', 'Contact service accepts and formats valid mobile');
+
+  // Test Submission Service mobile gate
+  let subPhoneErr = false;
+  try {
+    await submissionService.submitPaper({
+      candidateName: 'Scholar Abstract Author',
+      authorName: 'Scholar Abstract Author',
+      authorEmail: 'scholar.author@bhu.ac.in',
+      phone: '5876543210', // starts with 5
+      mobileNumber: '5876543210',
+      organization: 'BHU',
+      affiliation: 'BHU',
+      qualification: 'Ph.D.',
+      abstract: Array(350).fill('dharma').join(' '),
+    });
+  } catch (err: any) {
+    subPhoneErr = true;
+    assert(err.message === 'Please enter a valid 10-digit Indian mobile number.', 'Submission service rejects invalid mobile with standard message');
+  }
+  assert(subPhoneErr, 'Submission service rejects invalid mobile');
+
+  // Test Registration Service validatePhoneNumber
+  const regInvalidMobile = registrationService.validatePhoneNumber({
+    countryCode: '+91',
+    nationalNumber: '12345',
+    fullFormatted: '+91 12345'
+  });
+  assert(!regInvalidMobile.isValid, 'Registration service rejects short mobile number');
+  assert(regInvalidMobile.error === 'Please enter a valid 10-digit Indian mobile number.', 'Registration service returns standard mobile error');
+
+  const regForeignCc = registrationService.validatePhoneNumber({
+    countryCode: '+1',
+    nationalNumber: '9876543210',
+    fullFormatted: '+1 9876543210'
+  });
+  assert(!regForeignCc.isValid && regForeignCc.error === 'Only country code +91 is currently supported.', 'Registration service enforces +91 country code');
+
+  const regValidMobile = registrationService.validatePhoneNumber({
+    countryCode: '+91',
+    nationalNumber: '9876543210',
+    fullFormatted: '+91 9876543210'
+  });
+  assert(regValidMobile.isValid, 'Registration service accepts valid 10-digit Indian mobile');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);
