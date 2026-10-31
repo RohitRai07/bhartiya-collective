@@ -72,12 +72,21 @@ export const config = {
   },
 
   email: {
-    host: process.env.EMAIL_HOST || '',
-    port: parseInt(process.env.EMAIL_PORT || '587'),
-    secure: process.env.EMAIL_SECURE === 'true',
-    user: process.env.EMAIL_USER || '',
-    pass: process.env.EMAIL_PASS || '',
-    from: process.env.EMAIL_FROM || '"Bharat Collective" <noreply@bharatcollective.org>',
+    // GoDaddy Professional Email powered by Titan SMTP settings
+    provider: 'titan',
+    host: process.env.SMTP_HOST || process.env.EMAIL_HOST || 'smtp.titan.email',
+    port: parseInt(process.env.SMTP_PORT || process.env.EMAIL_PORT || '465'),
+    secure: process.env.SMTP_SECURE !== undefined 
+      ? process.env.SMTP_SECURE === 'true' 
+      : (process.env.EMAIL_SECURE !== undefined ? process.env.EMAIL_SECURE === 'true' : true), // true for 465 (SSL/TLS), false for 587 (STARTTLS)
+    user: process.env.SMTP_USER || process.env.EMAIL_USER || 'office@bharatcollective.in',
+    pass: process.env.SMTP_PASS || process.env.EMAIL_PASS || '',
+    fromName: process.env.SMTP_FROM_NAME || 'Bharat Collective Foundation',
+    fromEmail: process.env.SMTP_FROM_EMAIL || process.env.OFFICE_EMAIL || 'office@bharatcollective.in',
+    replyTo: process.env.SMTP_REPLY_TO || 'office@bharatcollective.in',
+    get from(): string {
+      return `"${this.fromName}" <${this.fromEmail}>`;
+    },
     officeEmail: process.env.OFFICE_EMAIL || 'office@bharatcollective.in',
     officePhone: process.env.OFFICE_PHONE || '+91 80768 02450',
   },

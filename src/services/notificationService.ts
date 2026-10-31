@@ -150,8 +150,8 @@ const GATEWAY_STORAGE_KEY = 'bharat_collective_email_gateway';
 export const DEFAULT_GATEWAY_CONFIG: EmailGatewayConfig = {
   provider: 'simulation',
   webhookUrl: '',
-  senderName: 'Bharat Collective Secretariat',
-  senderEmail: 'newsletter@bharatcollective.org',
+  senderName: 'Bharat Collective Foundation',
+  senderEmail: 'office@bharatcollective.in',
 };
 
 function loadStoredGatewayConfig(): EmailGatewayConfig {

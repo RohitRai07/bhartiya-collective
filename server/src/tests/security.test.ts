@@ -9,6 +9,7 @@ import { paymentService } from '../services/payment.service';
 import { emailService } from '../services/email.service';
 import { smsService } from '../services/sms.service';
 import { notificationService } from '../services/notification.service';
+import { newsletterService } from '../services/newsletter.service';
 import { app } from '../index';
 
 async function runSecurityTests() {
@@ -355,6 +356,92 @@ async function runSecurityTests() {
   });
   assert(multiNotif.status === 'QUEUED', 'Multi-channel payment notification queued cleanly');
   console.log('  ✅ PASS: Central notification service dispatches multi-channel payment receipt');
+
+  // 14. GoDaddy Titan Professional Email & Newsletter Notification Integration
+  console.log('\n📌 Testing GoDaddy Titan Professional Email & Newsletter Notification Integration:');
+
+  // Verify Central SMTP Configuration & Identity
+  assert(config.email.host === 'smtp.titan.email', 'SMTP host configured as smtp.titan.email');
+  assert(config.email.port === 465, 'SMTP port configured for SSL/TLS (465)');
+  assert(config.email.secure === true, 'SMTP secure is true for port 465');
+  assert(config.email.user === 'office@bharatcollective.in', 'SMTP user is office@bharatcollective.in');
+  assert(config.email.fromName === 'Bharat Collective Foundation', 'Sender display name is Bharat Collective Foundation');
+  assert(config.email.from === '"Bharat Collective Foundation" <office@bharatcollective.in>', 'From header formatted with organization display name and official email');
+  assert(config.email.replyTo === 'office@bharatcollective.in', 'Reply-To address set to office@bharatcollective.in');
+  console.log('  ✅ PASS: GoDaddy Titan SMTP configuration and official sender identity verified');
+
+  // Verify Email Validation before sending
+  const badSend = await emailService.sendEmail({
+    to: 'invalid-email-format',
+    subject: 'Test Subject',
+    html: '<p>Content</p>',
+  });
+  assert(badSend === false, 'Invalid recipient email format rejected by emailService');
+  const activityLogs = emailService.getActivityLogs(5);
+  assert(activityLogs[0].status === 'Failed', 'Activity log records Failed status for invalid email');
+  console.log('  ✅ PASS: Recipient email validated on backend before dispatch');
+
+  // Verify Valid Single Email Dispatch & Activity Logging
+  const goodSend = await emailService.sendEmail({
+    to: 'scholar.test@du.ac.in',
+    recipientName: 'Prof. Ananya',
+    subject: 'Academic Consultation - Bharat Collective',
+    html: '<p>Namaste Professor</p>',
+    category: 'scholar_inquiry',
+  });
+  assert(goodSend === true, 'Valid email dispatched successfully');
+  const lastLog = emailService.getActivityLogs(1)[0];
+  assert(lastLog.recipientEmail === 'scholar.test@du.ac.in', 'Log contains recipient email');
+  assert(lastLog.senderEmail === 'office@bharatcollective.in', 'Log records official sender email');
+  assert(lastLog.status === 'Sent', 'Log records Sent status');
+  assert(lastLog.category === 'scholar_inquiry', 'Log records correct category');
+  console.log('  ✅ PASS: Outgoing email logged with recipient, subject, sender, timestamp, and status');
+
+  // Verify Bulk Email Sending with Deduplication & Individual Delivery
+  const batchResult = await emailService.sendBatchEmails([
+    { email: 'fellow.1@iitd.ac.in', name: 'Fellow 1' },
+    { email: 'fellow.1@iitd.ac.in', name: 'Fellow 1 Duplicate' },
+    { email: 'fellow.2@nludelhi.ac.in', name: 'Fellow 2' },
+  ], 'Symposium Invitation', '<p>You are invited</p>', undefined, 'event_invitation');
+  assert(batchResult.total === 2, 'Batch deduplicates recipients: 3 passed -> 2 unique');
+  assert(batchResult.sent === 2, 'Batch delivers to all unique recipients individually');
+  console.log('  ✅ PASS: Bulk communications deduplicate recipients and deliver individually');
+
+  // Verify Automatic Newsletter Subscription Internal Notification
+  emailService.clearActivityLogs();
+  const subResult = await newsletterService.subscribe({
+    email: 'new.patron@alumni.harvard.edu',
+    name: 'Dr. Vikramaditya',
+    phone: '+91 98765 43210',
+    source: 'monographs-page',
+  });
+  assert(subResult.success === true, 'Newsletter subscription succeeds');
+  assert(subResult.status === 'success', 'Status is success for new subscription');
+  assert(subResult.notificationSent === true, 'Automatic internal admin notification dispatched');
+  
+  // Verify Internal Notification Details
+  const adminNotifLog = emailService.getActivityLogs(5).find(l => l.category === 'newsletter_admin_alert');
+  assert(adminNotifLog !== undefined, 'Admin notification logged in activity log');
+  assert(adminNotifLog.recipientEmail === 'office@bharatcollective.in', 'Internal notification recipient is office@bharatcollective.in');
+  assert(adminNotifLog.subject === 'New Newsletter Subscription – Bharat Collective Foundation', 'Subject is exact required notification subject');
+  assert(adminNotifLog.senderEmail === 'office@bharatcollective.in', 'Sender is office@bharatcollective.in');
+  console.log('  ✅ PASS: Internal notification automatically sent to office@bharatcollective.in with exact subject');
+
+  // Verify Duplicate Subscription Prevention (No Duplicate Notification)
+  const dupSubResult = await newsletterService.subscribe({
+    email: 'new.patron@alumni.harvard.edu',
+    source: 'monographs-page',
+  });
+  assert(dupSubResult.status === 'already_subscribed', 'Subscribing existing email returns already_subscribed');
+  assert(dupSubResult.notificationSent === false, 'Duplicate subscription strictly does NOT trigger duplicate notification');
+  console.log('  ✅ PASS: Duplicate subscription recognized and duplicate notification prevented');
+
+  // Verify Invalid Email Rejection in Newsletter
+  const badSub = await newsletterService.subscribe({
+    email: 'throwaway@mailinator.com',
+  });
+  assert(badSub.success === false && badSub.status === 'invalid_email', 'Disposable email rejected from newsletter');
+  console.log('  ✅ PASS: Newsletter rejects disposable and invalid email addresses');
 
   console.log('\n====================================================');
   console.log('🎉 ALL BACKEND PRODUCTION SECURITY TESTS PASSED!');

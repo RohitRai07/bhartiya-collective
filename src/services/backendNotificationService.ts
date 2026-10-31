@@ -111,6 +111,34 @@ export class BackendNotificationService {
         channels
       });
       if (response && response.success) {
+        // Synchronize local audit log
+        const channel: NotificationChannel = 
+          channels.email && channels.whatsapp && channels.sms ? 'all' :
+          channels.email && channels.whatsapp ? 'both' :
+          channels.whatsapp ? 'whatsapp' :
+          channels.sms ? 'sms' : 'email';
+        const sourceModule = (dynamicData.sourceModule as RecipientSourceModule) || subscribers[0]?.sourceModule || 'general';
+        const recipients = subscribers.map((s, idx) => ({
+          id: s.id || `rec-${idx}`,
+          name: s.name || s.email?.split('@')[0] || 'Subscriber',
+          email: s.email || '',
+          phone: s.phone || '',
+          category: (s.category || 'subscriber') as any,
+          sourceModule: s.sourceModule || sourceModule,
+          isSubscribed: s.isSubscribed,
+          referenceCode: s.referenceCode,
+        }));
+        if (recipients.length > 0) {
+          notificationService.sendNotification({
+            recipients,
+            channel,
+            channels,
+            sourceModule,
+            templateId: type,
+            subject: dynamicData.title || dynamicData.subject || `Official Update: ${type.replace(/_/g, ' ')}`,
+            message: dynamicData.message || dynamicData.body || `Namaste,\n\nThis is an official communication regarding ${type.replace(/_/g, ' ')}.\n\nWarm regards,\nBharat Collective Foundation`
+          }).catch(() => {});
+        }
         return response.data;
       }
     } catch (e) {

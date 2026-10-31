@@ -1819,7 +1819,7 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
                       type="email"
                       value={gatewayConfig.senderEmail}
                       onChange={e => setGatewayConfig({ ...gatewayConfig, senderEmail: e.target.value })}
-                      placeholder="e.g. secretariat@bharatcollective.org"
+                      placeholder="office@bharatcollective.in"
                       className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-mono"
                     />
                   </div>

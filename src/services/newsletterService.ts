@@ -71,6 +71,8 @@ export type SubscribeResult =
   | { status: 'error'; message: string };
 
 export const newsletterService = {
+  inFlightSubscriptions: new Set<string>(),
+
   /**
    * Validate email address syntax
    */
@@ -94,66 +96,103 @@ export const newsletterService = {
       return { status: 'error', message: validation.error || 'Invalid email address.' };
     }
 
-    // 2. Future Backend / API Client integration branch
-    if (!apiConfig.useMockData) {
+    // Prevent duplicate in-flight submissions (accidental multiple clicks)
+    if (this.inFlightSubscriptions.has(cleanEmail)) {
+      return {
+        status: 'success',
+        message: 'Your subscription is currently being processed.',
+      };
+    }
+    this.inFlightSubscriptions.add(cleanEmail);
+
+    try {
+      // 2. Send via Backend API so GoDaddy Titan internal notification is dispatched to office@bharatcollective.in
       try {
-        const response = await apiClient.post<NewsletterSubscriptionRecord>(
+        const response = await apiClient.post<any>(
           apiConfig.endpoints.newsletter.subscribe,
           { email: cleanEmail, source: input.source || 'website-footer' }
         );
-        // Trigger automated confirmation
-        notificationService.sendNewsletterConfirmation(cleanEmail).catch(console.error);
 
-        return {
-          status: 'success',
-          message: response.message || 'Thank you for subscribing to Bharat Collective Research Digest.',
-          record: response.data,
-        };
-      } catch (err: any) {
-        if (err.statusCode === 409 || err.message?.includes('already')) {
+        if (response && response.success) {
+          if (response.data?.status === 'already_subscribed' || (response as any).status === 'already_subscribed') {
+            return {
+              status: 'already_subscribed',
+              message: 'This email is already subscribed to the Bharat Collective digest.',
+            };
+          }
+
+          const record: NewsletterSubscriptionRecord = response.data?.data || response.data || {
+            id: `sub-${Date.now()}`,
+            email: cleanEmail,
+            status: 'active',
+            subscribedAt: new Date().toISOString(),
+            source: input.source || 'website-footer',
+          };
+
+          // Synchronize local storage
+          const subscribers = loadStoredSubscribers();
+          const updated = [record, ...subscribers.filter(s => s.email.toLowerCase() !== cleanEmail)];
+          saveSubscribers(updated);
+
+          // Confirmation email to subscriber
+          notificationService.sendNewsletterConfirmation(cleanEmail).catch(console.error);
+
+          return {
+            status: 'success',
+            message: response.message || 'Thank you for subscribing! A confirmation notification has been sent to your email.',
+            record,
+          };
+        }
+      } catch (backendErr: any) {
+        if (backendErr.statusCode === 409 || backendErr.message?.includes('already')) {
           return {
             status: 'already_subscribed',
             message: 'This email is already subscribed to the Bharat Collective digest.',
           };
         }
+        if (backendErr.statusCode === 400 && backendErr.message) {
+          return {
+            status: 'error',
+            message: backendErr.message,
+          };
+        }
+        console.warn('Backend subscription endpoint unavailable, processing locally:', backendErr);
+      }
+
+      // 3. Local storage fallback
+      await new Promise(resolve => setTimeout(resolve, 200));
+      const subscribers = loadStoredSubscribers();
+
+      const existing = subscribers.find(s => s.email.toLowerCase() === cleanEmail);
+      if (existing && existing.status === 'active') {
         return {
-          status: 'error',
-          message: err.message || 'Unable to complete subscription. Please try again.',
+          status: 'already_subscribed',
+          message: 'This email is already subscribed to the Bharat Collective digest.',
         };
       }
-    }
 
-    // 3. Phase 1 Persistent Local Handling
-    await new Promise(resolve => setTimeout(resolve, 300));
-    const subscribers = loadStoredSubscribers();
-
-    const existing = subscribers.find(s => s.email.toLowerCase() === cleanEmail);
-    if (existing && existing.status === 'active') {
-      return {
-        status: 'already_subscribed',
-        message: 'This email is already subscribed to the Bharat Collective digest.',
+      const record: NewsletterSubscriptionRecord = {
+        id: `sub-${Date.now()}`,
+        email: cleanEmail,
+        status: 'active',
+        subscribedAt: new Date().toISOString(),
+        source: input.source || 'website-footer',
       };
+
+      const updated = [record, ...subscribers.filter(s => s.email.toLowerCase() !== cleanEmail)];
+      saveSubscribers(updated);
+
+      // Confirmation email to subscriber
+      notificationService.sendNewsletterConfirmation(cleanEmail).catch(console.error);
+
+      return {
+        status: 'success',
+        message: 'Thank you for subscribing! A confirmation notification has been sent to your email.',
+        record,
+      };
+    } finally {
+      this.inFlightSubscriptions.delete(cleanEmail);
     }
-
-    const record: NewsletterSubscriptionRecord = {
-      id: `sub-${Date.now()}`,
-      email: cleanEmail,
-      status: 'active',
-      subscribedAt: new Date().toISOString(),
-      source: input.source || 'website-footer',
-    };
-
-    const updated = [record, ...subscribers.filter(s => s.email.toLowerCase() !== cleanEmail)];
-    saveSubscribers(updated);
-
-    // Section 9 Requirement: Send confirmation email to subscriber
-    notificationService.sendNewsletterConfirmation(cleanEmail).catch(console.error);
-
-    return {
-      status: 'success',
-      message: 'Thank you for subscribing! A confirmation notification has been sent to your email.',
-      record,
-    };
   },
 
   /**
