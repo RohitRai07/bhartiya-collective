@@ -11,7 +11,8 @@ import { smsService } from '../services/sms.service';
 import { notificationService } from '../services/notification.service';
 import { newsletterService } from '../services/newsletter.service';
 import { app } from '../index';
-import { validateEmailAddress, validateIndianMobile, INDIAN_MOBILE_CONFIG } from '../middleware/validation.middleware';
+import { validateEmailAddress, validateIndianMobile, INDIAN_MOBILE_CONFIG, validateAbstractSubmissionEmail, ABSTRACT_SUBMISSION_APPROVED_DOMAINS, ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR } from '../middleware/validation.middleware';
+import { submitPaper } from '../controllers/submission.controller';
 
 async function runSecurityTests() {
   console.log('====================================================');
@@ -469,6 +470,130 @@ async function runSecurityTests() {
   assert(badPhoneSub.success === false, 'Newsletter rejects invalid phone number');
   assert(badPhoneSub.message === INDIAN_MOBILE_CONFIG.errorMessage, 'Newsletter returns standardized mobile error');
   console.log('  ✅ PASS: Newsletter subscriber intake validates Indian mobile number');
+
+
+
+  // --- Testing Server-Side Abstract Submission Strict Email Domain Whitelist ---
+  console.log('\n📌 Testing Server-Side Abstract Submission Email Whitelist & Direct API Protection:');
+  
+  // Test server-side validateAbstractSubmissionEmail
+  for (const d of ABSTRACT_SUBMISSION_APPROVED_DOMAINS) {
+    const val = validateAbstractSubmissionEmail(`scholar@${d}`);
+    assert(val.isValid === true, `Server accepts approved domain: ${d}`);
+  }
+
+  // Reject unapproved domains
+  const unapprovedServerEmails = [
+    'scholar@du.ac.in',
+    'prof@harvard.edu',
+    'user@gmailcom.com',
+    'user@mailinator.com',
+    'author@company.org'
+  ];
+  for (const ue of unapprovedServerEmails) {
+    const val = validateAbstractSubmissionEmail(ue);
+    assert(val.isValid === false, `Server rejects unapproved domain: ${ue}`);
+    assert(val.error === ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR, 'Server returns exact unapproved provider error');
+  }
+  console.log('  ✅ PASS: Server-side validateAbstractSubmissionEmail enforces approved domain whitelist');
+
+  // Test Direct API Request to submitPaper Controller with unapproved email
+  let reqStatus = 0;
+  let resJson: any = null;
+  const mockReqUnapproved: any = {
+    body: {
+      candidateName: 'Direct API Tester',
+      authorEmail: 'scholar@iitd.ac.in', // Institutional domain strictly unapproved for abstract submission
+      mobileNumber: '9876543210',
+      organization: 'IIT Delhi',
+      qualification: 'Ph.D.',
+      abstract: Array(320).fill('pramana').join(' '),
+    }
+  };
+  const mockRes: any = {
+    status(code: number) { reqStatus = code; return this; },
+    json(data: any) { resJson = data; return this; }
+  };
+
+  await submitPaper(mockReqUnapproved, mockRes);
+  assert(reqStatus === 400, 'Direct API request with unapproved domain returns 400 Bad Request');
+  assert(resJson.error === ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR, 'Direct API returns exact unapproved provider error');
+  assert(resJson.code === 'INVALID_EMAIL', 'Direct API returns INVALID_EMAIL error code');
+  console.log('  ✅ PASS: Direct API request cannot bypass Abstract Submission email domain whitelist');
+
+  // Test Direct API Request with typo domain
+  reqStatus = 0;
+  resJson = null;
+  const mockReqTypo: any = {
+    body: {
+      candidateName: 'Direct API Tester',
+      authorEmail: 'scholar@gmailcom.com',
+      mobileNumber: '9876543210',
+      organization: 'IIT Delhi',
+      qualification: 'Ph.D.',
+      abstract: Array(320).fill('pramana').join(' '),
+    }
+  };
+  await submitPaper(mockReqTypo, mockRes);
+  assert(reqStatus === 400, 'Direct API request with typo domain returns 400 Bad Request');
+  assert(resJson.error === ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR, 'Direct API returns unapproved provider error for typo');
+  console.log('  ✅ PASS: Direct API request rejects misspelled domain names');
+
+  // Test Direct API Request with invalid format
+  reqStatus = 0;
+  resJson = null;
+  const mockReqInvalidFormat: any = {
+    body: {
+      candidateName: 'Direct API Tester',
+      authorEmail: 'notanemail',
+      mobileNumber: '9876543210',
+      organization: 'IIT Delhi',
+      qualification: 'Ph.D.',
+      abstract: Array(320).fill('pramana').join(' '),
+    }
+  };
+  await submitPaper(mockReqInvalidFormat, mockRes);
+  assert(reqStatus === 400, 'Direct API request with invalid format returns 400');
+  assert(resJson.error === 'Please enter a valid email address.', 'Direct API returns format error');
+  console.log('  ✅ PASS: Direct API request validates complete email format');
+
+  // Test Direct API Request with invalid mobile number
+  reqStatus = 0;
+  resJson = null;
+  const mockReqInvalidMobile: any = {
+    body: {
+      candidateName: 'Direct API Tester',
+      authorEmail: 'scholar@gmail.com',
+      mobileNumber: '12345',
+      organization: 'IIT Delhi',
+      qualification: 'Ph.D.',
+      abstract: Array(320).fill('pramana').join(' '),
+    }
+  };
+  await submitPaper(mockReqInvalidMobile, mockRes);
+  assert(reqStatus === 400, 'Direct API request with invalid mobile returns 400');
+  assert(resJson.error === 'Please enter a valid 10-digit Indian mobile number.', 'Direct API returns standard mobile error');
+  console.log('  ✅ PASS: Direct API request enforces global 10-digit Indian mobile validation');
+
+  // Test Direct API Request with valid approved email & valid mobile
+  reqStatus = 0;
+  resJson = null;
+  const mockReqValid: any = {
+    body: {
+      candidateName: 'Dr. Validated Scholar',
+      authorEmail: 'scholar.approved@gmail.com',
+      mobileNumber: '9876543210',
+      organization: 'Indological Research Foundation',
+      qualification: 'Ph.D.',
+      abstract: Array(320).fill('nyaya').join(' '),
+    }
+  };
+  await submitPaper(mockReqValid, mockRes);
+  assert(reqStatus === 201, 'Direct API request with approved domain returns 201 Created');
+  assert(resJson.success === true, 'Submission successful');
+  assert(resJson.data.submissionCode.startsWith('BC-CFP-'), 'Submission code generated');
+  assert(resJson.data.authorEmail === 'scholar.approved@gmail.com', 'Author email saved');
+  console.log('  ✅ PASS: Direct API request succeeds with approved email domain and valid inputs');
 
 
   console.log('\n====================================================');

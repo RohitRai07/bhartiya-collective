@@ -48,6 +48,9 @@ import {
   validateEmailAddress,
   validateIndianMobile,
   INDIAN_MOBILE_CONFIG,
+  validateAbstractSubmissionEmail,
+  ABSTRACT_SUBMISSION_APPROVED_DOMAINS,
+  ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR,
   validateExtendedAbstract,
   countWords,
 } from '../services/contactValidation';
@@ -1357,7 +1360,11 @@ async function runTests() {
   assert(computeLiveEventStatus({ liveStatus: 'upcoming' }) === 'upcoming', 'Explicit upcoming status respected');
   assert(computeLiveEventStatus({ liveStatus: 'ended' }) === 'ended', 'Explicit ended status respected');
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const nowForToday = new Date();
+  const y = nowForToday.getFullYear();
+  const m = String(nowForToday.getMonth() + 1).padStart(2, '0');
+  const d = String(nowForToday.getDate()).padStart(2, '0');
+  const todayStr = y + '-' + m + '-' + d;
   assert(computeLiveEventStatus({ date: todayStr }) === 'live', 'Event scheduled for today computes as live');
   assert(computeLiveEventStatus({ date: '2020-01-01' }) === 'ended', 'Event scheduled in past computes as ended');
   assert(computeLiveEventStatus({ date: '2030-12-31' }) === 'upcoming', 'Event scheduled in future computes as upcoming');
@@ -1907,7 +1914,7 @@ async function runTests() {
   const submittedRecord = await submissionService.submitPaper({
     candidateName: 'Dr. Vikramaditya Someshwar',
     authorName: 'Dr. Vikramaditya Someshwar',
-    authorEmail: 'v.someshwar@nludelhi.ac.in',
+    authorEmail: 'v.someshwar@gmail.com',
     mobileNumber: '+91 98765 43210',
     phone: '+91 98765 43210',
     organization: 'National Law University Delhi',
@@ -1922,7 +1929,7 @@ async function runTests() {
 
   assert(Boolean(submittedRecord.id), 'Submission record created with unique ID');
   assert(submittedRecord.submissionCode.startsWith('BC-CFP-'), 'Submission record has valid BC-CFP tracking code');
-  assert(submittedRecord.authorEmail === 'v.someshwar@nludelhi.ac.in', 'Author email properly saved');
+  assert(submittedRecord.authorEmail === 'v.someshwar@gmail.com', 'Author email properly saved');
   assert(submittedRecord.mobileNumber === '+91 98765 43210', 'Mobile number properly saved');
   assert(submittedRecord.qualification === 'Associate Professor of Law', 'Qualification properly saved');
 
@@ -2151,7 +2158,7 @@ async function runTests() {
     await submissionService.submitPaper({
       candidateName: 'Scholar Abstract Author',
       authorName: 'Scholar Abstract Author',
-      authorEmail: 'scholar.author@bhu.ac.in',
+      authorEmail: 'scholar.author@gmail.com',
       phone: '5876543210', // starts with 5
       mobileNumber: '5876543210',
       organization: 'BHU',
@@ -2187,6 +2194,158 @@ async function runTests() {
     fullFormatted: '+91 9876543210'
   });
   assert(regValidMobile.isValid, 'Registration service accepts valid 10-digit Indian mobile');
+
+
+  // --- Testing Abstract Submission Strict Email Domain Whitelist ---
+  console.log('\n📌 Testing Abstract Submission Strict Email Domain Whitelist:');
+
+  // 1. All 15 approved domains must be accepted
+  const approvedWhitelist = [
+    'gmail.com',
+    'yahoo.com',
+    'yahoo.co.in',
+    'outlook.com',
+    'hotmail.com',
+    'live.com',
+    'rediffmail.com',
+    'rediff.com',
+    'icloud.com',
+    'me.com',
+    'proton.me',
+    'protonmail.com',
+    'zoho.com',
+    'zoho.in',
+    'gmx.com'
+  ];
+
+  assert(ABSTRACT_SUBMISSION_APPROVED_DOMAINS.length === 15, 'Whitelist contains exactly 15 approved domains');
+  for (const domain of approvedWhitelist) {
+    const testEmail = `scholar.${domain.replace(/\./g, '')}@${domain}`;
+    const res = validateAbstractSubmissionEmail(testEmail);
+    assert(res.isValid === true, `Approved domain accepted: ${domain}`);
+    assert(res.formatted === testEmail.toLowerCase(), `Formatted email is lowercased for: ${domain}`);
+  }
+
+  // 2. Unapproved company, institutional, and custom domains must be rejected
+  const unapprovedDomains = [
+    'iitd.ac.in',
+    'harvard.edu',
+    'bharatcollective.org',
+    'trilegal.com',
+    'company.co.uk',
+    'customdomain.org'
+  ];
+  for (const domain of unapprovedDomains) {
+    const testEmail = `researcher@${domain}`;
+    const res = validateAbstractSubmissionEmail(testEmail);
+    assert(res.isValid === false, `Unapproved domain rejected: ${domain}`);
+    assert(res.error === ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR, `Exact error returned for: ${domain}`);
+  }
+
+  // 3. Typo / misspelled domains must be rejected
+  const typoDomains = [
+    'user@gmailcom.com',
+    'user@gmaill.com',
+    'user@yahooo.com',
+    'user@outlookk.com',
+    'user@rediffmaill.com'
+  ];
+  for (const typoEmail of typoDomains) {
+    const res = validateAbstractSubmissionEmail(typoEmail);
+    assert(res.isValid === false, `Typo domain rejected: ${typoEmail}`);
+    assert(res.error === ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR, `Exact error returned for typo domain: ${typoEmail}`);
+  }
+
+  // 4. Disposable email domains must be rejected
+  const cfpDisposableEmails = [
+    'scholar@mailinator.com',
+    'scholar@tempmail.com',
+    'scholar@yopmail.com'
+  ];
+  for (const disp of cfpDisposableEmails) {
+    const res = validateAbstractSubmissionEmail(disp);
+    assert(res.isValid === false, `Disposable email rejected: ${disp}`);
+    assert(res.error === ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR, 'Disposable domain returns unapproved domain error in abstract form');
+  }
+
+  // 5. Case-insensitivity: uppercase and mixed-case domains accepted
+  const caseTests = [
+    'scholar@GMAIL.COM',
+    'author@Yahoo.Co.In',
+    'fellow@PROTON.ME',
+    'writer@OUTLOOK.com'
+  ];
+  for (const cEmail of caseTests) {
+    const res = validateAbstractSubmissionEmail(cEmail);
+    assert(res.isValid === true, `Mixed/uppercase domain accepted: ${cEmail}`);
+    assert(res.formatted === cEmail.toLowerCase(), 'Formatted email normalized to lowercase');
+  }
+
+  // 6. Accidental leading and trailing whitespace trimmed
+  const spacedTests = [
+    '   scholar@gmail.com   ',
+    '  author@yahoo.co.in ',
+    '\tscholar@proton.me\n'
+  ];
+  for (const sEmail of spacedTests) {
+    const res = validateAbstractSubmissionEmail(sEmail);
+    assert(res.isValid === true, `Spaced email accepted after trimming: "${sEmail.trim()}"`);
+    assert(res.formatted === sEmail.trim().toLowerCase(), 'Normalized email is trimmed');
+  }
+
+  // 7. Invalid email formats must return standard invalid email message
+  const invalidFormatTests = [
+    '',
+    'notanemail',
+    'user@',
+    '@gmail.com',
+    'user#tag@gmail.com',
+    'user..name@gmail.com'
+  ];
+  for (const inv of invalidFormatTests) {
+    const res = validateAbstractSubmissionEmail(inv);
+    assert(res.isValid === false, `Invalid format rejected: "${inv}"`);
+    assert(res.error === 'Please enter a valid email address.', 'Invalid format returns standard format error');
+  }
+
+  // 8. Submission service submission gate enforces whitelist
+  let subWhitelistCaught = false;
+  try {
+    await submissionService.submitPaper({
+      candidateName: 'Dr. Institutional Scholar',
+      authorName: 'Dr. Institutional Scholar',
+      authorEmail: 'scholar@nludelhi.ac.in', // Institutional domain rejected for CFP
+      mobileNumber: '+91 98765 43210',
+      organization: 'NLU Delhi',
+      qualification: 'Professor',
+      abstract: Array(350).fill('dharma').join(' '),
+    });
+  } catch (err: any) {
+    subWhitelistCaught = true;
+    assert(err.message === ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR, 'Submission service rejects unapproved institutional email');
+  }
+  assert(subWhitelistCaught === true, 'Submission service enforces abstract whitelist');
+
+  // 9. Confirm other services remain unrestricted for legitimate institutional emails
+  const careerInstApp = careerService.create({
+    type: 'job',
+    fullName: 'Dr. Alok Ranjan',
+    email: 'alok.ranjan@jnu.ac.in', // Institutional domain allowed for careers!
+    phone: '9876543210',
+    currentInstitution: 'JNU',
+    qualification: 'Ph.D.',
+    areaOfInterest: 'Center for Public Policy / Studies',
+  });
+  assert(careerInstApp.email === 'alok.ranjan@jnu.ac.in', 'Career service accepts institutional email');
+
+  const contactInstInq = contactService.create({
+    name: 'Prof. Meenakshi',
+    email: 'm.sundaram@madrasuniv.ac.in', // Institutional domain allowed for inquiries!
+    phone: '9876543210',
+    subject: 'Academic Consultation',
+    message: 'Visiting fellowship consultation.',
+  });
+  assert(contactInstInq.email === 'm.sundaram@madrasuniv.ac.in', 'Contact service accepts institutional email');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

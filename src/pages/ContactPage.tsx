@@ -4,6 +4,7 @@ import { submissionService } from '../services/submissionService';
 import { featureConfig } from '../config/featureConfig';
 import { 
   validateEmailAddress, 
+  validateAbstractSubmissionEmail,
   validateIndianMobile, 
   validateExtendedAbstract, 
   countWords,
@@ -57,8 +58,8 @@ export const ContactPage: React.FC = () => {
       newErrors.candidateName = 'Full name must be at least 2 characters.';
     }
 
-    // 2. Email Address *
-    const emailVal = validateEmailAddress(email);
+    // 2. Email Address * (Strict Whitelist for Abstract Submission)
+    const emailVal = validateAbstractSubmissionEmail(email);
     if (!emailVal.isValid) {
       newErrors.email = emailVal.error || 'Please enter a valid email address.';
     }

@@ -7,6 +7,7 @@ import adminRoutes from './routes/admin.routes';
 import paymentRoutes from './routes/payment.routes';
 import notificationRoutes from './routes/notification.routes';
 import newsletterRoutes from './routes/newsletter.routes';
+import submissionRoutes from './routes/submission.routes';
 
 export const app = express();
 
@@ -63,6 +64,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/notification', notificationRoutes);
 app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/submissions', submissionRoutes);
 
 // 6. 404 Handler for unknown API endpoints
 app.use((req, res) => {

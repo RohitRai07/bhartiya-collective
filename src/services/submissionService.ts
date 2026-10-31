@@ -6,7 +6,7 @@
 
 import { apiConfig } from '../config/apiConfig';
 import { apiClient } from './apiClient';
-import { validateIndianMobile } from './contactValidation';
+import { validateIndianMobile, validateAbstractSubmissionEmail } from './contactValidation';
 import { PaperSubmissionInput, PaperSubmissionRecord, PaperSubmissionStatus } from '../types/submission';
 
 const initialSubmissions: PaperSubmissionRecord[] = [
@@ -81,8 +81,14 @@ export const submissionService = {
     await new Promise(resolve => setTimeout(resolve, 300));
     const items = loadStoredSubmissions();
     const authorName = input.authorName || input.candidateName || '';
+    const authorEmail = input.authorEmail || input.email || '';
     const affiliation = input.affiliation || input.organization || '';
     const phone = input.phone || input.mobileNumber || '';
+
+    const emailVal = validateAbstractSubmissionEmail(authorEmail);
+    if (!emailVal.isValid) {
+      throw new Error(emailVal.error || 'Please enter a valid email address.');
+    }
 
     let formattedPhone = phone;
     if (phone && phone.trim()) {

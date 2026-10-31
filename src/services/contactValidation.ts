@@ -394,6 +394,36 @@ export const DISPOSABLE_EMAIL_DOMAINS = new Set<string>([
 ]);
 
 /**
+ * Approved Email Domains for Abstract Submission Form
+ * Only approved mainstream providers are allowed for Call for Papers / Abstract submissions.
+ */
+export const ABSTRACT_SUBMISSION_APPROVED_DOMAINS = [
+  'gmail.com',
+  'yahoo.com',
+  'yahoo.co.in',
+  'outlook.com',
+  'hotmail.com',
+  'live.com',
+  'rediffmail.com',
+  'rediff.com',
+  'icloud.com',
+  'me.com',
+  'proton.me',
+  'protonmail.com',
+  'zoho.com',
+  'zoho.in',
+  'gmx.com',
+] as const;
+
+export const ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR =
+  'Please use a supported email provider such as Gmail, Yahoo, Outlook or Rediffmail.';
+
+export interface EmailValidationOptions {
+  allowedDomains?: readonly string[] | Set<string>;
+  unapprovedDomainError?: string;
+}
+
+/**
  * Robust Client & Server Email Address Validation
  * 
  * - Trims leading and trailing spaces before validation
@@ -401,10 +431,13 @@ export const DISPOSABLE_EMAIL_DOMAINS = new Set<string>([
  * - Rejects spaces, invalid characters, incomplete local parts, or missing domains
  * - Validates at least one dot in domain and a valid TLD of at least 2 alpha characters
  * - Detects and rejects known disposable email domains
- * - Does NOT restrict users to specific email providers (accepts all legitimate domains)
+ * - Supports configurable allowed domain whitelist for specialized forms (e.g. Abstract Submission)
  * - Returns exact required inline error message: "Please enter a valid email address."
  */
-export function validateEmailAddress(rawInput: string): { isValid: boolean; error?: string; formatted: string } {
+export function validateEmailAddress(
+  rawInput: string,
+  options?: EmailValidationOptions
+): { isValid: boolean; error?: string; formatted: string } {
   const trimmed = (rawInput || '').trim();
   if (!trimmed) {
     return { isValid: false, error: 'Please enter a valid email address.', formatted: '' };
@@ -461,13 +494,40 @@ export function validateEmailAddress(rawInput: string): { isValid: boolean; erro
     return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
   }
 
-  // Check for disposable email domains
   const domainLower = domainPart.toLowerCase();
+
+  // If allowed domain whitelist is provided, enforce it
+  if (options?.allowedDomains) {
+    const isAllowed = options.allowedDomains instanceof Set
+      ? options.allowedDomains.has(domainLower)
+      : (options.allowedDomains as readonly string[]).some(d => d.toLowerCase() === domainLower);
+
+    if (!isAllowed) {
+      return {
+        isValid: false,
+        error: options.unapprovedDomainError || ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR,
+        formatted: trimmed.toLowerCase(),
+      };
+    }
+  }
+
+  // Check for disposable email domains
   if (DISPOSABLE_EMAIL_DOMAINS.has(domainLower)) {
     return { isValid: false, error: 'Disposable email addresses are not accepted. Please enter a valid email address.', formatted: trimmed };
   }
 
   return { isValid: true, formatted: trimmed.toLowerCase() };
+}
+
+/**
+ * Strict Email Domain Validation specifically for Abstract Submission Form.
+ * Only permits approved domains (gmail.com, yahoo.com, etc.).
+ */
+export function validateAbstractSubmissionEmail(rawInput: string): { isValid: boolean; error?: string; formatted: string } {
+  return validateEmailAddress(rawInput, {
+    allowedDomains: ABSTRACT_SUBMISSION_APPROVED_DOMAINS,
+    unapprovedDomainError: ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR,
+  });
 }
 
 /**
