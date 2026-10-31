@@ -1,3 +1,4 @@
+import { validateEmailAddress } from './contactValidation';
 /**
  * Newsletter Service for Bharat Collective Foundation
  * 
@@ -74,12 +75,9 @@ export const newsletterService = {
    * Validate email address syntax
    */
   validateEmail(email: string): { isValid: boolean; error?: string } {
-    if (!email || !email.trim()) {
-      return { isValid: false, error: 'Email address is required.' };
-    }
-    const cleanEmail = email.trim();
-    if (!EMAIL_REGEX.test(cleanEmail)) {
-      return { isValid: false, error: 'Please enter a valid email address (e.g., scholar@example.org).' };
+    const val = validateEmailAddress(email);
+    if (!val.isValid) {
+      return { isValid: false, error: val.error || 'Please enter a valid email address.' };
     }
     return { isValid: true };
   },

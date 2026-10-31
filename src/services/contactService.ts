@@ -1,3 +1,4 @@
+import { validateEmailAddress } from './contactValidation';
 /**
  * Contact & Inquiry Service
  * 
@@ -95,6 +96,11 @@ class ContactService {
   }
 
   create(input: ContactInquiryInput): ContactInquiryRecord {
+    const emailVal = validateEmailAddress(input.email);
+    if (!emailVal.isValid) {
+      throw new Error(emailVal.error || 'Please enter a valid email address.');
+    }
+
     const current = this.getStore();
     const count = current.length + 1;
     const randomSuffix = Math.floor(100 + Math.random() * 900);

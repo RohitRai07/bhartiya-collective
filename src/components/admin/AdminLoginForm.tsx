@@ -1,3 +1,4 @@
+import { validateEmailAddress } from '../../services/contactValidation';
 import React, { useState, useEffect, useRef } from 'react';
 import { authService } from '../../services/authService';
 import { AuthSession, TwoFactorChallenge, AdminCredentials } from '../../types/auth';
@@ -71,6 +72,12 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
 
     if (!email.trim() || !password.trim()) {
       setErrorMessage('Please provide both administrator email and password.');
+      return;
+    }
+
+    const emailVal = validateEmailAddress(email);
+    if (!emailVal.isValid) {
+      setErrorMessage(emailVal.error || 'Please enter a valid email address.');
       return;
     }
 

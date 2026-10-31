@@ -1,3 +1,4 @@
+import { validateEmailAddress } from '../services/contactValidation';
 import React, { useState, useEffect } from 'react';
 import { magazineService } from '../services/magazineService';
 import { featureConfig } from '../config/featureConfig';
@@ -64,6 +65,15 @@ export const MagazinePage: React.FC = () => {
 
   const handleCompletePurchaseAndDownload = async () => {
     if (!purchasingIssue) return;
+
+    if (readerEmail.trim()) {
+      const emailVal = validateEmailAddress(readerEmail);
+      if (!emailVal.isValid) {
+        setPaymentError(emailVal.error || 'Please enter a valid email address.');
+        return;
+      }
+    }
+
     setIsProcessing(true);
     setPaymentError(null);
 

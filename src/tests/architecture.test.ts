@@ -1904,6 +1904,156 @@ async function runTests() {
   assert(submittedRecord.mobileNumber === '+91 98765 43210', 'Mobile number properly saved');
   assert(submittedRecord.qualification === 'Associate Professor of Law', 'Qualification properly saved');
 
+  // --- Testing Uniform Email Validation Across All Intake Services ---
+  console.log('\n📌 Testing Uniform Email Validation Across All Intake Services:');
+
+  // 1. Newsletter Service
+  const nlVal = newsletterService.validateEmail('invalid-newsletter-email');
+  assert(!nlVal.isValid, 'Newsletter rejects invalid email format');
+  assert(nlVal.error === 'Please enter a valid email address.', 'Newsletter returns standardized email error message');
+
+  const nlDispVal = newsletterService.validateEmail('spamuser@mailinator.com');
+  assert(!nlDispVal.isValid, 'Newsletter rejects disposable email domain');
+
+  const nlInvalidSub = await newsletterService.subscribe({ email: 'invalid-newsletter-email', source: 'test-suite' });
+  assert(nlInvalidSub.status === 'error', 'Newsletter subscribe method rejects invalid email');
+  assert(nlInvalidSub.message === 'Please enter a valid email address.', 'Newsletter subscribe returns standardized error');
+
+  const nlDispSub = await newsletterService.subscribe({ email: 'spamuser@mailinator.com', source: 'test-suite' });
+  assert(nlDispSub.status === 'error', 'Newsletter subscribe method rejects disposable email');
+
+  // 2. Registration Service
+  let regErrorCaught = false;
+  try {
+    await registrationService.submitRegistration({
+      name: 'Test Candidate',
+      email: 'not-an-email',
+      phone: '9876543210',
+      pincode: '110001',
+      interests: ['Research'],
+    } as any);
+  } catch (err: any) {
+    regErrorCaught = true;
+    assert(err.message === 'Please enter a valid email address.', 'Registration service throws standardized error for invalid email');
+  }
+  assert(regErrorCaught, 'Registration service rejects invalid email');
+
+  let regDispErrorCaught = false;
+  try {
+    await registrationService.submitRegistration({
+      name: 'Test Candidate',
+      email: 'candidate@tempmail.com',
+      phone: '9876543210',
+      pincode: '110001',
+      interests: ['Research'],
+    } as any);
+  } catch (err: any) {
+    regDispErrorCaught = true;
+    assert(err.message.includes('Please enter a valid email address'), 'Registration service throws error for disposable email');
+  }
+  assert(regDispErrorCaught, 'Registration service rejects disposable email');
+
+  // 3. Donation Service
+  let donationErrorCaught = false;
+  try {
+    await createDonation({
+      name: 'Patron Tester',
+      email: 'bad.email@',
+      phone: '9876543210',
+      amount: 1000,
+    });
+  } catch (err: any) {
+    donationErrorCaught = true;
+    assert(err.message === 'Please enter a valid email address.', 'Donation service throws standardized error for invalid email');
+  }
+  assert(donationErrorCaught, 'Donation service rejects invalid email');
+
+  let donationDispErrorCaught = false;
+  try {
+    await createDonation({
+      name: 'Patron Tester',
+      email: 'throwaway@guerrillamail.com',
+      phone: '9876543210',
+      amount: 1000,
+    });
+  } catch (err: any) {
+    donationDispErrorCaught = true;
+    assert(err.message.includes('Please enter a valid email address'), 'Donation service throws error for disposable email');
+  }
+  assert(donationDispErrorCaught, 'Donation service rejects disposable email');
+
+  // 4. Career Service
+  let careerErrorCaught = false;
+  try {
+    await careerService.create({
+      name: 'Applicant Tester',
+      email: 'applicant@@domain.com',
+      phone: '9876543210',
+      role: 'Research Fellow',
+      message: 'Cover letter text',
+      qualification: 'PhD in Political Science',
+      experience: '5 years',
+      specialization: 'Indic Thought',
+      currentLocation: 'New Delhi',
+      cvFileName: 'cv.pdf',
+    });
+  } catch (err: any) {
+    careerErrorCaught = true;
+    assert(err.message === 'Please enter a valid email address.', 'Career service throws standardized error for invalid email');
+  }
+  assert(careerErrorCaught, 'Career service rejects invalid email');
+
+  let careerDispErrorCaught = false;
+  try {
+    await careerService.create({
+      name: 'Applicant Tester',
+      email: 'applicant@yopmail.com',
+      phone: '9876543210',
+      role: 'Research Fellow',
+      message: 'Cover letter text',
+      qualification: 'PhD in Political Science',
+      experience: '5 years',
+      specialization: 'Indic Thought',
+      currentLocation: 'New Delhi',
+      cvFileName: 'cv.pdf',
+    });
+  } catch (err: any) {
+    careerDispErrorCaught = true;
+    assert(err.message.includes('Please enter a valid email address'), 'Career service throws error for disposable email');
+  }
+  assert(careerDispErrorCaught, 'Career service rejects disposable email');
+
+  // 5. Contact Service
+  let contactErrorCaught = false;
+  try {
+    await contactService.create({
+      name: 'Inquirer Tester',
+      email: 'bad contact email',
+      phone: '9876543210',
+      subject: 'Inquiry',
+      message: 'Hello, need information.',
+    });
+  } catch (err: any) {
+    contactErrorCaught = true;
+    assert(err.message === 'Please enter a valid email address.', 'Contact service throws standardized error for invalid email');
+  }
+  assert(contactErrorCaught, 'Contact service rejects invalid email');
+
+  let contactDispErrorCaught = false;
+  try {
+    await contactService.create({
+      name: 'Inquirer Tester',
+      email: 'inquirer@trashmail.com',
+      phone: '9876543210',
+      subject: 'Inquiry',
+      message: 'Hello, need information.',
+    });
+  } catch (err: any) {
+    contactDispErrorCaught = true;
+    assert(err.message.includes('Please enter a valid email address'), 'Contact service throws error for disposable email');
+  }
+  assert(contactDispErrorCaught, 'Contact service rejects disposable email');
+
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);
   console.log(`========================================\n`);

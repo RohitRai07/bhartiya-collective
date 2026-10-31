@@ -1,3 +1,4 @@
+import { validateEmailAddress } from '../../services/contactValidation';
 import React, { useState } from 'react';
 import { registrationService } from '../../services/registrationService';
 import { pincodeService } from '../../services/pincodeService';
@@ -146,10 +147,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
     if (!formData.firstName.trim()) errors.firstName = 'First name is required.';
     if (!formData.lastName.trim()) errors.lastName = 'Last name is required.';
 
-    if (!formData.email.trim()) {
-      errors.email = 'Email address is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      errors.email = 'Please enter a valid email address.';
+    const emailVal = validateEmailAddress(formData.email);
+    if (!emailVal.isValid) {
+      errors.email = emailVal.error || 'Please enter a valid email address.';
     }
 
     // Phone validation (+91 10 digits)

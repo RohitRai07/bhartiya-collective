@@ -1,3 +1,4 @@
+import { validateEmailAddress } from '../../services/contactValidation';
 import React, { useState } from 'react';
 import { 
   createDonation, 
@@ -106,8 +107,9 @@ export const DonationSection: React.FC = () => {
       return;
     }
 
-    if (!email.trim() || !email.includes('@')) {
-      setErrorMessage('Please enter a valid email address.');
+    const emailVal = validateEmailAddress(email);
+    if (!emailVal.isValid) {
+      setErrorMessage(emailVal.error || 'Please enter a valid email address.');
       return;
     }
 

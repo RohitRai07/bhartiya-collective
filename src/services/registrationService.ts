@@ -1,3 +1,4 @@
+import { validateEmailAddress } from './contactValidation';
 /**
  * Registration Service
  * 
@@ -148,6 +149,12 @@ export const registrationService = {
    * Submit a new registration from the public website
    */
   async submitRegistration(input: UserRegistrationInput): Promise<RegistrationSubmissionResult> {
+    // 0. Email validation check
+    const emailVal = validateEmailAddress(input.email);
+    if (!emailVal.isValid) {
+      throw new Error(emailVal.error || 'Please enter a valid email address.');
+    }
+
     // 1. Phone validation check
     const phoneVal = this.validatePhoneNumber(input.phoneNumber);
     if (!phoneVal.isValid) {

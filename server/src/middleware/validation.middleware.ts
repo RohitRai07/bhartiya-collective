@@ -12,10 +12,10 @@ export function validateLoginInput(req: Request, res: Response, next: NextFuncti
     return;
   }
 
-  // Basic email pattern check
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email.trim())) {
-    res.status(400).json({ error: 'Invalid email address format.', code: 'INVALID_INPUT' });
+  // Standard robust email validation
+  const emailValidation = validateEmailAddress(email);
+  if (!emailValidation.isValid) {
+    res.status(400).json({ error: emailValidation.error || 'Please enter a valid email address.', code: 'INVALID_INPUT' });
     return;
   }
 

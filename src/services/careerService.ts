@@ -1,3 +1,4 @@
+import { validateEmailAddress } from './contactValidation';
 import { CareerApplicationInput, CareerApplicationRecord, MAX_CV_SIZE_BYTES } from '../types/career';
 
 const STORAGE_KEY = 'bharat_career_applications';
@@ -83,6 +84,11 @@ class CareerService {
   }
 
   create(input: CareerApplicationInput): CareerApplicationRecord {
+    const emailVal = validateEmailAddress(input.email);
+    if (!emailVal.isValid) {
+      throw new Error(emailVal.error || 'Please enter a valid email address.');
+    }
+
     if (input.cvFileSize && input.cvFileSize > MAX_CV_SIZE_BYTES) {
       throw new Error('CV file exceeds the strict maximum limit of 1 MB.');
     }

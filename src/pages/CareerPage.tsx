@@ -1,3 +1,4 @@
+import { validateEmailAddress } from '../services/contactValidation';
 import React, { useState, useEffect } from 'react';
 import { careerService } from '../services/careerService';
 import { featureConfig } from '../config/featureConfig';
@@ -50,8 +51,9 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
       setSubmitError('Please enter your full name.');
       return;
     }
-    if (!email.trim() || !email.includes('@')) {
-      setSubmitError('Please enter a valid email address.');
+    const emailVal = validateEmailAddress(email);
+    if (!emailVal.isValid) {
+      setSubmitError(emailVal.error || 'Please enter a valid email address.');
       return;
     }
     const cleanPhone = phone.replace(/[^0-9]/g, '');

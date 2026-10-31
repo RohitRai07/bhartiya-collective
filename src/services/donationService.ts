@@ -1,3 +1,4 @@
+import { validateEmailAddress } from './contactValidation';
 /**
  * Donation Service
  * 
@@ -55,6 +56,11 @@ export function validateDonationPhone(phone: string): { isValid: boolean; error?
  * Creates a donation record and registers an order with Razorpay
  */
 export async function createDonation(donationData: DonationData): Promise<DonationIntentResponse> {
+  const emailVal = validateEmailAddress(donationData.email);
+  if (!emailVal.isValid) {
+    throw new Error(emailVal.error || 'Please enter a valid email address.');
+  }
+
   const donationId = `DON-INTENT-${Date.now()}`;
 
   // Check if live payment integration feature flag is active
