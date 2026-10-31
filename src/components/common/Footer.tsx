@@ -159,13 +159,31 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                <span>{siteConfig.contact.email}</span>
+                <a
+                  href={siteConfig.contact.defaultMailto}
+                  className="hover:text-amber-400 transition-colors cursor-pointer"
+                  title="Send email to Bharat Collective Foundation"
+                >
+                  {siteConfig.contact.email}
+                </a>
               </div>
               <div className="flex items-start space-x-2">
                 <Phone className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <span className="block">{siteConfig.contact.phone}</span>
-                  <span className="block">{siteConfig.contact.phoneSecondary}</span>
+                  <a
+                    href={siteConfig.contact.phoneTel}
+                    className="block hover:text-amber-400 transition-colors cursor-pointer"
+                    title="Call Bharat Collective Foundation"
+                  >
+                    {siteConfig.contact.phone}
+                  </a>
+                  <a
+                    href={siteConfig.contact.phoneSecondaryTel}
+                    className="block hover:text-amber-400 transition-colors cursor-pointer"
+                    title="Call Bharat Collective Foundation (Secondary)"
+                  >
+                    {siteConfig.contact.phoneSecondary}
+                  </a>
                 </div>
               </div>
             </div>

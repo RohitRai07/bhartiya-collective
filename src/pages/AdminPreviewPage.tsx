@@ -970,8 +970,8 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
       application_id: app.applicationCode,
       status: app.status,
       contact_person: 'HR Department',
-      contact_email: 'careers@bharatcollective.org',
-      contact_phone: '+91 80768 02450'
+      contact_email: siteConfig.contact.officeEmail,
+      contact_phone: siteConfig.contact.phone
     });
     setNotifyDefaultSubject(`Update on Your Application (${app.applicationCode}) - Bharat Collective Foundation`);
     setNotifyDefaultMessage(`Namaste ${app.fullName},\n\nWe have an update regarding your application with the Bharat Collective Foundation.\n\nWarm regards,\nCareers Secretariat`);
@@ -1006,8 +1006,8 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
     setNotifyDynamicData({
       job_title: 'Bharat Collective Fellowship & Positions',
       contact_person: 'HR Department',
-      contact_email: 'careers@bharatcollective.org',
-      contact_phone: '+91 80768 02450'
+      contact_email: siteConfig.contact.officeEmail,
+      contact_phone: siteConfig.contact.phone
     });
     setNotifyDefaultSubject(`Official Communication from Careers Desk - Bharat Collective Foundation`);
     setNotifyDefaultMessage(`Namaste,\n\nWe are communicating with you regarding your application with the Bharat Collective Foundation.\n\nWarm regards,\nCareers Secretariat`);

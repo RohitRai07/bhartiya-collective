@@ -137,7 +137,23 @@ export const ContactPage: React.FC = () => {
           Connect with the Secretariat
         </h1>
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-          Inquiries regarding research collaborations, visiting fellowships, media interviews, and academic manuscript submissions.
+          For general institutional inquiries or academic collaborations, write to{' '}
+          <a
+            href={siteConfig.contact.defaultMailto}
+            className="font-semibold text-amber-700 hover:text-amber-800 underline underline-offset-2 transition-colors cursor-pointer"
+            title="Send email to Bharat Collective Foundation"
+          >
+            {siteConfig.contact.officeEmail}
+          </a>
+          {' '}or call{' '}
+          <a
+            href={siteConfig.contact.phoneTel}
+            className="font-semibold text-amber-700 hover:text-amber-800 underline underline-offset-2 transition-colors cursor-pointer"
+            title="Call Bharat Collective Foundation"
+          >
+            {siteConfig.contact.phone}
+          </a>
+          . Submit academic manuscripts and scholarly abstracts below.
         </p>
       </div>
 
@@ -400,8 +416,8 @@ export const ContactPage: React.FC = () => {
                   <p className="leading-relaxed">
                     Please send your abstract to{' '}
                     <a
-                      href={mailtoHref}
-                      className="font-semibold text-amber-700 hover:text-amber-800 underline underline-offset-2 transition-colors inline-flex items-center space-x-1"
+                      href={siteConfig.contact.callForPapersMailto}
+                      className="font-semibold text-amber-700 hover:text-amber-800 underline underline-offset-2 transition-colors inline-flex items-center space-x-1 cursor-pointer"
                       title="Open default email application or Gmail compose"
                     >
                       <span>{siteConfig.contact.officeEmail}</span>

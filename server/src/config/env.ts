@@ -79,6 +79,7 @@ export const config = {
     pass: process.env.EMAIL_PASS || '',
     from: process.env.EMAIL_FROM || '"Bharat Collective" <noreply@bharatcollective.org>',
     officeEmail: process.env.OFFICE_EMAIL || 'office@bharatcollective.in',
+    officePhone: process.env.OFFICE_PHONE || '+91 80768 02450',
   },
 
   whatsapp: {

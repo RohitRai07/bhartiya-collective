@@ -1720,17 +1720,39 @@ async function runTests() {
   assert(field4Idx < field5Idx, 'Organization precedes Qualification');
   assert(field5Idx < field6Idx, 'Qualification precedes Extended Abstract');
 
-  // --- Testing Centralized Email Configuration & Mailto Link ---
-  console.log('\n📌 Testing Centralized Office Email Configuration & Mailto Link:');
+  // --- Testing Global Contact Information & Clickable Links Across Website ---
+  console.log('\n📌 Testing Global Contact Information & Clickable Links Across Website:');
+  
+  // 1. Centralized Site Configuration Standardization
   assert(siteConfig.contact.officeEmail === 'office@bharatcollective.in', 'Centralized office email is office@bharatcollective.in');
+  assert(siteConfig.contact.email === 'office@bharatcollective.in', 'Global contact.email standardized to office@bharatcollective.in');
+  assert(siteConfig.contact.phone === '+91 80768 02450', 'Global contact.phone is approved +91 80768 02450');
+  assert(siteConfig.contact.phoneSecondary === '+91 77658 32852', 'Secondary contact phone preserved');
+  assert(siteConfig.contact.phoneTel === 'tel:+918076802450', 'Primary phone tel: link correctly formatted');
+  assert(siteConfig.contact.phoneSecondaryTel === 'tel:+917765832852', 'Secondary phone tel: link correctly formatted');
+  
+  // 2. Default & Specific Email Subject Links
   assert(
-    contactPageSource.includes('{siteConfig.contact.officeEmail}'),
-    'Contact page references centralized office email'
+    siteConfig.contact.defaultMailto.includes('mailto:office@bharatcollective.in?subject=Bharat%20Collective%20Foundation%20%E2%80%93%20General%20Enquiry'),
+    'Default mailto prepopulates recipient and subject "Bharat Collective Foundation – General Enquiry"'
   );
   assert(
-    contactPageSource.includes('Call for Papers - Bharat Collective Foundation'),
-    'Contact page mailto subject matches exact requirement'
+    siteConfig.contact.callForPapersMailto.includes('mailto:office@bharatcollective.in?subject=Call%20for%20Papers%20-%20Bharat%20Collective%20Foundation'),
+    'Call for Papers mailto prepopulates recipient and specific subject "Call for Papers - Bharat Collective Foundation"'
   );
+
+  // 3. Footer Links Inspection
+  const footerSource = fs.readFileSync('src/components/common/Footer.tsx', 'utf8');
+  assert(footerSource.includes('siteConfig.contact.defaultMailto'), 'Footer email uses defaultMailto link');
+  assert(footerSource.includes('siteConfig.contact.phoneTel'), 'Footer primary phone uses phoneTel tel: link');
+  assert(footerSource.includes('siteConfig.contact.phoneSecondaryTel'), 'Footer secondary phone uses phoneSecondaryTel tel: link');
+  assert(footerSource.includes('{siteConfig.contact.email}'), 'Footer displays standardized contact email');
+
+  // 4. Contact Page Links Inspection
+  assert(contactPageSource.includes('siteConfig.contact.defaultMailto'), 'Contact page header links to defaultMailto with general enquiry subject');
+  assert(contactPageSource.includes('siteConfig.contact.callForPapersMailto'), 'Contact page Call for Papers links to callForPapersMailto with CFP subject');
+  assert(contactPageSource.includes('siteConfig.contact.phoneTel'), 'Contact page header links to phoneTel tel: link');
+  assert(contactPageSource.includes('{siteConfig.contact.officeEmail}'), 'Contact page displays official office email');
 
   // --- Testing Email Address Validation Rules ---
   console.log('\n📌 Testing Robust Email Validation Rules (Client & Server):');

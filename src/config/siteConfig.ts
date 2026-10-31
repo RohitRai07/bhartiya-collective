@@ -11,6 +11,19 @@ const baseUrl = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
 const officeEmail = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OFFICE_EMAIL)
   || 'office@bharatcollective.in';
 
+// Centralized official contact mobile (configurable via VITE_OFFICE_PHONE)
+const officePhone = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OFFICE_PHONE)
+  || '+91 80768 02450';
+
+const officePhoneSecondary = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OFFICE_PHONE_SECONDARY)
+  || '+91 77658 32852';
+
+const cleanPhone = officePhone.replace(/[\s-]/g, '');
+const cleanPhoneSecondary = officePhoneSecondary.replace(/[\s-]/g, '');
+
+const defaultEmailSubject = 'Bharat Collective Foundation – General Enquiry';
+const callForPapersEmailSubject = 'Call for Papers - Bharat Collective Foundation';
+
 export const siteConfig = {
   name: 'Bharat Collective Foundation',
   shortName: 'Bharat Collective',
@@ -22,13 +35,21 @@ export const siteConfig = {
   establishedYear: 2024,
   organizationType: 'Non-Profit Research & Policy Foundation',
   contact: {
-    email: 'contact@bharatcollective.org',
-    pressEmail: 'media@bharatcollective.org',
+    email: officeEmail,
+    pressEmail: officeEmail,
     officeEmail,
-    phone: '+91 80768 02450',
-    phoneSecondary: '+91 77658 32852',
-    phones: ['+91 80768 02450', '+91 77658 32852'],
+    phone: officePhone,
+    phoneSecondary: officePhoneSecondary,
+    phones: [officePhone, officePhoneSecondary],
+    phoneClean: cleanPhone,
+    phoneSecondaryClean: cleanPhoneSecondary,
     address: 'Jasmine Grove Apartment, H-1, 410, Ghaziabad, UP: 201002',
+    defaultEmailSubject,
+    callForPapersEmailSubject,
+    defaultMailto: `mailto:${officeEmail}?subject=${encodeURIComponent(defaultEmailSubject)}`,
+    callForPapersMailto: `mailto:${officeEmail}?subject=${encodeURIComponent(callForPapersEmailSubject)}`,
+    phoneTel: `tel:${cleanPhone}`,
+    phoneSecondaryTel: `tel:${cleanPhoneSecondary}`,
   },
   // Official verified social media channels
   socials: {
