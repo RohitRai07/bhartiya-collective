@@ -7,6 +7,10 @@ const rawBase = typeof import.meta !== 'undefined' && import.meta.env && import.
   : '/';
 const baseUrl = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
 
+// Centralized official office email (configurable via VITE_OFFICE_EMAIL)
+const officeEmail = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OFFICE_EMAIL)
+  || 'office@bharatcollective.in';
+
 export const siteConfig = {
   name: 'Bharat Collective Foundation',
   shortName: 'Bharat Collective',
@@ -20,6 +24,7 @@ export const siteConfig = {
   contact: {
     email: 'contact@bharatcollective.org',
     pressEmail: 'media@bharatcollective.org',
+    officeEmail,
     phone: '+91 80768 02450',
     phoneSecondary: '+91 77658 32852',
     phones: ['+91 80768 02450', '+91 77658 32852'],

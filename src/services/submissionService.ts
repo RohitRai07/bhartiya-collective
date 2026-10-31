@@ -79,8 +79,22 @@ export const submissionService = {
 
     await new Promise(resolve => setTimeout(resolve, 300));
     const items = loadStoredSubmissions();
+    const authorName = input.authorName || input.candidateName || '';
+    const affiliation = input.affiliation || input.organization || '';
+    const phone = input.phone || input.mobileNumber || '';
+
     const record: PaperSubmissionRecord = {
+      researchDomainId: 'res-domain-1',
+      keywords: ['Call for Papers', 'Scholarly Abstract'],
+      paperTitle: input.paperTitle || `Scholarly Abstract - ${authorName}`,
+      declarationAgreed: true,
       ...input,
+      authorName,
+      candidateName: authorName,
+      affiliation,
+      organization: affiliation,
+      phone,
+      mobileNumber: phone,
       id: `cfp-${Date.now()}`,
       submissionCode: `BC-CFP-${Math.floor(1000 + Math.random() * 9000)}`,
       status: 'submitted',

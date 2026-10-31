@@ -112,3 +112,104 @@ export function validateFileUpload(req: Request, res: Response, next: NextFuncti
 
   next();
 }
+
+export const DISPOSABLE_EMAIL_DOMAINS = new Set<string>([
+  'mailinator.com',
+  'tempmail.com',
+  '10minutemail.com',
+  'guerrillamail.com',
+  'guerrillamail.net',
+  'guerrillamail.org',
+  'yopmail.com',
+  'trashmail.com',
+  'dispostable.com',
+  'throwawaymail.com',
+  'sharklasers.com',
+  'fakeinbox.com',
+  'getairmail.com',
+  'mohmal.com',
+  'mytemp.email',
+  'tempail.com',
+  'burnermail.io',
+]);
+
+/**
+ * Server-Side Robust Email Address Validation
+ */
+export function validateEmailAddress(rawInput: string): { isValid: boolean; error?: string; formatted: string } {
+  const trimmed = (rawInput || '').trim();
+  if (!trimmed) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: '' };
+  }
+
+  if (/\s/.test(trimmed)) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+  }
+
+  const atParts = trimmed.split('@');
+  if (atParts.length !== 2) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+  }
+
+  const [localPart, domainPart] = atParts;
+  if (!localPart || localPart.length > 64) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+  }
+
+  if (!domainPart || !domainPart.includes('.')) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+  }
+
+  const domainParts = domainPart.split('.');
+  const tld = domainParts[domainParts.length - 1];
+  if (!tld || tld.length < 2 || !/^[a-zA-Z]{2,}$/.test(tld)) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+  }
+
+  if (domainParts.some(p => !p || p.startsWith('-') || p.endsWith('-'))) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+  }
+
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+  if (!emailRegex.test(trimmed)) {
+    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+  }
+
+  const domainLower = domainPart.toLowerCase();
+  if (DISPOSABLE_EMAIL_DOMAINS.has(domainLower)) {
+    return { isValid: false, error: 'Disposable email addresses are not accepted. Please enter a valid email address.', formatted: trimmed };
+  }
+
+  return { isValid: true, formatted: trimmed.toLowerCase() };
+}
+
+/**
+ * Server-Side Indian Mobile Validation
+ */
+export function validateIndianMobile(rawInput: string): { isValid: boolean; error?: string; formatted: string; nationalNumber?: string } {
+  const trimmed = (rawInput || '').trim();
+  if (!trimmed) {
+    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.', formatted: '' };
+  }
+
+  if (/[^\d\s\-+()]/.test(trimmed)) {
+    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.', formatted: trimmed };
+  }
+
+  let digits = trimmed.replace(/[\s\-()]/g, '');
+  if (digits.startsWith('+91')) {
+    digits = digits.slice(3);
+  } else if (digits.startsWith('0091')) {
+    digits = digits.slice(4);
+  } else if (digits.startsWith('91') && digits.length === 12) {
+    digits = digits.slice(2);
+  } else if (digits.startsWith('0') && digits.length === 11) {
+    digits = digits.slice(1);
+  }
+
+  if (!/^[6-9]\d{9}$/.test(digits)) {
+    return { isValid: false, error: 'Please enter a valid 10-digit Indian mobile number.', formatted: trimmed };
+  }
+
+  return { isValid: true, formatted: `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`, nationalNumber: digits };
+}

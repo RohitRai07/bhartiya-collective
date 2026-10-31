@@ -45,7 +45,13 @@ import {
   organizeCleanLines,
   deduplicateLines,
   removeInvalidLines,
+  validateEmailAddress,
+  validateIndianMobile,
+  validateExtendedAbstract,
+  countWords,
 } from '../services/contactValidation';
+import { siteConfig } from '../config/siteConfig';
+import { submissionService } from '../services/submissionService';
 import { MAX_CV_SIZE_BYTES } from '../types/career';
 import { UserRegistrationInput } from '../types/registration';
 import { 
@@ -1683,6 +1689,210 @@ async function runTests() {
   const sampleEvent = allEvents[0];
   assert(Boolean(sampleEvent), 'Events catalog is available for registration');
   assert(typeof sampleEvent.id === 'string', 'Event has valid ID for registration and RSVP logging');
+
+  // --- Testing Contact Page Call for Papers Section Priority & Mobile/Desktop Order ---
+  console.log('\n📌 Testing Contact Page Call for Papers Mobile/Desktop Priority & Layout:');
+  const contactPageSource = fs.readFileSync('src/pages/ContactPage.tsx', 'utf8');
+  
+  // Verify Mobile Priority: Call for Papers has order-1, Secretariat has order-2
+  assert(
+    contactPageSource.includes('id="papers" className="order-1 lg:order-2 lg:col-span-7"'),
+    'Call for Papers container has order-1 for mobile and lg:order-2 for desktop'
+  );
+  assert(
+    contactPageSource.includes('className="order-2 lg:order-1 lg:col-span-5 space-y-6"'),
+    'Secretariat Details container has order-2 for mobile and lg:order-1 for desktop'
+  );
+
+  // Verify All 6 Mandatory Fields are Present in Exact Order
+  const field1Idx = contactPageSource.indexOf('Candidate Full Name');
+  const field2Idx = contactPageSource.indexOf('Email Address');
+  const field3Idx = contactPageSource.indexOf('Mobile Number (India)');
+  const field4Idx = contactPageSource.indexOf('College / University / Organization');
+  const field5Idx = contactPageSource.indexOf('Qualification / Current Year of Study');
+  const field6Idx = contactPageSource.indexOf('Extended Abstract (300–500 words)');
+
+  assert(field1Idx !== -1, 'Form contains Candidate Full Name field');
+  assert(field2Idx !== -1, 'Form contains Email Address field');
+  assert(field3Idx !== -1, 'Form contains Mobile Number (India) field');
+  assert(field4Idx !== -1, 'Form contains College / University / Organization field');
+  assert(field5Idx !== -1, 'Form contains Qualification / Current Year of Study field');
+  assert(field6Idx !== -1, 'Form contains Extended Abstract (300–500 words) field');
+
+  assert(field1Idx < field2Idx, 'Candidate Full Name precedes Email Address');
+  assert(field2Idx < field3Idx, 'Email Address precedes Mobile Number');
+  assert(field3Idx < field4Idx, 'Mobile Number precedes Organization');
+  assert(field4Idx < field5Idx, 'Organization precedes Qualification');
+  assert(field5Idx < field6Idx, 'Qualification precedes Extended Abstract');
+
+  // Verify Secretariat Details Preserved
+  assert(contactPageSource.includes('Secretariat Details'), 'Secretariat Details title preserved');
+  assert(contactPageSource.includes('Postal Address'), 'Postal Address section preserved');
+  assert(contactPageSource.includes('General Inquiries'), 'General Inquiries section preserved');
+  assert(contactPageSource.includes('Press & Editorial'), 'Press & Editorial section preserved');
+  assert(contactPageSource.includes('Telephone'), 'Telephone section preserved');
+
+  // --- Testing Centralized Email Configuration & Mailto Link ---
+  console.log('\n📌 Testing Centralized Office Email Configuration & Mailto Link:');
+  assert(siteConfig.contact.officeEmail === 'office@bharatcollective.in', 'Centralized office email is office@bharatcollective.in');
+  assert(
+    contactPageSource.includes('{siteConfig.contact.officeEmail}'),
+    'Contact page references centralized office email'
+  );
+  assert(
+    contactPageSource.includes('Call for Papers - Bharat Collective Foundation'),
+    'Contact page mailto subject matches exact requirement'
+  );
+
+  // --- Testing Email Address Validation Rules ---
+  console.log('\n📌 Testing Robust Email Validation Rules (Client & Server):');
+  
+  // Valid email tests across providers
+  const validEmails = [
+    'scholar@nludelhi.ac.in',
+    'prof.sharma@iitd.ac.in',
+    'researcher.indic@oxford.ac.uk',
+    'aravind.k@gmail.com',
+    'meera.verma@outlook.com',
+    'advocate.rao@yahoo.co.in',
+    'fellow@bharatcollective.org',
+    'user+tag@domain.co.in'
+  ];
+  for (const email of validEmails) {
+    const res = validateEmailAddress(email);
+    assert(res.isValid, `Valid email accepted: ${email}`);
+  }
+
+  // Leading/trailing whitespace trimmed
+  const paddedRes = validateEmailAddress('   scholar@university.edu   ');
+  assert(paddedRes.isValid && paddedRes.formatted === 'scholar@university.edu', 'Trims leading and trailing whitespace');
+
+  // Invalid email format tests
+  const invalidEmails = [
+    '',
+    '   ',
+    'notanemail',
+    'missingatsign.com',
+    '@nodomain.com',
+    'username@',
+    'username@.com',
+    'username@domain',
+    'user name@domain.com',
+    'user@domain .com',
+    'user@@domain.com',
+    'user@domain..com',
+  ];
+  for (const email of invalidEmails) {
+    const res = validateEmailAddress(email);
+    assert(!res.isValid, `Invalid email rejected: "${email}"`);
+    assert(res.error === 'Please enter a valid email address.', `Returns exact inline error message for: "${email}"`);
+  }
+
+  // Disposable email detection
+  const disposableEmails = [
+    'throwaway@mailinator.com',
+    'fakeuser@tempmail.com',
+    'anon@10minutemail.com',
+    'temp@guerrillamail.com',
+    'junk@yopmail.com',
+    'test@trashmail.com'
+  ];
+  for (const email of disposableEmails) {
+    const res = validateEmailAddress(email);
+    assert(!res.isValid, `Disposable email rejected: ${email}`);
+  }
+
+  // --- Testing Indian Mobile Number Validation Rules ---
+  console.log('\n📌 Testing 10-Digit Indian Mobile Number Validation:');
+  
+  const validMobiles = [
+    '9876543210',
+    '+91 9876543210',
+    '+91-98765-43210',
+    '98765 43210',
+    '09876543210',
+    '8123456789',
+    '7012345678',
+    '6901234567'
+  ];
+  for (const mobile of validMobiles) {
+    const res = validateIndianMobile(mobile);
+    assert(res.isValid, `Valid Indian mobile number accepted: ${mobile}`);
+  }
+
+  const invalidMobiles = [
+    '',
+    '12345',
+    '987654321', // 9 digits
+    '98765432100', // 11 digits
+    '5876543210', // Starts with 5
+    '1876543210', // Starts with 1
+    '98765abcde', // Non-numeric
+    '+1 9876543210', // US country code
+  ];
+  for (const mobile of invalidMobiles) {
+    const res = validateIndianMobile(mobile);
+    assert(!res.isValid, `Invalid Indian mobile number rejected: "${mobile}"`);
+    assert(res.error === 'Please enter a valid 10-digit Indian mobile number.', 'Returns clear Indian mobile validation error');
+  }
+
+  // --- Testing Extended Abstract (300-500 words) Validation ---
+  console.log('\n📌 Testing Extended Abstract (300-500 words) Word Count Validation:');
+  
+  // Empty
+  const emptyAbs = validateExtendedAbstract('');
+  assert(!emptyAbs.isValid, 'Empty abstract rejected');
+
+  // Too short (< 300 words)
+  const shortText = Array(250).fill('dharma').join(' ');
+  const shortAbs = validateExtendedAbstract(shortText);
+  assert(!shortAbs.isValid && shortAbs.wordCount === 250, 'Abstract with 250 words rejected as too short (< 300 words)');
+  assert(shortAbs.error?.includes('at least 300 words'), 'Error states minimum 300 words required');
+
+  // Too long (> 500 words)
+  const longText = Array(550).fill('jurisprudence').join(' ');
+  const longAbs = validateExtendedAbstract(longText);
+  assert(!longAbs.isValid && longAbs.wordCount === 550, 'Abstract with 550 words rejected as too long (> 500 words)');
+  assert(longAbs.error?.includes('not exceed 500 words'), 'Error states maximum 500 words limit');
+
+  // Valid boundary: 300 words
+  const minText = Array(300).fill('shastra').join(' ');
+  const minAbs = validateExtendedAbstract(minText);
+  assert(minAbs.isValid && minAbs.wordCount === 300, 'Abstract with exactly 300 words accepted');
+
+  // Valid boundary: 500 words
+  const maxText = Array(500).fill('pramana').join(' ');
+  const maxAbs = validateExtendedAbstract(maxText);
+  assert(maxAbs.isValid && maxAbs.wordCount === 500, 'Abstract with exactly 500 words accepted');
+
+  // Valid middle: 400 words
+  const midText = Array(400).fill('nyaya').join(' ');
+  const midAbs = validateExtendedAbstract(midText);
+  assert(midAbs.isValid && midAbs.wordCount === 400, 'Abstract with 400 words accepted');
+
+  // --- Testing Submission Intake with New Extended Application Fields ---
+  console.log('\n📌 Testing Submission Service with Extended Application Fields:');
+  const submittedRecord = await submissionService.submitPaper({
+    candidateName: 'Dr. Vikramaditya Someshwar',
+    authorName: 'Dr. Vikramaditya Someshwar',
+    authorEmail: 'v.someshwar@nludelhi.ac.in',
+    mobileNumber: '+91 98765 43210',
+    phone: '+91 98765 43210',
+    organization: 'National Law University Delhi',
+    affiliation: 'National Law University Delhi',
+    qualification: 'Associate Professor of Law',
+    paperTitle: 'Scholarly Abstract - Dr. Vikramaditya Someshwar',
+    abstract: minText,
+    researchDomainId: 'res-domain-1',
+    keywords: ['Call for Papers', 'Scholarly Abstract'],
+    declarationAgreed: true,
+  });
+
+  assert(Boolean(submittedRecord.id), 'Submission record created with unique ID');
+  assert(submittedRecord.submissionCode.startsWith('BC-CFP-'), 'Submission record has valid BC-CFP tracking code');
+  assert(submittedRecord.authorEmail === 'v.someshwar@nludelhi.ac.in', 'Author email properly saved');
+  assert(submittedRecord.mobileNumber === '+91 98765 43210', 'Mobile number properly saved');
+  assert(submittedRecord.qualification === 'Associate Professor of Law', 'Qualification properly saved');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);
