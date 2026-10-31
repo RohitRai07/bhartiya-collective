@@ -29,7 +29,7 @@ export const GLOBAL_APPROVED_EMAIL_DOMAINS = [
 export type ApprovedEmailDomain = (typeof GLOBAL_APPROVED_EMAIL_DOMAINS)[number];
 
 export const UNAPPROVED_EMAIL_DOMAIN_ERROR =
-  'Please use a supported email provider such as Gmail, Yahoo, Outlook or Rediffmail.';
+  'Please enter a valid email address.';
 
 export const INVALID_EMAIL_FORMAT_ERROR =
   'Please enter a valid email address.';

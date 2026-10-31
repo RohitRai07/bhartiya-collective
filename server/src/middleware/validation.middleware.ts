@@ -166,7 +166,7 @@ export interface EmailValidationOptions {
  * - Extracts domain after @ and normalizes to lowercase
  * - Enforces exact whitelist match against approved providers (Gmail, Yahoo, Outlook, Rediffmail, etc.)
  * - Rejects company, institutional (.ac.in, .edu), custom, misspelled, subdomain, and disposable domains
- * - Standardised error: "Please use a supported email provider such as Gmail, Yahoo, Outlook or Rediffmail."
+ * - Standardised error: "Please enter a valid email address."
  * - Invalid format returns: "Please enter a valid email address."
  */
 export function validateEmailAddress(
