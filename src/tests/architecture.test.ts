@@ -9,6 +9,7 @@ import { pincodeService } from '../services/pincodeService';
 import { registrationService } from '../services/registrationService';
 import { newsletterService } from '../services/newsletterService';
 import { 
+  donationService,
   createDonation, 
   validateDonationAmount, 
   validateDonationPhone, 
@@ -51,6 +52,8 @@ import {
   validateAbstractSubmissionEmail,
   ABSTRACT_SUBMISSION_APPROVED_DOMAINS,
   ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR,
+  GLOBAL_APPROVED_EMAIL_DOMAINS,
+  UNAPPROVED_EMAIL_DOMAIN_ERROR,
   validateExtendedAbstract,
   countWords,
 } from '../services/contactValidation';
@@ -109,7 +112,7 @@ async function runTests() {
 
   // 2. Newsletter Service Tests (Section 11)
   console.log('\n📌 Testing Newsletter Service Lifecycle (Section 11):');
-  const validEmail = 'scholar.test@university.ac.in';
+  const validEmail = 'scholar.test@gmail.com';
   const sub1 = await newsletterService.subscribe({ email: validEmail, source: 'test-suite' });
   assert(sub1.status === 'success', 'First-time email subscription succeeds');
 
@@ -140,7 +143,7 @@ async function runTests() {
     firstName: 'Devendra',
     middleName: 'Nath',
     lastName: 'Pandey',
-    email: 'devendra.pandey@bhu.ac.in',
+    email: 'devendra.pandey@gmail.com',
     phoneNumber: {
       countryCode: '+91',
       nationalNumber: '9839123456',
@@ -196,7 +199,7 @@ async function runTests() {
     frequency: 'monthly',
     cause: 'visiting_fellowships',
     donorName: 'Smt. Gayatri Devi',
-    email: 'gayatri.devi@patron.org',
+    email: 'gayatri.devi@gmail.com',
     isIndianTaxResident: true,
   });
 
@@ -558,7 +561,7 @@ async function runTests() {
   const newApp = careerService.create({
     type: 'internship',
     fullName: 'Aditya Vardhan Sharma',
-    email: 'aditya.sharma@du.ac.in',
+    email: 'aditya.sharma@gmail.com',
     phone: '+91 98111 22334',
     currentInstitution: 'Faculty of Law, Delhi University',
     qualification: 'Final Year LL.B',
@@ -582,7 +585,7 @@ async function runTests() {
   const noCvApp = careerService.create({
     type: 'job',
     fullName: 'Meera Deshmukh',
-    email: 'meera.deshmukh@bharat.org',
+    email: 'meera.deshmukh@gmail.com',
     phone: '+91 99887 76655',
     currentInstitution: 'Gokhale Institute of Politics and Economics',
     qualification: 'M.A. Economics',
@@ -901,7 +904,7 @@ async function runTests() {
   // 1. Contact / Enquiries Service Verification
   const testInquiry = await contactService.submitInquiry({
     name: 'Dr. Vikramaditya Sharma',
-    email: 'vikram.sharma@sampurnanand.ac.in',
+    email: 'vikram.sharma@gmail.com',
     phone: '+91 94150 99887',
     subject: 'Academic Collaboration on Indic Jurisprudence',
     message: 'We wish to invite scholars from Bharat Collective to our upcoming symposium.',
@@ -930,7 +933,7 @@ async function runTests() {
   const testContactRecipient = aggregatedRecipients.find(r => r.id === testInquiry.id);
   assert(!!testContactRecipient, 'Test contact inquiry is seamlessly aggregated as a notification recipient');
   assert(testContactRecipient?.name === 'Dr. Vikramaditya Sharma', 'Recipient retains original submitted name');
-  assert(testContactRecipient?.email === 'vikram.sharma@sampurnanand.ac.in', 'Recipient retains submitted email');
+  assert(testContactRecipient?.email === 'vikram.sharma@gmail.com', 'Recipient retains submitted email');
   assert(testContactRecipient?.hasEmail === true && testContactRecipient?.hasPhone === true, 'Channel capabilities computed accurately');
 
   // 3. Centralized Aggregator Statistics
@@ -1064,7 +1067,7 @@ async function runTests() {
     recipients: [{
       id: 'test-subscriber-pub-1',
       name: 'Dr. Anand Kumar',
-      email: 'anand.kumar@bihar.gov.in',
+      email: 'anand.kumar@gmail.com',
       phone: '+91 94310 11223',
       category: 'newsletter',
       sourceModule: 'newsletter',
@@ -1135,7 +1138,7 @@ async function runTests() {
     recipients: [{
       id: 'share-colleague-1',
       name: 'Colleague',
-      email: 'fellow.scholar@iitd.ac.in',
+      email: 'fellow.scholar@gmail.com',
       phone: '',
       category: 'subscriber',
     }],
@@ -1781,25 +1784,51 @@ async function runTests() {
   // --- Testing Email Address Validation Rules ---
   console.log('\n📌 Testing Robust Email Validation Rules (Client & Server):');
   
-  // Valid email tests across providers
+  // Valid email tests across all 15 approved providers
   const validEmails = [
-    'scholar@nludelhi.ac.in',
-    'prof.sharma@iitd.ac.in',
-    'researcher.indic@oxford.ac.uk',
     'aravind.k@gmail.com',
     'meera.verma@outlook.com',
     'advocate.rao@yahoo.co.in',
-    'fellow@bharatcollective.org',
-    'scholar.user.123@domain.co.in'
+    'scholar@yahoo.com',
+    'researcher@hotmail.com',
+    'fellow@live.com',
+    'patron@rediffmail.com',
+    'reader@rediff.com',
+    'scholar@icloud.com',
+    'scholar@me.com',
+    'user@proton.me',
+    'user@protonmail.com',
+    'contact@zoho.com',
+    'contact@zoho.in',
+    'desk@gmx.com',
   ];
   for (const email of validEmails) {
     const res = validateEmailAddress(email);
-    assert(res.isValid, `Valid email accepted: ${email}`);
+    assert(res.isValid, `Valid approved email accepted: ${email}`);
   }
 
   // Leading/trailing whitespace trimmed
-  const paddedRes = validateEmailAddress('   scholar@university.edu   ');
-  assert(paddedRes.isValid && paddedRes.formatted === 'scholar@university.edu', 'Trims leading and trailing whitespace');
+  const paddedRes = validateEmailAddress('   scholar@gmail.com   ');
+  assert(paddedRes.isValid && paddedRes.formatted === 'scholar@gmail.com', 'Trims leading and trailing whitespace');
+
+  // Unapproved domain rejection across the website
+  const unapprovedDomainEmails = [
+    'rohit@hwbdidw.com',
+    'rohit@gmailcom.com',
+    'rohit@gmail.com.fake.com',
+    'rohit@mygmail.com',
+    'rohit@company.in',
+    'rohit@college.edu',
+    'scholar@nludelhi.ac.in',
+    'prof.sharma@iitd.ac.in',
+    'fellow@jnu.ac.in',
+    'reader@domain.org'
+  ];
+  for (const email of unapprovedDomainEmails) {
+    const res = validateEmailAddress(email);
+    assert(!res.isValid, `Unapproved domain rejected: ${email}`);
+    assert(res.error === UNAPPROVED_EMAIL_DOMAIN_ERROR, `Returns exact unapproved provider message for: ${email}`);
+  }
 
   // Invalid email format tests
   const invalidEmails = [
@@ -1978,7 +2007,7 @@ async function runTests() {
     } as any);
   } catch (err: any) {
     regDispErrorCaught = true;
-    assert(err.message.includes('Please enter a valid email address'), 'Registration service throws error for disposable email');
+    assert(err.message.includes('Please enter a valid email address') || err.message === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Registration service throws error for disposable email');
   }
   assert(regDispErrorCaught, 'Registration service rejects disposable email');
 
@@ -2007,7 +2036,7 @@ async function runTests() {
     });
   } catch (err: any) {
     donationDispErrorCaught = true;
-    assert(err.message.includes('Please enter a valid email address'), 'Donation service throws error for disposable email');
+    assert(err.message.includes('Please enter a valid email address') || err.message === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Donation service throws error for disposable email');
   }
   assert(donationDispErrorCaught, 'Donation service rejects disposable email');
 
@@ -2048,7 +2077,7 @@ async function runTests() {
     });
   } catch (err: any) {
     careerDispErrorCaught = true;
-    assert(err.message.includes('Please enter a valid email address'), 'Career service throws error for disposable email');
+    assert(err.message.includes('Please enter a valid email address') || err.message === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Career service throws error for disposable email');
   }
   assert(careerDispErrorCaught, 'Career service rejects disposable email');
 
@@ -2079,7 +2108,7 @@ async function runTests() {
     });
   } catch (err: any) {
     contactDispErrorCaught = true;
-    assert(err.message.includes('Please enter a valid email address'), 'Contact service throws error for disposable email');
+    assert(err.message.includes('Please enter a valid email address') || err.message === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Contact service throws error for disposable email');
   }
   assert(contactDispErrorCaught, 'Contact service rejects disposable email');
 
@@ -2104,7 +2133,7 @@ async function runTests() {
     careerService.create({
       type: 'internship',
       fullName: 'Valid Name',
-      email: 'valid.scholar@du.ac.in',
+      email: 'valid.scholar@gmail.com',
       phone: '12345',
       currentInstitution: 'Delhi University',
       qualification: 'LL.B',
@@ -2119,7 +2148,7 @@ async function runTests() {
   const validCareerApp = careerService.create({
     type: 'internship',
     fullName: 'Valid Name',
-    email: 'valid.scholar2@du.ac.in',
+    email: 'valid.scholar2@gmail.com',
     phone: '9876543210',
     currentInstitution: 'Delhi University',
     qualification: 'LL.B',
@@ -2132,7 +2161,7 @@ async function runTests() {
   try {
     contactService.create({
       name: 'Inquirer Tester',
-      email: 'valid.inquirer@jnu.ac.in',
+      email: 'valid.inquirer@gmail.com',
       phone: 'invalid-phone',
       subject: 'Fellowship Inquiry',
       message: 'Hello, need information on fellowship.',
@@ -2145,7 +2174,7 @@ async function runTests() {
 
   const validContactInquiry = contactService.create({
     name: 'Inquirer Tester',
-    email: 'valid.inquirer2@jnu.ac.in',
+    email: 'valid.inquirer2@gmail.com',
     phone: '9876543210',
     subject: 'Fellowship Inquiry',
     message: 'Hello, need information on fellowship.',
@@ -2308,13 +2337,13 @@ async function runTests() {
     assert(res.error === 'Please enter a valid email address.', 'Invalid format returns standard format error');
   }
 
-  // 8. Submission service submission gate enforces whitelist
+  // 8. Submission service submission gate enforces whitelist globally
   let subWhitelistCaught = false;
   try {
     await submissionService.submitPaper({
       candidateName: 'Dr. Institutional Scholar',
       authorName: 'Dr. Institutional Scholar',
-      authorEmail: 'scholar@nludelhi.ac.in', // Institutional domain rejected for CFP
+      authorEmail: 'scholar@nludelhi.ac.in', // Institutional domain rejected globally
       mobileNumber: '+91 98765 43210',
       organization: 'NLU Delhi',
       qualification: 'Professor',
@@ -2322,30 +2351,118 @@ async function runTests() {
     });
   } catch (err: any) {
     subWhitelistCaught = true;
-    assert(err.message === ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR, 'Submission service rejects unapproved institutional email');
+    assert(err.message === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Submission service rejects unapproved institutional email');
   }
-  assert(subWhitelistCaught === true, 'Submission service enforces abstract whitelist');
+  assert(subWhitelistCaught === true, 'Submission service enforces global whitelist');
 
-  // 9. Confirm other services remain unrestricted for legitimate institutional emails
-  const careerInstApp = careerService.create({
+  // 9. Confirm all other services (career, contact, registration, donation, newsletter) enforce global whitelist
+  let careerCaught = false;
+  try {
+    careerService.create({
+      type: 'job',
+      fullName: 'Dr. Alok Ranjan',
+      email: 'rohit@hwbdidw.com', // Unapproved domain rejected
+      phone: '9876543210',
+      currentInstitution: 'JNU',
+      qualification: 'Ph.D.',
+      areaOfInterest: 'Center for Public Policy / Studies',
+    });
+  } catch (err: any) {
+    careerCaught = true;
+    assert(err.message === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Career service rejects unapproved domain rohit@hwbdidw.com');
+  }
+  assert(careerCaught === true, 'Career service enforces global whitelist');
+
+  // Career service accepts valid approved email
+  const careerValidApp = careerService.create({
     type: 'job',
     fullName: 'Dr. Alok Ranjan',
-    email: 'alok.ranjan@jnu.ac.in', // Institutional domain allowed for careers!
+    email: 'alok.ranjan@gmail.com',
     phone: '9876543210',
     currentInstitution: 'JNU',
     qualification: 'Ph.D.',
     areaOfInterest: 'Center for Public Policy / Studies',
   });
-  assert(careerInstApp.email === 'alok.ranjan@jnu.ac.in', 'Career service accepts institutional email');
+  assert(careerValidApp.email === 'alok.ranjan@gmail.com', 'Career service accepts approved email');
 
-  const contactInstInq = contactService.create({
+  // Contact service rejects unapproved domain
+  let contactCaught = false;
+  try {
+    contactService.create({
+      name: 'Prof. Meenakshi',
+      email: 'rohit@hwbdidw.com',
+      phone: '9876543210',
+      subject: 'Academic Consultation',
+      message: 'Visiting fellowship consultation.',
+    });
+  } catch (err: any) {
+    contactCaught = true;
+    assert(err.message === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Contact service rejects unapproved domain');
+  }
+  assert(contactCaught === true, 'Contact service enforces global whitelist');
+
+  // Contact service accepts approved email
+  const contactValidInq = contactService.create({
     name: 'Prof. Meenakshi',
-    email: 'm.sundaram@madrasuniv.ac.in', // Institutional domain allowed for inquiries!
+    email: 'm.sundaram@gmail.com',
     phone: '9876543210',
     subject: 'Academic Consultation',
     message: 'Visiting fellowship consultation.',
   });
-  assert(contactInstInq.email === 'm.sundaram@madrasuniv.ac.in', 'Contact service accepts institutional email');
+  assert(contactValidInq.email === 'm.sundaram@gmail.com', 'Contact service accepts approved email');
+
+  // Newsletter service rejects unapproved domain rohit@hwbdidw.com
+  const newsSubUnapproved = await newsletterService.subscribe({
+    email: 'rohit@hwbdidw.com',
+  });
+  assert(newsSubUnapproved.status === 'error', 'Newsletter rejects unapproved domain rohit@hwbdidw.com');
+  assert(newsSubUnapproved.message === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Newsletter returns exact unapproved provider message');
+
+  // Newsletter service accepts approved domain
+  const newsSubApproved = await newsletterService.subscribe({
+    email: 'scholar.new@yahoo.co.in',
+  });
+  assert(newsSubApproved.status === 'success', 'Newsletter accepts approved domain');
+
+  // Registration service rejects unapproved domain
+  let regCaught = false;
+  try {
+    await registrationService.submitRegistration({
+      firstName: 'Rohit',
+      lastName: 'Rai',
+      email: 'rohit@hwbdidw.com',
+      phoneNumber: { countryCode: '+91', nationalNumber: '9876543210' },
+      collegeName: 'Delhi University',
+      address: 'North Campus',
+      pincode: '110007',
+      city: 'Delhi',
+      district: 'North Delhi',
+      state: 'Delhi',
+      consent: true,
+    });
+  } catch (err: any) {
+    regCaught = true;
+    assert(err.message === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Registration service rejects unapproved domain');
+  }
+  assert(regCaught === true, 'Registration service enforces global whitelist');
+
+  // Donation service rejects unapproved domain
+  let donCaught = false;
+  try {
+    await donationService.createDonation({
+      amount: 1000,
+      frequency: 'one_time',
+      cause: 'digital_archives',
+      donorName: 'Patron',
+      email: 'rohit@hwbdidw.com',
+      phone: '+91 98765 43210',
+      isIndianTaxResident: true,
+    });
+  } catch (err: any) {
+    donCaught = true;
+    assert(err.message === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Donation service rejects unapproved domain');
+  }
+  assert(donCaught === true, 'Donation service enforces global whitelist');
 
   console.log(`\n========================================`);
   console.log(`Summary: ${passed} PASSED, ${failed} FAILED`);

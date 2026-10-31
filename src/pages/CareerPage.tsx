@@ -32,6 +32,7 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
   const [appType, setAppType] = useState<CareerApplicationType>('internship');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [institution, setInstitution] = useState('');
   const [qualification, setQualification] = useState('');
@@ -53,8 +54,11 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
     }
     const emailVal = validateEmailAddress(email);
     if (!emailVal.isValid) {
+      setEmailError(emailVal.error || 'Please enter a valid email address.');
       setSubmitError(emailVal.error || 'Please enter a valid email address.');
       return;
+    } else {
+      setEmailError(null);
     }
     const phoneVal = validateIndianMobile(phone);
     if (!phoneVal.isValid) {
@@ -93,6 +97,7 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
   const handleReset = () => {
     setFullName('');
     setEmail('');
+    setEmailError(null);
     setPhone('');
     setInstitution('');
     setQualification('');
@@ -256,12 +261,35 @@ export const CareerPage: React.FC<CareerPageProps> = ({}) => {
                   <input
                     type="email"
                     required
-                    placeholder="candidate@university.edu"
+                    placeholder="candidate@gmail.com"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-900 bg-slate-50/50 focus:border-amber-600 focus:bg-white"
+                    onChange={e => {
+                      setEmail(e.target.value);
+                      if (emailError) {
+                        const v = validateEmailAddress(e.target.value);
+                        if (v.isValid) setEmailError(null);
+                      }
+                    }}
+                    onBlur={() => {
+                      if (email.trim()) {
+                        const v = validateEmailAddress(email);
+                        if (!v.isValid) setEmailError(v.error || 'Please enter a valid email address.');
+                        else setEmailError(null);
+                      }
+                    }}
+                    className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border text-sm text-slate-900 bg-slate-50/50 transition-colors ${
+                      emailError 
+                        ? 'border-red-400 focus:border-red-500 focus:bg-white' 
+                        : 'border-slate-200 focus:border-amber-600 focus:bg-white'
+                    }`}
                   />
                 </div>
+                {emailError && (
+                  <p className="text-[11px] text-red-600 mt-1 flex items-center space-x-1">
+                    <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                    <span>{emailError}</span>
+                  </p>
+                )}
               </div>
 
               <div>

@@ -239,11 +239,21 @@ export const ContactPage: React.FC = () => {
                       id="authorEmail"
                       type="email"
                       required
-                      placeholder="e.g. scholar@university.edu"
+                      placeholder="e.g. scholar@gmail.com"
                       value={email}
                       onChange={e => {
                         setEmail(e.target.value);
-                        if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
+                        if (errors.email) {
+                          const v = validateAbstractSubmissionEmail(e.target.value);
+                          if (v.isValid) setErrors(prev => ({ ...prev, email: undefined }));
+                        }
+                      }}
+                      onBlur={() => {
+                        if (email.trim()) {
+                          const v = validateAbstractSubmissionEmail(email);
+                          if (!v.isValid) setErrors(prev => ({ ...prev, email: v.error || 'Please enter a valid email address.' }));
+                          else setErrors(prev => ({ ...prev, email: undefined }));
+                        }
                       }}
                       className={`w-full px-3.5 py-2.5 rounded-xl border text-xs transition-colors ${
                         errors.email 

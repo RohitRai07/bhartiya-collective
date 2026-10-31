@@ -1,5 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import { config } from '../config/env';
+import {
+  GLOBAL_APPROVED_EMAIL_DOMAINS,
+  UNAPPROVED_EMAIL_DOMAIN_ERROR,
+  INVALID_EMAIL_FORMAT_ERROR,
+  ABSTRACT_SUBMISSION_APPROVED_DOMAINS,
+  ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR,
+  type ApprovedEmailDomain,
+} from '../config/approvedEmailDomains';
+
+export {
+  GLOBAL_APPROVED_EMAIL_DOMAINS,
+  UNAPPROVED_EMAIL_DOMAIN_ERROR,
+  INVALID_EMAIL_FORMAT_ERROR,
+  ABSTRACT_SUBMISSION_APPROVED_DOMAINS,
+  ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR,
+  type ApprovedEmailDomain,
+};
+
+export const APPROVED_EMAIL_DOMAINS = GLOBAL_APPROVED_EMAIL_DOMAINS;
 
 /**
  * Validate Admin Login Request Body
@@ -133,38 +152,22 @@ export const DISPOSABLE_EMAIL_DOMAINS = new Set<string>([
   'burnermail.io',
 ]);
 
-/**
- * Approved Email Domains for Abstract Submission Form
- * Only approved mainstream providers are allowed for Call for Papers / Abstract submissions.
- */
-export const ABSTRACT_SUBMISSION_APPROVED_DOMAINS = [
-  'gmail.com',
-  'yahoo.com',
-  'yahoo.co.in',
-  'outlook.com',
-  'hotmail.com',
-  'live.com',
-  'rediffmail.com',
-  'rediff.com',
-  'icloud.com',
-  'me.com',
-  'proton.me',
-  'protonmail.com',
-  'zoho.com',
-  'zoho.in',
-  'gmx.com',
-] as const;
-
-export const ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR =
-  'Please use a supported email provider such as Gmail, Yahoo, Outlook or Rediffmail.';
-
 export interface EmailValidationOptions {
   allowedDomains?: readonly string[] | Set<string>;
   unapprovedDomainError?: string;
+  allowAnyDomain?: boolean;
 }
 
 /**
  * Server-Side Robust Email Address Validation
+ * 
+ * - Trims leading and trailing spaces before validation
+ * - Validates complete email address format
+ * - Extracts domain after @ and normalizes to lowercase
+ * - Enforces exact whitelist match against approved providers (Gmail, Yahoo, Outlook, Rediffmail, etc.)
+ * - Rejects company, institutional (.ac.in, .edu), custom, misspelled, subdomain, and disposable domains
+ * - Standardised error: "Please use a supported email provider such as Gmail, Yahoo, Outlook or Rediffmail."
+ * - Invalid format returns: "Please enter a valid email address."
  */
 export function validateEmailAddress(
   rawInput: string,
@@ -172,67 +175,68 @@ export function validateEmailAddress(
 ): { isValid: boolean; error?: string; formatted: string } {
   const trimmed = (rawInput || '').trim();
   if (!trimmed) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: '' };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: '' };
   }
 
   if (/\s/.test(trimmed)) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: trimmed };
   }
 
   // Strict rule: email must only contain alphanumeric characters, '.' and '@' (no other special characters)
   if (/[^a-zA-Z0-9.@]/.test(trimmed)) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: trimmed };
   }
 
   const atParts = trimmed.split('@');
   if (atParts.length !== 2) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: trimmed };
   }
 
   const [localPart, domainPart] = atParts;
   if (!localPart || localPart.length > 64) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: trimmed };
   }
 
   if (localPart.startsWith('.') || localPart.endsWith('.') || localPart.includes('..')) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: trimmed };
   }
 
   if (!domainPart || !domainPart.includes('.')) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: trimmed };
   }
 
   if (domainPart.startsWith('.') || domainPart.endsWith('.') || domainPart.includes('..')) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: trimmed };
   }
 
   const domainParts = domainPart.split('.');
   const tld = domainParts[domainParts.length - 1];
   if (!tld || tld.length < 2 || !/^[a-zA-Z]{2,}$/.test(tld)) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: trimmed };
   }
 
   if (domainParts.some(p => !p || !/^[a-zA-Z0-9]+$/.test(p))) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: trimmed };
   }
 
   const emailRegex = /^[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)+$/;
   if (!emailRegex.test(trimmed)) {
-    return { isValid: false, error: 'Please enter a valid email address.', formatted: trimmed };
+    return { isValid: false, error: INVALID_EMAIL_FORMAT_ERROR, formatted: trimmed };
   }
 
   const domainLower = domainPart.toLowerCase();
 
-  // If allowed domain whitelist is provided, enforce it
-  if (options?.allowedDomains) {
-    const isAllowed = options.allowedDomains instanceof Set
-      ? options.allowedDomains.has(domainLower)
-      : (options.allowedDomains as readonly string[]).some(d => d.toLowerCase() === domainLower);
+  // Enforce Approved Domain Whitelist globally by default
+  if (!options?.allowAnyDomain) {
+    const allowed = options?.allowedDomains || GLOBAL_APPROVED_EMAIL_DOMAINS;
+    const isAllowed = allowed instanceof Set
+      ? allowed.has(domainLower)
+      : (allowed as readonly string[]).some(d => d.toLowerCase() === domainLower);
 
     if (!isAllowed) {
       return {
         isValid: false,
-        error: options.unapprovedDomainError || ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR,
+        error: options?.unapprovedDomainError || UNAPPROVED_EMAIL_DOMAIN_ERROR,
         formatted: trimmed.toLowerCase(),
       };
     }
@@ -250,8 +254,8 @@ export function validateEmailAddress(
  */
 export function validateAbstractSubmissionEmail(rawInput: string): { isValid: boolean; error?: string; formatted: string } {
   return validateEmailAddress(rawInput, {
-    allowedDomains: ABSTRACT_SUBMISSION_APPROVED_DOMAINS,
-    unapprovedDomainError: ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR,
+    allowedDomains: GLOBAL_APPROVED_EMAIL_DOMAINS,
+    unapprovedDomainError: UNAPPROVED_EMAIL_DOMAIN_ERROR,
   });
 }
 

@@ -13,6 +13,8 @@ import { newsletterService } from '../services/newsletter.service';
 import { app } from '../index';
 import { validateEmailAddress, validateIndianMobile, INDIAN_MOBILE_CONFIG, validateAbstractSubmissionEmail, ABSTRACT_SUBMISSION_APPROVED_DOMAINS, ABSTRACT_SUBMISSION_UNAPPROVED_DOMAIN_ERROR } from '../middleware/validation.middleware';
 import { submitPaper } from '../controllers/submission.controller';
+import { subscribe } from '../controllers/newsletter.controller';
+import { GLOBAL_APPROVED_EMAIL_DOMAINS, UNAPPROVED_EMAIL_DOMAIN_ERROR } from '../config/approvedEmailDomains';
 
 async function runSecurityTests() {
   console.log('====================================================');
@@ -304,7 +306,7 @@ async function runSecurityTests() {
   console.log('\n📌 Testing Payment Confirmation Email & Future SMS Notifications:');
 
   // Test Payment Confirmation Email Service
-  const emailSent = await emailService.sendPaymentConfirmationEmail('patron.test@bharatcollective.org', {
+  const emailSent = await emailService.sendPaymentConfirmationEmail('patron.test@gmail.com', {
     donorName: 'Smt. Ananya Sen',
     amount: 5000,
     paymentId: 'pay_test_conf_12345',
@@ -321,7 +323,7 @@ async function runSecurityTests() {
   console.log('  ✅ PASS: Payment confirmation email with branding & 80G tax receipt acknowledgment');
 
   // Test Magazine Payment Confirmation Email
-  const magEmailSent = await emailService.sendPaymentConfirmationEmail('reader.test@bharatcollective.org', {
+  const magEmailSent = await emailService.sendPaymentConfirmationEmail('reader.test@gmail.com', {
     donorName: 'Sri Raghavendra',
     amount: 100,
     paymentId: 'pay_test_mag_54321',
@@ -385,7 +387,7 @@ async function runSecurityTests() {
 
   // Verify Valid Single Email Dispatch & Activity Logging
   const goodSend = await emailService.sendEmail({
-    to: 'scholar.test@du.ac.in',
+    to: 'scholar.test@gmail.com',
     recipientName: 'Prof. Ananya',
     subject: 'Academic Consultation - Bharat Collective',
     html: '<p>Namaste Professor</p>',
@@ -393,7 +395,7 @@ async function runSecurityTests() {
   });
   assert(goodSend === true, 'Valid email dispatched successfully');
   const lastLog = emailService.getActivityLogs(1)[0];
-  assert(lastLog.recipientEmail === 'scholar.test@du.ac.in', 'Log contains recipient email');
+  assert(lastLog.recipientEmail === 'scholar.test@gmail.com', 'Log contains recipient email');
   assert(lastLog.senderEmail === 'office@bharatcollective.in', 'Log records official sender email');
   assert(lastLog.status === 'Sent', 'Log records Sent status');
   assert(lastLog.category === 'scholar_inquiry', 'Log records correct category');
@@ -401,9 +403,9 @@ async function runSecurityTests() {
 
   // Verify Bulk Email Sending with Deduplication & Individual Delivery
   const batchResult = await emailService.sendBatchEmails([
-    { email: 'fellow.1@iitd.ac.in', name: 'Fellow 1' },
-    { email: 'fellow.1@iitd.ac.in', name: 'Fellow 1 Duplicate' },
-    { email: 'fellow.2@nludelhi.ac.in', name: 'Fellow 2' },
+    { email: 'fellow.1@gmail.com', name: 'Fellow 1' },
+    { email: 'fellow.1@gmail.com', name: 'Fellow 1 Duplicate' },
+    { email: 'fellow.2@yahoo.co.in', name: 'Fellow 2' },
   ], 'Symposium Invitation', '<p>You are invited</p>', undefined, 'event_invitation');
   assert(batchResult.total === 2, 'Batch deduplicates recipients: 3 passed -> 2 unique');
   assert(batchResult.sent === 2, 'Batch delivers to all unique recipients individually');
@@ -412,7 +414,7 @@ async function runSecurityTests() {
   // Verify Automatic Newsletter Subscription Internal Notification
   emailService.clearActivityLogs();
   const subResult = await newsletterService.subscribe({
-    email: 'new.patron@alumni.harvard.edu',
+    email: 'new.patron@gmail.com',
     name: 'Dr. Vikramaditya',
     phone: '+91 98765 43210',
     source: 'monographs-page',
@@ -431,7 +433,7 @@ async function runSecurityTests() {
 
   // Verify Duplicate Subscription Prevention (No Duplicate Notification)
   const dupSubResult = await newsletterService.subscribe({
-    email: 'new.patron@alumni.harvard.edu',
+    email: 'new.patron@gmail.com',
     source: 'monographs-page',
   });
   assert(dupSubResult.status === 'already_subscribed', 'Subscribing existing email returns already_subscribed');
@@ -464,7 +466,7 @@ async function runSecurityTests() {
 
   // Verify Newsletter subscriber phone gate
   const badPhoneSub = await newsletterService.subscribe({
-    email: 'valid.subscriber@du.ac.in',
+    email: 'valid.subscriber@gmail.com',
     phone: 'invalid-phone-number',
   });
   assert(badPhoneSub.success === false, 'Newsletter rejects invalid phone number');
@@ -594,6 +596,46 @@ async function runSecurityTests() {
   assert(resJson.data.submissionCode.startsWith('BC-CFP-'), 'Submission code generated');
   assert(resJson.data.authorEmail === 'scholar.approved@gmail.com', 'Author email saved');
   console.log('  ✅ PASS: Direct API request succeeds with approved email domain and valid inputs');
+
+  // Test Direct API to Newsletter with unapproved domain rohit@hwbdidw.com
+  reqStatus = 0;
+  resJson = null;
+  const mockReqNewsUnapproved: any = {
+    body: {
+      email: 'rohit@hwbdidw.com',
+      source: 'website-footer',
+    }
+  };
+  await subscribe(mockReqNewsUnapproved, mockRes);
+  assert(reqStatus === 400, 'Direct API to newsletter with unapproved domain returns 400');
+  assert(resJson.error === UNAPPROVED_EMAIL_DOMAIN_ERROR, 'Direct API to newsletter returns exact unapproved provider message');
+  console.log('  ✅ PASS: Direct API to newsletter rejects unapproved domain rohit@hwbdidw.com');
+
+  // Test all 15 approved domains on backend validateEmailAddress
+  for (const dom of GLOBAL_APPROVED_EMAIL_DOMAINS) {
+    const v = validateEmailAddress(`tester@${dom}`);
+    assert(v.isValid === true, `Backend approves exact domain: ${dom}`);
+    assert(v.formatted === `tester@${dom}`, `Backend formats domain to lowercase: ${dom}`);
+  }
+  console.log('  ✅ PASS: Backend validateEmailAddress accepts all 15 approved domains');
+
+  // Test unapproved domains on backend validateEmailAddress
+  const unapprovedBackTests = [
+    'rohit@hwbdidw.com',
+    'rohit@gmailcom.com',
+    'rohit@gmail.com.fake.com',
+    'rohit@mygmail.com',
+    'rohit@company.in',
+    'rohit@college.edu',
+    'scholar@nludelhi.ac.in',
+    'prof.sharma@iitd.ac.in',
+  ];
+  for (const bad of unapprovedBackTests) {
+    const v = validateEmailAddress(bad);
+    assert(v.isValid === false, `Backend rejects unapproved domain: ${bad}`);
+    assert(v.error === UNAPPROVED_EMAIL_DOMAIN_ERROR, `Backend returns exact message for: ${bad}`);
+  }
+  console.log('  ✅ PASS: Backend validateEmailAddress rejects unapproved, typo, and subdomain domains');
 
 
   console.log('\n====================================================');

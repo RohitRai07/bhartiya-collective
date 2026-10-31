@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Copy, Send } from 'lucide-react';
 import { notificationService } from '../../services/notificationService';
 import { siteConfig } from '../../config/siteConfig';
+import { validateEmailAddress, validateIndianMobile } from '../../services/contactValidation';
 
 interface ShareContentModalProps {
   isOpen: boolean;
@@ -51,6 +52,19 @@ export function ShareContentModal({ isOpen, onClose, contentTitle, contentUrl }:
     if (!recipient.trim()) {
       alert('Please enter recipient info');
       return;
+    }
+    if (shareMode === 'email') {
+      const val = validateEmailAddress(recipient);
+      if (!val.isValid) {
+        alert(val.error || 'Please enter a valid email address.');
+        return;
+      }
+    } else if (shareMode === 'whatsapp') {
+      const val = validateIndianMobile(recipient);
+      if (!val.isValid) {
+        alert(val.error || 'Please enter a valid 10-digit Indian mobile number.');
+        return;
+      }
     }
     
     setIsSending(true);
@@ -158,7 +172,7 @@ export function ShareContentModal({ isOpen, onClose, contentTitle, contentUrl }:
                   type={shareMode === 'email' ? 'email' : 'tel'}
                   value={recipient}
                   onChange={e => setRecipient(e.target.value)}
-                  placeholder={shareMode === 'email' ? 'colleague@example.com' : '+91 98765 43210'}
+                  placeholder={shareMode === 'email' ? 'colleague@gmail.com' : '+91 98765 43210'}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"
                 />
               </div>

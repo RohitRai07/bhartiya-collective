@@ -24,6 +24,7 @@ import { ResearchDomain } from '../types/research';
 import { ScholarExpert } from '../types/expert';
 import { NewsArticle } from '../types/news';
 import { NotificationLog, NotificationRecipient } from '../types/notification';
+import { validateEmailAddress } from '../services/contactValidation';
 import { EmailGatewayConfig } from '../services/notificationService';
 import { DEFAULT_ADMIN_CREDS } from '../services/authService';
 import { fileService } from '../services/fileService';
@@ -467,6 +468,11 @@ export const AdminPreviewPage: React.FC<AdminPreviewPageProps> = ({ onBackToPubl
   const handleAddSubscriberSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSubEmail || !newSubEmail.trim()) return;
+    const val = validateEmailAddress(newSubEmail);
+    if (!val.isValid) {
+      alert(val.error || 'Please enter a valid email address.');
+      return;
+    }
     try {
       await newsletterService.addSubscriberManually(newSubEmail.trim());
       setNewSubEmail('');
@@ -849,8 +855,9 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
   };
 
   const handleSendTestEmail = async () => {
-    if (!testEmailAddress || !testEmailAddress.includes('@')) {
-      alert('Please enter a valid email address.');
+    const val = validateEmailAddress(testEmailAddress);
+    if (!val.isValid) {
+      alert(val.error || 'Please enter a valid email address.');
       return;
     }
     setTestEmailLoading(true);
@@ -4604,7 +4611,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
                   <input
                     type="email"
                     required
-                    placeholder="Enter scholar email address (e.g. professor@jnu.ac.in)..."
+                    placeholder="Enter scholar email address (e.g. scholar@gmail.com)..."
                     value={newSubEmail}
                     onChange={e => setNewSubEmail(e.target.value)}
                     className="w-full px-3.5 py-2 text-xs rounded-xl border border-amber-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500"

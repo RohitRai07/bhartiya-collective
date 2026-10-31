@@ -423,8 +423,9 @@ export const NotificationCentre: React.FC<NotificationCentreProps> = ({
   // Test Email Handler
   const handleSendTestEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!testEmailAddress || !testEmailAddress.includes('@')) {
-      alert('Please enter a valid recipient email address.');
+    const val = validateEmailAddress(testEmailAddress);
+    if (!val.isValid) {
+      alert(val.error || 'Please enter a valid recipient email address.');
       return;
     }
 

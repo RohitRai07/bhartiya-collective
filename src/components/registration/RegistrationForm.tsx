@@ -386,9 +386,35 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess })
               <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
               <input
                 type="email"
-                placeholder="name@university.ac.in"
+                placeholder="name@gmail.com"
                 value={formData.email}
-                onChange={e => handleChange('email', e.target.value)}
+                onChange={e => {
+                  handleChange('email', e.target.value);
+                  if (validationErrors.email) {
+                    const v = validateEmailAddress(e.target.value);
+                    if (v.isValid) {
+                      setValidationErrors(prev => {
+                        const copy = { ...prev };
+                        delete copy.email;
+                        return copy;
+                      });
+                    }
+                  }
+                }}
+                onBlur={() => {
+                  if (formData.email.trim()) {
+                    const v = validateEmailAddress(formData.email);
+                    if (!v.isValid) {
+                      setValidationErrors(prev => ({ ...prev, email: v.error || 'Please enter a valid email address.' }));
+                    } else {
+                      setValidationErrors(prev => {
+                        const copy = { ...prev };
+                        delete copy.email;
+                        return copy;
+                      });
+                    }
+                  }
+                }}
                 className={`w-full pl-10 pr-3.5 py-2.5 rounded-xl border text-sm text-slate-900 placeholder-slate-400 bg-slate-50/50 ${
                   validationErrors.email ? 'border-red-400 bg-red-50/30' : 'border-slate-300 focus:border-amber-600'
                 }`}

@@ -163,10 +163,20 @@ export const NewsletterForm: React.FC<NewsletterFormProps> = ({
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
-                    if (clientError) setClientError(null);
+                    if (clientError) {
+                      const v = newsletterService.validateEmail(e.target.value);
+                      if (v.isValid) setClientError(null);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (email.trim()) {
+                      const v = newsletterService.validateEmail(email);
+                      if (!v.isValid) setClientError(v.error || 'Please enter a valid email address.');
+                      else setClientError(null);
+                    }
                   }}
                   disabled={state.status === 'loading'}
-                  placeholder="Enter your academic or personal email"
+                  placeholder="Enter your email (e.g. name@gmail.com)"
                   className={`w-full px-4 py-3 rounded-xl border text-sm text-slate-800 placeholder-slate-400 bg-slate-50/50 transition-all ${
                     clientError 
                       ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500' 

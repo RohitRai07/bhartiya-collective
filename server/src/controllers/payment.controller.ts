@@ -3,7 +3,7 @@ import { paymentService } from '../services/payment.service';
 import { config } from '../config/env';
 import { emailService } from '../services/email.service';
 import { smsService } from '../services/sms.service';
-import { validateIndianMobile } from '../middleware/validation.middleware';
+import { validateIndianMobile, validateEmailAddress } from '../middleware/validation.middleware';
 
 /**
  * Creates a server-side order with Razorpay
@@ -38,6 +38,19 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       }
       if (notes && notes.phone) {
         notes.phone = pVal.formatted;
+      }
+    }
+
+    // Validate donor email if provided
+    const emailToValidate = notes?.email || req.body?.email;
+    if (emailToValidate && typeof emailToValidate === 'string' && emailToValidate.trim()) {
+      const eVal = validateEmailAddress(emailToValidate);
+      if (!eVal.isValid) {
+        res.status(400).json({ error: eVal.error || 'Please enter a valid email address.', code: 'INVALID_EMAIL' });
+        return;
+      }
+      if (notes && notes.email) {
+        notes.email = eVal.formatted;
       }
     }
 
@@ -98,6 +111,19 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
     );
 
     if (isValid) {
+      // Validate donor email format & domain if present
+      const recipientEmail = donorDetails?.email?.trim();
+      if (recipientEmail) {
+        const eVal = validateEmailAddress(recipientEmail);
+        if (!eVal.isValid) {
+          res.status(400).json({
+            success: false,
+            error: eVal.error || 'Please enter a valid email address.',
+            code: 'INVALID_EMAIL',
+          });
+          return;
+        }
+      }
       const transaction = paymentService.recordTransaction({
         id: razorpay_payment_id,
         orderId: razorpay_order_id,
@@ -116,7 +142,6 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       });
 
       // Automatic Payment Confirmation Email and Future SMS Dispatch
-      const recipientEmail = donorDetails?.email?.trim();
       const recipientPhone = donorDetails?.phone?.trim();
 
       if (recipientEmail) {

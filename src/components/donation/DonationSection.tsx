@@ -393,9 +393,21 @@ export const DonationSection: React.FC = () => {
                     <input
                       type="email"
                       required
-                      placeholder="name@domain.org"
+                      placeholder="name@gmail.com"
                       value={email}
-                      onChange={e => setEmail(e.target.value)}
+                      onChange={e => {
+                        setEmail(e.target.value);
+                        if (errorMessage && (errorMessage.includes('email') || errorMessage.includes('provider'))) {
+                          const v = validateEmailAddress(e.target.value);
+                          if (v.isValid) setErrorMessage(null);
+                        }
+                      }}
+                      onBlur={() => {
+                        if (email.trim()) {
+                          const v = validateEmailAddress(email);
+                          if (!v.isValid) setErrorMessage(v.error || 'Please enter a valid email address.');
+                        }
+                      }}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-amber-600"
                     />
                   </div>

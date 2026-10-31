@@ -183,8 +183,9 @@ export class EmailService {
     const cleanTo = (options.to || '').trim();
     const category = options.category || 'general';
 
-    // 1. Validate recipient email address on backend
-    const val = validateEmailAddress(cleanTo);
+    // 1. Validate recipient email address on backend (permitting internal admin address for alert dispatches)
+    const isInternalAlert = category === 'newsletter_admin_alert' || cleanTo.toLowerCase() === config.email.user.toLowerCase();
+    const val = validateEmailAddress(cleanTo, isInternalAlert ? { allowAnyDomain: true } : undefined);
     if (!val.isValid) {
       console.warn(`[Email Validation Error] Rejected invalid recipient email: "${cleanTo}"`);
       this.recordLog({
