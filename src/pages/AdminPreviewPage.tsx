@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { registrationService } from '../services/registrationService';
 import { submissionService } from '../services/submissionService';
 import { newsletterService } from '../services/newsletterService';
@@ -1218,24 +1218,19 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
   });
 
   // Deduplicated unique subscribers list (case-insensitive & trimmed)
-  const uniqueSubscribers = useMemo(() => {
-    const seen = new Set<string>();
-    const list: any[] = [];
-    for (const s of subscribers || []) {
-      const norm = (s.email || '').trim().toLowerCase();
-      if (!norm || seen.has(norm)) continue;
-      seen.add(norm);
-      list.push({ ...s, email: norm });
-    }
-    return list;
-  }, [subscribers]);
+  const seenSubEmails = new Set<string>();
+  const uniqueSubscribers: any[] = [];
+  for (const s of subscribers || []) {
+    const norm = (s.email || '').trim().toLowerCase();
+    if (!norm || seenSubEmails.has(norm)) continue;
+    seenSubEmails.add(norm);
+    uniqueSubscribers.push({ ...s, email: norm });
+  }
 
   // Filtered subscribers (guaranteed unique)
-  const filteredSubscribers = useMemo(() => {
-    return uniqueSubscribers.filter(s => 
-      !subSearch || s.email.toLowerCase().includes(subSearch.trim().toLowerCase())
-    );
-  }, [uniqueSubscribers, subSearch]);
+  const filteredSubscribers = uniqueSubscribers.filter(s => 
+    !subSearch || s.email.toLowerCase().includes(subSearch.trim().toLowerCase())
+  );
 
   // Filtered CFP Submissions
   const filteredSubmissions = (submissions || []).filter(s =>
