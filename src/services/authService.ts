@@ -152,7 +152,13 @@ export const authService = {
         session = inMemorySession;
       }
       
-      if (!session) return null;
+      if (!session || !session.user || !session.token) {
+        inMemorySession = null;
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+        }
+        return null;
+      }
 
       // Basic expiry check
       if (session?.expiresAt && new Date(session.expiresAt).getTime() < Date.now()) {

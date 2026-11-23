@@ -90,7 +90,8 @@ export function App() {
   }, []);
 
   // Isolated Admin Portal Route (Protected by Admin Credentials)
-  if (currentPath === '/admin' || currentPath === '/admin/login' || currentPath === '/admin/') {
+  const normalizedPath = currentPath.split('?')[0].replace(/\/+$/, '') || '/';
+  if (normalizedPath === '/admin' || normalizedPath === '/admin/login') {
     return (
       <ErrorBoundary>
         <AdminPreviewPage onBackToPublicSite={() => navigateTo('/')} />

@@ -25,6 +25,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private handleReset = () => {
+    try {
+      if (typeof window !== 'undefined' && window.location.hash.includes('admin')) {
+        localStorage.removeItem('bharat_collective_admin_session');
+      }
+    } catch {}
     this.setState({ hasError: false, error: null });
     window.location.hash = '#/';
     window.location.reload();

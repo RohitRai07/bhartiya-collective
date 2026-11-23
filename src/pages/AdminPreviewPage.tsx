@@ -1141,8 +1141,8 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
     setFeatures(updated);
   };
 
-  // If not logged in as admin, render Admin Login screen
-  if (!session) {
+  // If not logged in as admin or session is invalid, render Admin Login screen
+  if (!session || !session.user) {
     return (
       <AdminLoginForm
         onLoginSuccess={handleLoginSuccess}
@@ -1161,7 +1161,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
           </div>
           <h2 className="text-xl font-serif font-bold text-white">403 - Access Forbidden</h2>
           <p className="text-xs text-slate-400">
-            Your account ({session.user.email}) does not possess administrative privileges to manage the Bharat Collective Admin Portal.
+            Your account ({session.user?.email || 'unauthorized'}) does not possess administrative privileges to manage the Bharat Collective Admin Portal.
           </p>
           <div className="pt-2 flex justify-center space-x-3">
             <button
@@ -1186,7 +1186,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
   const filteredRegistrations = (registrations || []).filter(r => {
     const matchesFilter = regFilter === 'all' || r.status === regFilter;
     const matchesSearch = !regSearch || 
-      `${r.firstName} ${r.lastName}`.toLowerCase().includes(regSearch.toLowerCase()) ||
+      `${r.firstName || ''} ${r.lastName || ''}`.toLowerCase().includes(regSearch.toLowerCase()) ||
       (r.collegeName || '').toLowerCase().includes(regSearch.toLowerCase()) ||
       (r.city || '').toLowerCase().includes(regSearch.toLowerCase()) ||
       (r.registrationNumber || '').toLowerCase().includes(regSearch.toLowerCase());
@@ -1207,12 +1207,12 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
 
     const matchesSearch =
       !careerSearch ||
-      app.fullName.toLowerCase().includes(careerSearch.toLowerCase()) ||
-      app.email.toLowerCase().includes(careerSearch.toLowerCase()) ||
-      app.currentInstitution.toLowerCase().includes(careerSearch.toLowerCase()) ||
-      app.qualification.toLowerCase().includes(careerSearch.toLowerCase()) ||
-      app.areaOfInterest.toLowerCase().includes(careerSearch.toLowerCase()) ||
-      app.applicationCode.toLowerCase().includes(careerSearch.toLowerCase());
+      (app.fullName || '').toLowerCase().includes(careerSearch.toLowerCase()) ||
+      (app.email || '').toLowerCase().includes(careerSearch.toLowerCase()) ||
+      (app.currentInstitution || '').toLowerCase().includes(careerSearch.toLowerCase()) ||
+      (app.qualification || '').toLowerCase().includes(careerSearch.toLowerCase()) ||
+      (app.areaOfInterest || '').toLowerCase().includes(careerSearch.toLowerCase()) ||
+      (app.applicationCode || '').toLowerCase().includes(careerSearch.toLowerCase());
 
     return matchesFilter && matchesSearch;
   });
@@ -1229,15 +1229,15 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
 
   // Filtered subscribers (guaranteed unique)
   const filteredSubscribers = uniqueSubscribers.filter(s => 
-    !subSearch || s.email.toLowerCase().includes(subSearch.trim().toLowerCase())
+    !subSearch || (s.email || '').toLowerCase().includes(subSearch.trim().toLowerCase())
   );
 
   // Filtered CFP Submissions
   const filteredSubmissions = (submissions || []).filter(s =>
     !cfpSearch || 
-    s.paperTitle.toLowerCase().includes(cfpSearch.toLowerCase()) ||
-    s.authorName.toLowerCase().includes(cfpSearch.toLowerCase()) ||
-    s.submissionCode.toLowerCase().includes(cfpSearch.toLowerCase())
+    (s.paperTitle || '').toLowerCase().includes(cfpSearch.toLowerCase()) ||
+    (s.authorName || '').toLowerCase().includes(cfpSearch.toLowerCase()) ||
+    (s.submissionCode || '').toLowerCase().includes(cfpSearch.toLowerCase())
   );
 
   return (
@@ -1293,7 +1293,7 @@ const handleSaveContent = async (type: ContentEntityType, data: any) => {
         <div className="flex items-center space-x-1.5 sm:space-x-4 text-xs shrink-0">
           <div className="hidden lg:flex items-center space-x-2 text-slate-300">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Administrator: <strong className="text-white font-mono">{session.user.email}</strong></span>
+            <span>Administrator: <strong className="text-white font-mono">{session.user?.email || 'admin@bharatcollective.org'}</strong></span>
           </div>
 
           <button
