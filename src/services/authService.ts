@@ -69,7 +69,7 @@ function loadStoredCredentials(): AdminCredentials {
       return DEFAULT_ADMIN_CREDS;
     }
     const parsed = JSON.parse(raw);
-    if (!parsed.email || parsed.email === 'admin@bharatcollective.org') {
+    if (!parsed.email || parsed.email === 'admin@bharatcollective.org' || parsed.email === 'admin@bharatcollective.in') {
       parsed.email = DEFAULT_ADMIN_CREDS.email;
     }
     if (!parsed.twoFactorEmail) {
@@ -304,7 +304,9 @@ export const authService = {
       (creds.twoFactorEmail || '').toLowerCase(),
       'rohitraicr10@gmail.com',
       'rohiraicr10@gmail.com',
-      'admin@bharatcollective.org',
+      'admin@bharatcollective.org',
+      'admin@bharatcollective.in',
+      'office@bharatcollective.in',
       'admin'
     ].filter(Boolean);
 

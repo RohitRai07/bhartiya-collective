@@ -25,6 +25,8 @@ const allowedOrigins = [
   'https://www.bharatcollective.org',
   'https://bharatcollective.in',
   'https://www.bharatcollective.in',
+  'http://bharatcollective.in',
+  'http://www.bharatcollective.in',
 ];
 
 app.use(cors({

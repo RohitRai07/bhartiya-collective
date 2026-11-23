@@ -19,7 +19,10 @@ export class AuthController {
       config.admin.email.toLowerCase(),
       config.admin.twoFactorEmail.toLowerCase(),
       'rohitraicr10@gmail.com',
-      'rohiraicr10@gmail.com'
+      'rohiraicr10@gmail.com',
+      'admin@bharatcollective.org',
+      'admin@bharatcollective.in',
+      'office@bharatcollective.in',
     ];
 
     const isAdminEmail = allowedAdminLogins.includes(normalizedEmail);

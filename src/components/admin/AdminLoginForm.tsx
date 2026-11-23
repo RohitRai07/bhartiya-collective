@@ -1,4 +1,4 @@
-import { validateEmailAddress } from '../../services/contactValidation';
+import { validateEmailAddress, APPROVED_EMAIL_DOMAINS } from '../../services/contactValidation';
 import React, { useState, useEffect, useRef } from 'react';
 import { authService } from '../../services/authService';
 import { AuthSession, TwoFactorChallenge, AdminCredentials } from '../../types/auth';
@@ -75,7 +75,13 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
       return;
     }
 
-    const emailVal = validateEmailAddress(email);
+    const emailVal = validateEmailAddress(email, {
+      allowedDomains: [
+        ...APPROVED_EMAIL_DOMAINS,
+        'bharatcollective.in',
+        'bharatcollective.org',
+      ],
+    });
     if (!emailVal.isValid) {
       setErrorMessage(emailVal.error || 'Please enter a valid email address.');
       return;

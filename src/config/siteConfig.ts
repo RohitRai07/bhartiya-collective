@@ -27,6 +27,8 @@ const callForPapersEmailSubject = 'Call for Papers - Bharat Collective Foundatio
 export const siteConfig = {
   name: 'Bharat Collective Foundation',
   shortName: 'Bharat Collective',
+  siteUrl: 'https://bharatcollective.in',
+  domain: 'bharatcollective.in',
   tagline: 'Connecting Bharat, Bringing Minds Together',
   secondaryMotto: 'Empowering Citizens. Advancing Policy. Transforming Bharat.',
   logoUrl: `${baseUrl}images/bharat-collective-logo.jpg`,
