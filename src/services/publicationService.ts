@@ -11,38 +11,28 @@ import { Publication, PublicationCategory } from '../types/publication';
 import { mockPublications } from '../data/mockPublications';
 
 const STORAGE_KEY = 'bharat_collective_publications';
+let memoryPublications: Publication[] = [...mockPublications];
 
 function loadStoredPublications(): Publication[] {
-  if (typeof window === 'undefined') return mockPublications;
+  if (typeof window === 'undefined') return memoryPublications;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      const initial = mockPublications.map(p => ({
-        ...p,
-        status: 'draft' as const,
-      }));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-      return initial;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockPublications));
+      memoryPublications = [...mockPublications];
+      return mockPublications;
     }
     const parsed: Publication[] = JSON.parse(raw);
-    let changed = false;
-    const updated = parsed.map(p => {
-      if (p.id.startsWith('pub-') && p.status !== 'draft') {
-        changed = true;
-        return { ...p, status: 'draft' as const };
-      }
-      return p;
-    });
-    if (changed) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    }
-    return updated;
+    const valid = Array.isArray(parsed) ? parsed : mockPublications;
+    memoryPublications = valid;
+    return valid;
   } catch {
-    return mockPublications;
+    return memoryPublications;
   }
 }
 
 function savePublications(list: Publication[]) {
+  memoryPublications = list;
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));

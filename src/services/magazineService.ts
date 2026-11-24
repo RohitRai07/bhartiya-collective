@@ -70,18 +70,7 @@ class MagazineService {
         return SEED_MAGAZINES;
       }
       const parsed: MagazineIssue[] = JSON.parse(raw);
-      let changed = false;
-      const updated = parsed.map(m => {
-        if (m.id.startsWith('mag-') && m.status !== 'draft') {
-          changed = true;
-          return { ...m, status: 'draft' as const };
-        }
-        return m;
-      });
-      if (changed) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      }
-      return updated;
+      return Array.isArray(parsed) ? parsed : SEED_MAGAZINES;
     } catch {
       return this.memoryStore;
     }

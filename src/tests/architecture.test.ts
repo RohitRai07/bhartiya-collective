@@ -310,6 +310,53 @@ async function runTests() {
   const pubs = await publicationService.getPublications({ includeDrafts: true });
   assert(Array.isArray(pubs) && pubs.length > 0, 'Publication service functions independently');
 
+  // Verify Publication Lifecycle: Create, Publish, Toggle, Visibility, and Delete
+  console.log('  Testing Publication Create-to-Publish Lifecycle:');
+  const testPublication = await publicationService.createPublication({
+    title: 'Test Monograph on Dharmic Jurisprudence & Governance',
+    subtitle: 'An Empirical Evaluation of Classical Texts',
+    authors: ['Prof. Test Scholar', 'Dr. Research Jurist'],
+    abstract: 'Comprehensive comparative analysis of legal jurisprudence and constitutional values.',
+    category: 'Monograph',
+    publishedDate: '2026-11-24',
+    pages: 48,
+    tags: ['Jurisprudence', 'Governance', 'Dharma'],
+    featured: true,
+    status: 'published',
+  });
+  assert(testPublication.id.startsWith('pub-'), 'New publication created with valid pub- ID prefix');
+  assert(testPublication.status === 'published', 'New publication created with status: published');
+
+  // Verify published publication is returned by public getPublications()
+  const publicPubs = await publicationService.getPublications({ includeDrafts: false });
+  assert(publicPubs.some(p => p.id === testPublication.id), 'Newly published publication is visible in public getPublications()');
+
+  // Verify Toggle Publish: switches to draft
+  const draftPublication = await publicationService.togglePublish(testPublication.id);
+  assert(draftPublication.status === 'draft', 'Publication status toggled to draft via togglePublish()');
+
+  // Verify public view hides draft
+  const publicPubsAfterDraft = await publicationService.getPublications({ includeDrafts: false });
+  assert(!publicPubsAfterDraft.some(p => p.id === testPublication.id), 'Draft publication is hidden from public view');
+
+  // Verify includeDrafts view still contains it
+  const allPubsWithDraft = await publicationService.getPublications({ includeDrafts: true });
+  assert(allPubsWithDraft.some(p => p.id === testPublication.id), 'Draft publication is visible in admin view with includeDrafts');
+
+  // Verify Toggle Publish: switches back to published
+  const republishedPub = await publicationService.togglePublish(testPublication.id);
+  assert(republishedPub.status === 'published', 'Publication status toggled back to published via togglePublish()');
+
+  // Verify public view now reveals it again
+  const publicPubsRepublished = await publicationService.getPublications({ includeDrafts: false });
+  assert(publicPubsRepublished.some(p => p.id === testPublication.id), 'Republished publication is visible on public website');
+
+  // Clean up test publication
+  await publicationService.deletePublication(testPublication.id);
+  const pubsAfterDelete = await publicationService.getPublications({ includeDrafts: true });
+  assert(!pubsAfterDelete.some(p => p.id === testPublication.id), 'Test publication cleaned up successfully');
+  console.log('  ✅ PASS: Publication create-to-publish end-to-end workflow verified');
+
   const evts = await eventService.getEvents();
   assert(Array.isArray(evts) && evts.length > 0, 'Event service functions independently');
 

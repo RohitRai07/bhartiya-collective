@@ -12,39 +12,33 @@ import { ScholarExpert, ExpertRole } from '../types/expert';
 import { mockExperts } from '../data/mockExperts';
 
 const STORAGE_KEY = 'bharat_collective_experts';
+let memoryExperts: ScholarExpert[] = [...mockExperts];
 
 function loadStoredExperts(): ScholarExpert[] {
-  if (typeof window === 'undefined') return mockExperts;
+  if (typeof window === 'undefined') return memoryExperts;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       const initial = mockExperts.map((exp, idx) => ({
         ...exp,
         councilRole: (idx % 2 === 0 ? 'advisory_council' : 'senior_fellow') as ExpertRole,
-        status: 'archived' as const,
+        status: exp.status || 'active' as const,
       }));
       localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+      memoryExperts = initial;
       return initial;
     }
     const parsed: ScholarExpert[] = JSON.parse(raw);
-    let changed = false;
-    const updated = parsed.map(exp => {
-      if (exp.id.startsWith('exp-') && exp.status !== 'archived') {
-        changed = true;
-        return { ...exp, status: 'archived' as const };
-      }
-      return exp;
-    });
-    if (changed) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    }
-    return updated;
+    const valid = Array.isArray(parsed) ? parsed : mockExperts;
+    memoryExperts = valid;
+    return valid;
   } catch {
-    return mockExperts;
+    return memoryExperts;
   }
 }
 
 function saveExperts(list: ScholarExpert[]) {
+  memoryExperts = list;
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));

@@ -443,7 +443,7 @@ export class CentralizedNotificationService {
 
     // 1. Publications
     try {
-      const pubs = await publicationService.getPublications(false);
+      const pubs = await publicationService.getPublications({ includeDrafts: false });
       for (const p of pubs) {
         if (p.status === 'draft') continue;
         const logs = notificationService.getLogsForContent('publication', p.id, p.title);
@@ -452,11 +452,11 @@ export class CentralizedNotificationService {
           title: p.title,
           contentType: 'publication',
           contentTypeLabel: 'Research Publication',
-          publicationDate: p.date || p.year?.toString() || '',
+          publicationDate: p.publishedDate || '',
           status: 'published',
           publicUrl: '/publications',
-          authorOrSpeaker: p.author,
-          summary: p.abstract || p.summary || '',
+          authorOrSpeaker: Array.isArray(p.authors) ? p.authors.join(', ') : p.authors || '',
+          summary: p.abstract || '',
           notificationCount: logs.length,
           lastNotifiedAt: logs[0]?.sentAt,
         });

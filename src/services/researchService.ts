@@ -12,7 +12,7 @@ import { mockResearchDomains } from '../data/mockResearch';
 
 const STORAGE_KEY = 'bharat_collective_research_domains';
 
-let memoryDomains: ResearchDomain[] = mockResearchDomains.map(d => ({ ...d, status: 'draft' as const }));
+let memoryDomains: ResearchDomain[] = mockResearchDomains.map(d => ({ ...d, status: d.status || 'published' }));
 
 function loadStoredDomains(): ResearchDomain[] {
   if (typeof window === 'undefined') return memoryDomains;
@@ -23,18 +23,7 @@ function loadStoredDomains(): ResearchDomain[] {
       return memoryDomains;
     }
     const parsed: ResearchDomain[] = JSON.parse(raw);
-    let changed = false;
-    const updated = parsed.map(d => {
-      if (d.id.startsWith('res-domain-') && d.status !== 'draft') {
-        changed = true;
-        return { ...d, status: 'draft' as const };
-      }
-      return d;
-    });
-    if (changed) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    }
-    return updated;
+    return Array.isArray(parsed) ? parsed : memoryDomains;
   } catch {
     return memoryDomains;
   }

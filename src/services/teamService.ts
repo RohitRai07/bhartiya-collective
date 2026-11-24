@@ -127,18 +127,7 @@ function loadStoredNationalTeam(): NationalTeamMember[] {
       return [...SEED_NATIONAL_TEAM];
     }
     const parsed: NationalTeamMember[] = JSON.parse(raw);
-    let changed = false;
-    const updated = parsed.map(m => {
-      if (m.id.startsWith('nat-') && m.status !== 'draft') {
-        changed = true;
-        return { ...m, status: 'draft' as const };
-      }
-      return m;
-    });
-    if (changed) {
-      localStorage.setItem(NATIONAL_STORAGE_KEY, JSON.stringify(updated));
-    }
-    return updated;
+    return Array.isArray(parsed) ? parsed : [...memoryNationalTeam];
   } catch {
     return [...memoryNationalTeam];
   }
@@ -164,18 +153,7 @@ function loadStoredStateChapters(): StateChapter[] {
       return [...SEED_STATE_CHAPTERS];
     }
     const parsed: StateChapter[] = JSON.parse(raw);
-    let changed = false;
-    const updated = parsed.map(c => {
-      if (c.id.startsWith('sc-') && c.status !== 'draft') {
-        changed = true;
-        return { ...c, status: 'draft' as const };
-      }
-      return c;
-    });
-    if (changed) {
-      localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(updated));
-    }
-    return updated;
+    return Array.isArray(parsed) ? parsed : [...memoryStateChapters];
   } catch {
     return [...memoryStateChapters];
   }

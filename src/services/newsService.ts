@@ -12,38 +12,28 @@ import { NewsArticle } from '../types/news';
 import { mockNews } from '../data/mockNews';
 
 const STORAGE_KEY = 'bharat_collective_news';
+let memoryNews: NewsArticle[] = [...mockNews];
 
 function loadStoredNews(): NewsArticle[] {
-  if (typeof window === 'undefined') return mockNews;
+  if (typeof window === 'undefined') return memoryNews;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      const initial = mockNews.map(n => ({
-        ...n,
-        status: 'draft' as const,
-      }));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-      return initial;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockNews));
+      memoryNews = [...mockNews];
+      return mockNews;
     }
     const parsed: NewsArticle[] = JSON.parse(raw);
-    let changed = false;
-    const updated = parsed.map(n => {
-      if (n.id.startsWith('news-') && n.status !== 'draft') {
-        changed = true;
-        return { ...n, status: 'draft' as const };
-      }
-      return n;
-    });
-    if (changed) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    }
-    return updated;
+    const valid = Array.isArray(parsed) ? parsed : mockNews;
+    memoryNews = valid;
+    return valid;
   } catch {
-    return mockNews;
+    return memoryNews;
   }
 }
 
 function saveNews(list: NewsArticle[]) {
+  memoryNews = list;
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
