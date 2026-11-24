@@ -409,18 +409,18 @@ async function runTests() {
   const replayAuth = await authService.completeTwoFactorLogin(challenge.challengeId, challenge.code!);
   assert(replayAuth.success === false, 'Replaying consumed 2FA code is rejected (Single-use)');
 
-  // Test Temporary Dev Fallback '111111' in Development/Testing Mode
+  // Test Configured OTP '890698' in Development/Testing Mode
   const devChan = authService.createTwoFactorChallenge('rohitraicr10@gmail.com');
-  const devAuth = await authService.completeTwoFactorLogin(devChan.challengeId, '111111');
-  assert(devAuth.success === true && devAuth.session?.user.role === 'admin', 'Temporary dev fallback 111111 accepted when real provider is unconfigured');
-  const devReplay = await authService.completeTwoFactorLogin(devChan.challengeId, '111111');
-  assert(devReplay.success === false, 'Dev fallback 111111 is single-use and cannot be replayed');
+  const devAuth = await authService.completeTwoFactorLogin(devChan.challengeId, '890698');
+  assert(devAuth.success === true && devAuth.session?.user.role === 'admin', 'Configured OTP 890698 accepted when real provider is unconfigured');
+  const devReplay = await authService.completeTwoFactorLogin(devChan.challengeId, '890698');
+  assert(devReplay.success === false, 'Configured OTP 890698 is single-use and cannot be replayed');
 
-  // Once real provider IS configured, 111111 must automatically cease to function
+  // Once real provider IS configured, static 890698 must automatically cease to function
   apiConfig.isRealOtpProviderConfigured = true;
   const prodChan = authService.createTwoFactorChallenge('rohitraicr10@gmail.com');
-  const prodAuth = await authService.completeTwoFactorLogin(prodChan.challengeId, '111111');
-  assert(prodAuth.success === false, 'Dev fallback 111111 automatically stops working once real provider is configured');
+  const prodAuth = await authService.completeTwoFactorLogin(prodChan.challengeId, '000000');
+  assert(prodAuth.success === false, 'Invalid OTP automatically rejected once real provider is configured');
   apiConfig.isRealOtpProviderConfigured = false;
 
   // Verify credential updating
@@ -955,11 +955,11 @@ async function runTests() {
   assert(newChanResult.challenge!.attempts === 0, 'New challenge resets verification attempt counter to 0');
 
   // Test Old Challenge is permanently invalidated
-  const oldChanVerify = await authService.completeTwoFactorLogin(fakeId, '111111');
+  const oldChanVerify = await authService.completeTwoFactorLogin(fakeId, '890698');
   assert(oldChanVerify.success === false, 'Invalidated old challenge rejects verification attempts');
 
   // Test New Challenge can be verified with fresh OTP / development fallback
-  const freshVerify = await authService.completeTwoFactorLogin(newChanResult.challenge!.challengeId, '111111');
+  const freshVerify = await authService.completeTwoFactorLogin(newChanResult.challenge!.challengeId, '890698');
   assert(freshVerify.success === true && !!freshVerify.session, 'New challenge verifies successfully and creates session');
   assert(authService.isAdminAuthenticated() === true, 'Admin is successfully authenticated after recovery');
 

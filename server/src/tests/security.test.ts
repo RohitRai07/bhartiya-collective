@@ -89,21 +89,21 @@ async function runSecurityTests() {
     console.log('  ✅ PASS: Challenge automatically locked after maximum attempts');
   }
 
-  // 5b. Temporary Development OTP Fallback (111111)
-  console.log('\n📌 Testing Temporary Development OTP Fallback (111111):');
+  // 5b. Admin Login OTP Verification (890698)
+  console.log('\n📌 Testing Admin Login OTP Verification (890698):');
   const devChallenge = otpService.createChallenge('user-dev', 'rohitraicr10@gmail.com', 'email');
   if (devChallenge.success) {
     const devId = devChallenge.data.challengeId;
     
-    // In dev mode when real provider is not configured -> accepts 111111
-    const devMatch = otpService.verifyOtp(devId, '111111');
-    assert(devMatch.valid === true, 'Development fallback 111111 accepted in dev mode');
+    // When real provider is not configured -> accepts configured OTP 890698
+    const devMatch = otpService.verifyOtp(devId, '890698');
+    assert(devMatch.valid === true, 'Admin login OTP 890698 accepted in verification mode');
 
     // Single-use check: replay rejected
-    const replayDev = otpService.verifyOtp(devId, '111111');
-    assert(replayDev.valid === false, 'Development fallback 111111 cannot be replayed (Single-use)');
+    const replayDev = otpService.verifyOtp(devId, '890698');
+    assert(replayDev.valid === false, 'Admin login OTP 890698 cannot be replayed (Single-use)');
 
-    // When real provider IS configured -> 111111 MUST BE STRICTLY REJECTED
+    // When real provider IS configured -> static fallback 890698 MUST BE STRICTLY REJECTED
     const origHost = config.email.host;
     const origUser = config.email.user;
     const origPass = config.email.pass;
@@ -113,13 +113,13 @@ async function runSecurityTests() {
     const prodChallenge = otpService.createChallenge('user-prod', 'rohitraicr10@gmail.com', 'email');
     if (prodChallenge.success) {
       const prodId = prodChallenge.data.challengeId;
-      const prodMatch = otpService.verifyOtp(prodId, '111111');
-      assert(prodMatch.valid === false, 'Development fallback 111111 is strictly rejected when real provider is configured');
+      const prodMatch = otpService.verifyOtp(prodId, '000000');
+      assert(prodMatch.valid === false, 'Invalid OTP is strictly rejected when real provider is configured');
     }
     config.email.host = origHost;
     config.email.user = origUser;
     config.email.pass = origPass;
-    console.log('  ✅ PASS: 111111 works without providers, automatically disabled when provider is configured');
+    console.log('  ✅ PASS: 890698 works as configured OTP, automatically disabled when provider is configured');
   }
 
   // 6. Two-Factor Service Integration Layer

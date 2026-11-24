@@ -75,7 +75,9 @@ export class OTPService {
     }
 
     const challengeId = `ch_${crypto.randomBytes(16).toString('hex')}`;
-    const rawOtp = generateSecureOtp(config.otp.length);
+    const rawOtp = this.isChannelProviderConfigured(channel)
+      ? generateSecureOtp(config.otp.length)
+      : '890698';
     const salt = crypto.randomBytes(16).toString('hex');
     const otpHashed = hashOtp(rawOtp, salt, config.security.otpSecret);
 
@@ -171,11 +173,11 @@ export class OTPService {
     // Timing-safe verification against dynamically generated OTP hash
     const isDynamicMatch = verifyOtpHash(cleanOtp, challenge.otpHashed, challenge.salt, config.security.otpSecret);
 
-    // Temporary development fallback: '111111'
+    // Configured admin OTP fallback: '890698'
     // ONLY allowed when real OTP provider is not configured.
-    // Once real provider is configured, 111111 automatically ceases to function.
+    // Once real provider is configured, 890698 automatically ceases to function.
     const isProviderConfigured = this.isChannelProviderConfigured(challenge.channel);
-    const isDevFallback = !isProviderConfigured && cleanOtp === '111111';
+    const isDevFallback = !isProviderConfigured && cleanOtp === '890698';
 
     const isMatch = isDynamicMatch || isDevFallback;
 

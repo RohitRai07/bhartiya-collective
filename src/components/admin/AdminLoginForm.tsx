@@ -29,8 +29,8 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
   onBackToPublicSite 
 }) => {
   const [step, setStep] = useState<'credentials' | '2fa'>('credentials');
-  const [email, setEmail] = useState('rohitraicr10@gmail.com');
-  const [password, setPassword] = useState('BharatAdmin@2026');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [challenge, setChallenge] = useState<TwoFactorChallenge | null>(null);
   const [loading, setLoading] = useState(false);
@@ -325,13 +325,6 @@ export const AdminLoginForm: React.FC<AdminLoginFormProps> = ({
                 <p className="text-[10px] text-slate-400 pt-1">
                   Valid for 5 minutes • Single-use security token
                 </p>
-                {!apiConfig.isRealOtpProviderConfigured && (
-                  <div className="pt-1.5">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      Testing Mode: Use temporary OTP <strong className="ml-1.5 font-mono tracking-widest text-white">111111</strong>
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* Error Banners */}
