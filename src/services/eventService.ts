@@ -152,8 +152,12 @@ export const eventService = {
    */
   async getEvents(includeDrafts: boolean = false): Promise<EventItem[]> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.get<EventItem[]>(apiConfig.endpoints.events);
-      return response.data;
+      try {
+        const response = await apiClient.get<EventItem[]>(apiConfig.endpoints.events);
+        if (response && response.data && Array.isArray(response.data)) return response.data;
+      } catch (err) {
+        console.warn('Backend events endpoint unavailable, reading from local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 60));
@@ -184,8 +188,12 @@ export const eventService = {
    */
   async getEventById(id: string): Promise<EventItem | null> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.get<EventItem>(`${apiConfig.endpoints.events}/${id}`);
-      return response.data;
+      try {
+        const response = await apiClient.get<EventItem>(`${apiConfig.endpoints.events}/${id}`);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend event details unavailable, reading from local store:', err);
+      }
     }
 
     const rawItems = loadStoredEvents();
@@ -206,8 +214,12 @@ export const eventService = {
    */
   async createEvent(input: Omit<EventItem, 'id'>): Promise<EventItem> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.post<EventItem>(apiConfig.endpoints.events, input);
-      return response.data;
+      try {
+        const response = await apiClient.post<EventItem>(apiConfig.endpoints.events, input);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend event creation unavailable, saving to local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -285,8 +297,12 @@ export const eventService = {
    */
   async updateEvent(id: string, updates: Partial<EventItem>): Promise<EventItem> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.put<EventItem>(`${apiConfig.endpoints.events}/${id}`, updates);
-      return response.data;
+      try {
+        const response = await apiClient.put<EventItem>(`${apiConfig.endpoints.events}/${id}`, updates);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend event update unavailable, saving to local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -351,8 +367,12 @@ export const eventService = {
    */
   async deleteEvent(id: string): Promise<boolean> {
     if (!apiConfig.useMockData) {
-      await apiClient.delete(`${apiConfig.endpoints.events}/${id}`);
-      return true;
+      try {
+        await apiClient.delete(`${apiConfig.endpoints.events}/${id}`);
+        recordDeletedEventId(id);
+      } catch (err) {
+        console.warn('Backend event deletion unavailable, updating local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 100));

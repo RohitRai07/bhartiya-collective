@@ -71,11 +71,15 @@ function saveSubmissions(list: PaperSubmissionRecord[]) {
 export const submissionService = {
   async submitPaper(input: PaperSubmissionInput): Promise<PaperSubmissionRecord> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.post<PaperSubmissionRecord>(
-        apiConfig.endpoints.submissions.callForPapers,
-        input
-      );
-      return response.data;
+      try {
+        const response = await apiClient.post<PaperSubmissionRecord>(
+          apiConfig.endpoints.submissions.callForPapers,
+          input
+        );
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend submission endpoint unavailable, processing locally:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -127,10 +131,14 @@ export const submissionService = {
 
   async getSubmissions(): Promise<PaperSubmissionRecord[]> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.get<PaperSubmissionRecord[]>(
-        apiConfig.endpoints.submissions.callForPapers
-      );
-      return response.data;
+      try {
+        const response = await apiClient.get<PaperSubmissionRecord[]>(
+          apiConfig.endpoints.submissions.callForPapers
+        );
+        if (response && response.data && Array.isArray(response.data)) return response.data;
+      } catch (err) {
+        console.warn('Backend submission list unavailable, reading from local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 60));

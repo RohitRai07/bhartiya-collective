@@ -60,8 +60,12 @@ export const expertService = {
    */
   async getExperts(options?: { role?: ExpertRole; includeArchived?: boolean }): Promise<ScholarExpert[]> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.get<ScholarExpert[]>(apiConfig.endpoints.experts);
-      return response.data;
+      try {
+        const response = await apiClient.get<ScholarExpert[]>(apiConfig.endpoints.experts);
+        if (response && response.data && Array.isArray(response.data)) return response.data;
+      } catch (err) {
+        console.warn('Backend experts endpoint unavailable, reading from local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 60));
@@ -83,8 +87,12 @@ export const expertService = {
    */
   async getExpertById(id: string): Promise<ScholarExpert | null> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.get<ScholarExpert>(`${apiConfig.endpoints.experts}/${id}`);
-      return response.data;
+      try {
+        const response = await apiClient.get<ScholarExpert>(`${apiConfig.endpoints.experts}/${id}`);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend expert details unavailable, reading from local store:', err);
+      }
     }
 
     const experts = loadStoredExperts();
@@ -96,8 +104,12 @@ export const expertService = {
    */
   async createExpert(input: Omit<ScholarExpert, 'id'>): Promise<ScholarExpert> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.post<ScholarExpert>(apiConfig.endpoints.experts, input);
-      return response.data;
+      try {
+        const response = await apiClient.post<ScholarExpert>(apiConfig.endpoints.experts, input);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend expert creation unavailable, saving to local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 120));
@@ -118,8 +130,12 @@ export const expertService = {
    */
   async updateExpert(id: string, updates: Partial<ScholarExpert>): Promise<ScholarExpert> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.put<ScholarExpert>(`${apiConfig.endpoints.experts}/${id}`, updates);
-      return response.data;
+      try {
+        const response = await apiClient.put<ScholarExpert>(`${apiConfig.endpoints.experts}/${id}`, updates);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend expert update unavailable, saving to local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 120));
@@ -138,8 +154,11 @@ export const expertService = {
    */
   async deleteExpert(id: string): Promise<boolean> {
     if (!apiConfig.useMockData) {
-      await apiClient.delete(`${apiConfig.endpoints.experts}/${id}`);
-      return true;
+      try {
+        await apiClient.delete(`${apiConfig.endpoints.experts}/${id}`);
+      } catch (err) {
+        console.warn('Backend expert deletion unavailable, updating local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 100));

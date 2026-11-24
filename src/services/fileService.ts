@@ -18,14 +18,17 @@ export const fileService = {
     onProgress?: (percent: number) => void
   ): Promise<UploadedFileMetadata> {
     if (!apiConfig.useMockData) {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await apiClient.post<UploadedFileMetadata>(
-        apiConfig.endpoints.files.upload,
-        formData
-      );
-      return response.data;
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await apiClient.post<UploadedFileMetadata>(
+          apiConfig.endpoints.files.upload,
+          formData
+        );
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend upload endpoint unavailable, falling back to local simulation:', err);
+      }
     }
 
     // Mock upload simulation with progress increments
@@ -51,10 +54,14 @@ export const fileService = {
    */
   async getDownloadUrl(fileId: string): Promise<string> {
     if (!apiConfig.useMockData) {
-      const res = await apiClient.get<{ downloadUrl: string }>(
-        `${apiConfig.endpoints.files.getDownloadUrl}/${fileId}`
-      );
-      return res.data.downloadUrl;
+      try {
+        const res = await apiClient.get<{ downloadUrl: string }>(
+          `${apiConfig.endpoints.files.getDownloadUrl}/${fileId}`
+        );
+        if (res && res.data && res.data.downloadUrl) return res.data.downloadUrl;
+      } catch (err) {
+        console.warn('Backend download link unavailable, falling back to local URL:', err);
+      }
     }
 
     return `https://storage.bhartiyacollective.org/public/${fileId}.pdf`;

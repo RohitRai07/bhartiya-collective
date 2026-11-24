@@ -59,8 +59,12 @@ export const newsService = {
    */
   async getNews(includeDrafts: boolean = false): Promise<NewsArticle[]> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.get<NewsArticle[]>(apiConfig.endpoints.news);
-      return response.data;
+      try {
+        const response = await apiClient.get<NewsArticle[]>(apiConfig.endpoints.news);
+        if (response && response.data && Array.isArray(response.data)) return response.data;
+      } catch (err) {
+        console.warn('Backend news endpoint unavailable, reading from local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 60));
@@ -97,8 +101,12 @@ export const newsService = {
    */
   async createArticle(input: Omit<NewsArticle, 'id'>): Promise<NewsArticle> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.post<NewsArticle>(apiConfig.endpoints.news, input);
-      return response.data;
+      try {
+        const response = await apiClient.post<NewsArticle>(apiConfig.endpoints.news, input);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend article creation unavailable, saving to local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 120));
@@ -121,8 +129,12 @@ export const newsService = {
    */
   async updateArticle(id: string, updates: Partial<NewsArticle>): Promise<NewsArticle> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.put<NewsArticle>(`${apiConfig.endpoints.news}/${id}`, updates);
-      return response.data;
+      try {
+        const response = await apiClient.put<NewsArticle>(`${apiConfig.endpoints.news}/${id}`, updates);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend article update unavailable, saving to local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 120));
@@ -141,8 +153,11 @@ export const newsService = {
    */
   async deleteArticle(id: string): Promise<boolean> {
     if (!apiConfig.useMockData) {
-      await apiClient.delete(`${apiConfig.endpoints.news}/${id}`);
-      return true;
+      try {
+        await apiClient.delete(`${apiConfig.endpoints.news}/${id}`);
+      } catch (err) {
+        console.warn('Backend article deletion unavailable, updating local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 100));

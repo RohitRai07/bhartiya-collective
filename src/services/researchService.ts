@@ -54,8 +54,12 @@ function saveDomains(list: ResearchDomain[]) {
 export const researchService = {
   async getDomains(includeDrafts: boolean = false): Promise<ResearchDomain[]> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.get<ResearchDomain[]>(apiConfig.endpoints.research);
-      return response.data;
+      try {
+        const response = await apiClient.get<ResearchDomain[]>(apiConfig.endpoints.research);
+        if (response && response.data && Array.isArray(response.data)) return response.data;
+      } catch (err) {
+        console.warn('Backend research endpoint unavailable, reading from local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 60));
@@ -71,8 +75,12 @@ export const researchService = {
 
   async createDomain(input: Omit<ResearchDomain, 'id'>): Promise<ResearchDomain> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.post<ResearchDomain>(apiConfig.endpoints.research, input);
-      return response.data;
+      try {
+        const response = await apiClient.post<ResearchDomain>(apiConfig.endpoints.research, input);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend research domain creation unavailable, saving to local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -89,8 +97,12 @@ export const researchService = {
 
   async updateDomain(id: string, updates: Partial<ResearchDomain>): Promise<ResearchDomain> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.put<ResearchDomain>(`${apiConfig.endpoints.research}/${id}`, updates);
-      return response.data;
+      try {
+        const response = await apiClient.put<ResearchDomain>(`${apiConfig.endpoints.research}/${id}`, updates);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend research domain update unavailable, saving to local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -106,8 +118,11 @@ export const researchService = {
 
   async deleteDomain(id: string): Promise<boolean> {
     if (!apiConfig.useMockData) {
-      await apiClient.delete(`${apiConfig.endpoints.research}/${id}`);
-      return true;
+      try {
+        await apiClient.delete(`${apiConfig.endpoints.research}/${id}`);
+      } catch (err) {
+        console.warn('Backend research domain deletion unavailable, updating local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 100));

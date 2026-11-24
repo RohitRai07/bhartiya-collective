@@ -106,20 +106,24 @@ class ApiClient {
       }
 
       const response = await fetch(finalUrl, fetchOptions);
+      const contentType = response.headers.get('content-type') || '';
+      const isJson = contentType.includes('application/json');
 
       // Handle non-2xx responses
       if (!response.ok) {
         let errorData: any = {};
-        try {
-          errorData = await response.json();
-        } catch {
-          errorData = { message: response.statusText || 'An unexpected network error occurred' };
+        if (isJson) {
+          try {
+            errorData = await response.json();
+          } catch {
+            // fallback if json parsing fails
+          }
         }
 
         const apiError: ApiError = {
           success: false,
           statusCode: response.status,
-          message: errorData.message || `Request failed with status ${response.status}`,
+          message: errorData.message || response.statusText || `Request failed with status ${response.status}`,
           errors: errorData.errors,
           timestamp: new Date().toISOString(),
         };
@@ -127,8 +131,55 @@ class ApiClient {
         throw apiError;
       }
 
-      // Parse JSON response
-      const data = await response.json();
+      // Check if response is actually JSON before parsing (prevents <!doctype HTML syntax errors on static hosts)
+      if (!isJson) {
+        const text = await response.text();
+        // If it starts with '<', it's HTML from a static host rewrite (e.g. index.html)
+        if (text.trim().startsWith('<')) {
+          const apiError: ApiError = {
+            success: false,
+            statusCode: 404,
+            message: 'API endpoint unavailable or returned HTML (static host fallback)',
+            timestamp: new Date().toISOString(),
+          };
+          throw apiError;
+        }
+
+        // Try parsing text as json just in case headers were omitted
+        try {
+          const parsed = JSON.parse(text);
+          if (parsed && typeof parsed === 'object' && 'success' in parsed && 'data' in parsed) {
+            return parsed as ApiResponse<T>;
+          }
+          return {
+            success: true,
+            data: parsed as T,
+            timestamp: new Date().toISOString(),
+          };
+        } catch {
+          const apiError: ApiError = {
+            success: false,
+            statusCode: 0,
+            message: 'Server returned non-JSON response',
+            timestamp: new Date().toISOString(),
+          };
+          throw apiError;
+        }
+      }
+
+      // Parse JSON response safely
+      let data: any;
+      try {
+        data = await response.json();
+      } catch (jsonErr: any) {
+        const apiError: ApiError = {
+          success: false,
+          statusCode: 0,
+          message: 'Malformed JSON received from server',
+          timestamp: new Date().toISOString(),
+        };
+        throw apiError;
+      }
 
       // Return standardized envelope if not already enveloped
       if (data && typeof data === 'object' && 'success' in data && 'data' in data) {

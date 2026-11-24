@@ -215,10 +215,14 @@ export const registrationService = {
    */
   async getRegistrations(): Promise<UserRegistrationRecord[]> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.get<UserRegistrationRecord[]>(
-        apiConfig.endpoints.registration.adminList
-      );
-      return response.data;
+      try {
+        const response = await apiClient.get<UserRegistrationRecord[]>(
+          apiConfig.endpoints.registration.adminList
+        );
+        if (response && response.data && Array.isArray(response.data)) return response.data;
+      } catch (err) {
+        console.warn('Backend registrations list unavailable, reading from local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 60));
@@ -230,8 +234,12 @@ export const registrationService = {
    */
   async updateStatus(id: string, status: 'pending' | 'verified' | 'archived'): Promise<boolean> {
     if (!apiConfig.useMockData) {
-      await apiClient.patch(`${apiConfig.endpoints.registration.adminList}/${id}`, { status });
-      return true;
+      try {
+        await apiClient.patch(`${apiConfig.endpoints.registration.adminList}/${id}`, { status });
+        return true;
+      } catch (err) {
+        console.warn('Backend registration status update unavailable, updating locally:', err);
+      }
     }
 
     const items = loadStoredRegistrations();

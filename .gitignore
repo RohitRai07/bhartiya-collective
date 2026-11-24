@@ -28,6 +28,7 @@ server/.env.*
 .idea/
 *.swp
 *.swo
+scratch/
 
 # OS files
 .DS_Store

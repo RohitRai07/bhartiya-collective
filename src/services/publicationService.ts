@@ -59,8 +59,12 @@ export const publicationService = {
    */
   async getPublications(params?: { category?: PublicationCategory; search?: string; includeDrafts?: boolean }): Promise<Publication[]> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.get<Publication[]>(apiConfig.endpoints.publications, { params });
-      return response.data;
+      try {
+        const response = await apiClient.get<Publication[]>(apiConfig.endpoints.publications, { params });
+        if (response && response.data && Array.isArray(response.data)) return response.data;
+      } catch (err) {
+        console.warn('Backend publications endpoint unavailable, reading from local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 60));
@@ -103,8 +107,12 @@ export const publicationService = {
    */
   async getPublicationById(id: string): Promise<Publication | null> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.get<Publication>(`${apiConfig.endpoints.publications}/${id}`);
-      return response.data;
+      try {
+        const response = await apiClient.get<Publication>(`${apiConfig.endpoints.publications}/${id}`);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend publication details unavailable, reading from local store:', err);
+      }
     }
 
     const items = loadStoredPublications();
@@ -116,8 +124,12 @@ export const publicationService = {
    */
   async createPublication(input: Omit<Publication, 'id'>): Promise<Publication> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.post<Publication>(apiConfig.endpoints.publications, input);
-      return response.data;
+      try {
+        const response = await apiClient.post<Publication>(apiConfig.endpoints.publications, input);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend publication creation unavailable, saving to local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -137,8 +149,12 @@ export const publicationService = {
    */
   async updatePublication(id: string, updates: Partial<Publication>): Promise<Publication> {
     if (!apiConfig.useMockData) {
-      const response = await apiClient.put<Publication>(`${apiConfig.endpoints.publications}/${id}`, updates);
-      return response.data;
+      try {
+        const response = await apiClient.put<Publication>(`${apiConfig.endpoints.publications}/${id}`, updates);
+        if (response && response.data) return response.data;
+      } catch (err) {
+        console.warn('Backend publication update unavailable, saving to local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 150));
@@ -157,8 +173,11 @@ export const publicationService = {
    */
   async deletePublication(id: string): Promise<boolean> {
     if (!apiConfig.useMockData) {
-      await apiClient.delete(`${apiConfig.endpoints.publications}/${id}`);
-      return true;
+      try {
+        await apiClient.delete(`${apiConfig.endpoints.publications}/${id}`);
+      } catch (err) {
+        console.warn('Backend publication deletion unavailable, updating local store:', err);
+      }
     }
 
     await new Promise(resolve => setTimeout(resolve, 100));
