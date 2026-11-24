@@ -1,0 +1,58 @@
+# ====================================================================
+# Bharat Collective Foundation (https://bharatcollective.in)
+# Hostinger Apache / LiteSpeed Production Configuration
+# ====================================================================
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Enforce HTTPS across all pages and admin routes
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP_HOST} ^(www\.)?bharatcollective\.in [NC]
+  RewriteRule ^(.*)$ https://bharatcollective.in/$1 [L,R=301]
+
+  # 2. Canonical Domain Normalization (redirect www to non-www)
+  RewriteCond %{HTTP_HOST} ^www\.bharatcollective\.in [NC]
+  RewriteRule ^(.*)$ https://bharatcollective.in/$1 [L,R=301]
+
+  # 3. Single Page Application (SPA) Client-Side & Admin Routing
+  # Allows direct access and refreshes on /admin, /careers, /register, etc.
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# ====================================================================
+# Security Headers
+# ====================================================================
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# ====================================================================
+# Compression (Gzip / Deflate)
+# ====================================================================
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+
+# ====================================================================
+# Browser Caching for Performance
+# ====================================================================
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 month"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType application/pdf "access plus 1 month"
+</IfModule>
